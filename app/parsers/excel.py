@@ -59,10 +59,16 @@ class ExcelParser(BaseParser):
                     logger.warning(f"工作表 {sheet_name} 解析失败: {sheet_error}")
                     content_parts.append(f"## 工作表: {sheet_name}\n\n*工作表解析失败: {str(sheet_error)}*")
             
-            markdown_content = '\n\n'.join(content_parts)
+            raw_content = '\n\n'.join(content_parts)
+            
+            # 处理换行符
+            raw_content = raw_content.replace('\\n', '\n')
+            
+            # 格式化为统一的代码块格式
+            markdown_content = f"```sheet\n{raw_content or 'Excel文件为空或无法提取内容'}\n```"
             
             logger.info(f"成功解析Excel文件: {file_path}")
-            return markdown_content or "Excel文件为空或无法提取内容"
+            return markdown_content
             
         except Exception as e:
             logger.error(f"解析Excel文件失败 {file_path}: {e}")

@@ -35,7 +35,13 @@ class DocxParser(BaseParser):
             for table in doc.tables:
                 content_parts.append(self._parse_table(table))
             
-            markdown_content = '\n\n'.join(content_parts)
+            raw_content = '\n\n'.join(content_parts)
+            
+            # 处理换行符
+            raw_content = raw_content.replace('\\n', '\n')
+            
+            # 格式化为统一的代码块格式
+            markdown_content = f"```document\n{raw_content}\n```"
             
             logger.info(f"成功解析DOCX文件: {file_path}")
             return markdown_content

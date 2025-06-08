@@ -76,7 +76,13 @@ class CsvParser(BaseParser):
                 text_table = tabulate(text_df, headers='keys', tablefmt='github', showindex=False)
                 content_parts.append(text_table)
             
-            markdown_content = '\n\n'.join(content_parts)
+            raw_content = '\n\n'.join(content_parts)
+            
+            # 处理换行符
+            raw_content = raw_content.replace('\\n', '\n')
+            
+            # 格式化为统一的代码块格式
+            markdown_content = f"```sheet\n{raw_content}\n```"
             
             logger.info(f"成功解析CSV文件: {file_path}")
             return markdown_content

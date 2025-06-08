@@ -2,7 +2,7 @@
 
 ## 📖 概述
 
-MedicNex File2Markdown 是一个文档转换微服务，支持将多种格式的文件转换为Markdown格式。本文档为前端工程师提供完整的API接口说明。
+MedicNex File2Markdown 是一个文档转换微服务，支持将多种格式的文件（包括文档、图片、代码文件等）转换为统一的Markdown代码块格式。本文档为前端工程师提供完整的API接口说明。
 
 ## 🌐 基础信息
 
@@ -12,6 +12,19 @@ MedicNex File2Markdown 是一个文档转换微服务，支持将多种格式的
 - **认证方式**: Bearer Token
 - **请求格式**: multipart/form-data (文件上传)
 - **响应格式**: JSON
+
+## ✨ 统一输出格式
+
+所有文件转换结果都采用统一的代码块格式输出，便于前端统一处理和渲染：
+
+| 文件类型 | 输出格式 | 示例用途 |
+|----------|----------|----------|
+| 代码文件 (83+语言) | ```python, ```javascript 等 | 代码高亮显示 |
+| 幻灯片文件 | ```slideshow | PPT内容展示 |
+| 图像文件 | ```image | OCR + 视觉描述 |
+| 纯文本文件 | ```text | 文本内容展示 |
+| 文档文件 | ```document | Word/PDF文档 |
+| 表格文件 | ```sheet | Excel/CSV数据 |
 
 ## 🔐 认证机制
 
@@ -60,20 +73,29 @@ Authorization: Bearer your-api-key
     ".txt", ".md", ".markdown", ".text",
     ".docx", ".doc", 
     ".pdf",
-    ".pptx",
+    ".pptx", ".ppt",
     ".csv",
     ".xlsx", ".xls",
-    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp"
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp",
+    ".py", ".js", ".ts", ".java", ".cpp", ".c", ".cs", ".go", ".rs",
+    ".html", ".css", ".json", ".yaml", ".xml", ".sql", ".sh"
   ],
-  "total_count": 15
+  "total_count": 90
 }
 ```
+
+**支持的文件类型**:
+- **文档类**: TXT, MD, DOCX, DOC, PDF
+- **演示文稿**: PPTX, PPT  
+- **表格数据**: XLSX, XLS, CSV
+- **图像文件**: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP
+- **代码文件**: 83+种编程语言（Python, JavaScript, Java, C++, Go, Rust等）
 
 ### 3. 文件转换
 
 **接口地址**: `POST /v1/convert`
 
-**功能说明**: 将上传的文件转换为Markdown格式
+**功能说明**: 将上传的文件转换为Markdown代码块格式
 
 **请求头**:
 ```http
@@ -90,13 +112,35 @@ Content-Type: multipart/form-data
 - 最大文件大小: 100MB
 - 支持的文件类型: 见"支持的文件类型"接口
 
-**响应示例**:
+**响应示例（Python代码文件）**:
+```json
+{
+  "filename": "example.py",
+  "size": 1024,
+  "content_type": "text/x-python",
+  "markdown": "```python\ndef hello_world():\n    print('Hello, World!')\n    return 'success'\n```",
+  "duration_ms": 150
+}
+```
+
+**响应示例（图片文件）**:
+```json
+{
+  "filename": "chart.png",
+  "size": 204800,
+  "content_type": "image/png",
+  "markdown": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Description:\n这是一个显示月度销售趋势的柱状图，包含了12个月的销售数据...\n```",
+  "duration_ms": 2500
+}
+```
+
+**响应示例（Word文档）**:
 ```json
 {
   "filename": "document.docx",
   "size": 1280345,
   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "markdown": "# 文档标题\n\n这是文档内容...",
+  "markdown": "```document\n# 文档标题\n\n这是文档内容...\n\n## 章节2\n\n更多内容...\n```",
   "duration_ms": 420
 }
 ```
@@ -126,7 +170,8 @@ class MedicNexAPI {
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.detail?.message || `API Error: ${response.status}`);
     }
 
     return response.json();
@@ -162,6 +207,13 @@ class MedicNexAPI {
 
     return response.json();
   }
+
+  // 检查文件类型是否支持
+  async isFileSupported(filename) {
+    const types = await this.getSupportedTypes();
+    const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return types.supported_extensions.includes(ext);
+  }
 }
 
 // 使用示例
@@ -179,10 +231,19 @@ const FileConverter = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-       const api = new MedicNexAPI('https://file.medicnex.com/v1', 'your-api-key');
+  const api = new MedicNexAPI('https://file.medicnex.com/v1', 'your-api-key');
 
-  const handleFileSelect = (event) => {
+  const handleFileSelect = async (event) => {
     const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    // 检查文件类型
+    const isSupported = await api.isFileSupported(selectedFile.name);
+    if (!isSupported) {
+      setError('不支持的文件类型');
+      return;
+    }
+
     setFile(selectedFile);
     setResult(null);
     setError(null);
@@ -204,124 +265,84 @@ const FileConverter = () => {
     }
   };
 
+  // 解析代码块类型
+  const parseCodeBlock = (markdown) => {
+    const match = markdown.match(/^```(\w+)\n([\s\S]*?)```$/);
+    if (match) {
+      return {
+        language: match[1],
+        content: match[2]
+      };
+    }
+    return { language: 'text', content: markdown };
+  };
+
+  const renderResult = () => {
+    if (!result) return null;
+
+    const { language, content } = parseCodeBlock(result.markdown);
+
+    return (
+      <div className="result">
+        <h3>转换结果 ({language})</h3>
+        <div className="file-info">
+          <p>文件名: {result.filename}</p>
+          <p>大小: {(result.size / 1024).toFixed(1)} KB</p>
+          <p>处理时间: {result.duration_ms} ms</p>
+        </div>
+        
+        {/* 根据不同类型渲染内容 */}
+        {language === 'image' ? (
+          <div className="image-result">
+            <pre>{content}</pre>
+          </div>
+        ) : language !== 'text' ? (
+          <pre className={`language-${language}`}>
+            <code>{content}</code>
+          </pre>
+        ) : (
+          <div className="text-result">
+            <pre>{content}</pre>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="file-converter">
       <div className="upload-area">
-        <input
-          type="file"
+        <input 
+          type="file" 
           onChange={handleFileSelect}
-          accept=".txt,.md,.docx,.doc,.pdf,.pptx,.csv,.xlsx,.xls,.png,.jpg,.jpeg,.gif,.bmp,.tiff,.webp"
+          disabled={converting}
         />
+        
         {file && (
           <div className="file-info">
-            <p>选中文件: {file.name}</p>
-            <p>文件大小: {(file.size / 1024 / 1024).toFixed(2)} MB</p>
+            <p>已选择: {file.name}</p>
+            <button 
+              onClick={handleConvert} 
+              disabled={converting}
+            >
+              {converting ? '转换中...' : '开始转换'}
+            </button>
           </div>
         )}
       </div>
 
-      <button
-        onClick={handleConvert}
-        disabled={!file || converting}
-        className="convert-button"
-      >
-        {converting ? '转换中...' : '开始转换'}
-      </button>
-
       {error && (
         <div className="error">
-          <p>转换失败: {error}</p>
+          错误: {error}
         </div>
       )}
 
-      {result && (
-        <div className="result">
-          <h3>转换结果</h3>
-          <div className="result-info">
-            <p>文件名: {result.filename}</p>
-            <p>处理时间: {result.duration_ms}ms</p>
-          </div>
-          <div className="markdown-content">
-            <h4>Markdown 内容:</h4>
-            <pre>{result.markdown}</pre>
-          </div>
-        </div>
-      )}
+      {renderResult()}
     </div>
   );
 };
 
 export default FileConverter;
-```
-
-### 拖拽上传组件示例
-
-```jsx
-import React, { useState, useCallback } from 'react';
-
-const DragDropUploader = () => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [files, setFiles] = useState([]);
-
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    setFiles(droppedFiles);
-  }, []);
-
-  const uploadFiles = async () => {
-    const api = new MedicNexAPI('https://file.medicnex.com/v1', 'your-api-key');
-    
-    for (const file of files) {
-      try {
-        const result = await api.convertFile(file);
-        console.log(`${file.name} 转换完成:`, result);
-      } catch (error) {
-        console.error(`${file.name} 转换失败:`, error);
-      }
-    }
-  };
-
-  return (
-    <div
-      className={`drag-drop-area ${isDragging ? 'dragging' : ''}`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <p>拖拽文件到此处或点击选择文件</p>
-      <input
-        type="file"
-        multiple
-        onChange={(e) => setFiles(Array.from(e.target.files))}
-      />
-      
-      {files.length > 0 && (
-        <div>
-          <h4>选中的文件:</h4>
-          <ul>
-            {files.map((file, index) => (
-              <li key={index}>{file.name}</li>
-            ))}
-          </ul>
-          <button onClick={uploadFiles}>批量转换</button>
-        </div>
-      )}
-    </div>
-  );
-};
 ```
 
 ## 🎨 CSS样式参考

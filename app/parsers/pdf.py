@@ -47,10 +47,16 @@ class PdfParser(BaseParser):
                             logger.warning(f"PDF图片提取失败 第{page_num}页 图片{img_idx}: {img_error}")
                             content_parts.append(f"### 第 {page_num} 页 - 图片 {img_idx + 1}\n\n*图片提取失败*")
             
-            markdown_content = '\n\n'.join(content_parts)
+            raw_content = '\n\n'.join(content_parts)
+            
+            # 处理换行符
+            raw_content = raw_content.replace('\\n', '\n')
+            
+            # 格式化为统一的代码块格式
+            markdown_content = f"```document\n{raw_content or 'PDF文件为空或无法提取内容'}\n```"
             
             logger.info(f"成功解析PDF文件: {file_path}")
-            return markdown_content or "PDF文件为空或无法提取内容"
+            return markdown_content
             
         except Exception as e:
             logger.error(f"解析PDF文件失败 {file_path}: {e}")

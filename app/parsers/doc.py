@@ -24,10 +24,16 @@ class DocParser(BaseParser):
                         logger.warning(f"DOC转换警告: {message}")
             
             # 将HTML转换为Markdown
-            markdown_content = markdownify(html_content, heading_style="ATX")
+            raw_content = markdownify(html_content, heading_style="ATX")
+            
+            # 处理换行符
+            raw_content = raw_content.replace('\\n', '\n')
+            
+            # 格式化为统一的代码块格式
+            markdown_content = f"```document\n{raw_content.strip()}\n```"
             
             logger.info(f"成功解析DOC文件: {file_path}")
-            return markdown_content.strip()
+            return markdown_content
             
         except Exception as e:
             logger.error(f"解析DOC文件失败 {file_path}: {e}")

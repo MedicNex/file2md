@@ -8,6 +8,7 @@ from .pptx import PptxParser
 from .excel import ExcelParser
 from .csv import CsvParser
 from .image import ImageParser
+from .code import CodeParser
 
 class ParserRegistry:
     """解析器注册表"""
@@ -26,7 +27,8 @@ class ParserRegistry:
             PptxParser,
             ExcelParser,
             CsvParser,
-            ImageParser
+            ImageParser,
+            CodeParser
         ]
         
         for parser_class in parsers:

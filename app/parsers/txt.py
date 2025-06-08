@@ -21,8 +21,14 @@ class PlainParser(BaseParser):
             with open(file_path, 'r', encoding=encoding) as f:
                 content = f.read()
             
+            # 处理换行符
+            content = content.replace('\\n', '\n')
+            
+            # 格式化为统一的代码块格式
+            formatted_content = f"```text\n{content.strip()}\n```"
+            
             logger.info(f"成功解析纯文本文件: {file_path}")
-            return content.strip()
+            return formatted_content
             
         except Exception as e:
             logger.error(f"解析纯文本文件失败 {file_path}: {e}")

@@ -130,7 +130,12 @@ def format_image_result(ocr_text: str, vision_description: str) -> str:
     """
     格式化图片处理结果，按照要求的markdown格式
     """
-    result = f"# OCR\n\n{ocr_text}\n\n# Description\n\n{vision_description}"
+    # 处理换行符
+    ocr_text = ocr_text.replace('\\n', '\n')
+    vision_description = vision_description.replace('\\n', '\n')
+    
+    # 使用统一的代码块格式
+    result = f"```image\n# OCR:\n{ocr_text}\n\n# Description:\n{vision_description}\n```"
     return result
 
 async def fallback_ocr(image_path: str) -> str:

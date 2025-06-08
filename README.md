@@ -1,28 +1,56 @@
 # MedicNex File2Markdown 服务
 
-一个基于 FastAPI 的微服务，可以将各种文档格式（Word、PDF、PowerPoint、Excel、CSV、图片等）转换为 Markdown 文本。
+一个基于 FastAPI 的微服务，可以将各种文档格式（Word、PDF、PowerPoint、Excel、CSV、图片、代码文件等）转换为 Markdown 文本。
 
 ## 功能特性
 
 - 🔐 **API Key 鉴权**：支持多个 API Key 管理
-- 📄 **多格式支持**：支持 TXT、MD、DOCX、DOC、PDF、PPTX、XLS、XLSX、CSV、图片等格式
+- 📄 **多格式支持**：支持 TXT、MD、DOCX、DOC、PDF、PPTX、XLS、XLSX、CSV、图片、代码文件等格式
+- 💻 **代码文件支持**：支持 83+ 种编程语言文件转换
 - 🖼️ **智能图片识别**：集成 OpenAI Vision API 和 Tesseract OCR
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
 - 🐳 **容器化部署**：提供 Docker 和 Docker Compose 支持
-- 📊 **结构化输出**：统一的 Markdown 格式输出
+- 📊 **统一输出格式**：所有文件类型统一输出为代码块格式
+
+## 统一输出格式
+
+所有文件转换结果都采用统一的代码块格式输出：
+
+| 文件类型 | 输出格式 | 示例 |
+|----------|----------|------|
+| 幻灯片文件 | `````slideshow` | PowerPoint 内容 |
+| 图像文件 | `````image` | OCR + 视觉描述 |
+| 纯文本文件 | `````text` | 文本内容 |
+| 文档文件 | `````document` | Word/PDF 内容 |
+| 表格文件 | `````sheet` | Excel/CSV 数据 |
+| 代码文件 | `````python`、`````javascript` 等 | 对应语言代码块 |
 
 ## 支持的文件格式
 
-| 格式 | 扩展名 | 解析器 | 说明 |
-|------|--------|--------|------|
-| 纯文本 | `.txt`, `.md` | PlainParser | 直接读取文本内容 |
-| Word文档 | `.docx` | DocxParser | 提取文本、表格和格式 |
-| Word文档 | `.doc` | DocParser | 通过 mammoth 转换 |
-| PDF文档 | `.pdf` | PdfParser | 提取文本和图片 |
-| PowerPoint | `.ppt`, `.pptx` | PptxParser | 提取幻灯片内容 |
-| Excel表格 | `.xls`, `.xlsx` | ExcelParser | 转换为表格和统计信息 |
-| CSV数据 | `.csv` | CsvParser | 数据分析和表格展示 |
-| 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp` | ImageParser | OCR和视觉识别 |
+### 文档和数据文件
+
+| 格式 | 扩展名 | 解析器 | 输出格式 | 说明 |
+|------|--------|--------|----------|------|
+| 纯文本 | `.txt`, `.md`, `.markdown`, `.text` | PlainParser | `text` | 直接读取文本内容 |
+| Word文档 | `.docx` | DocxParser | `document` | 提取文本、表格和格式 |
+| Word文档 | `.doc` | DocParser | `document` | 通过 mammoth 转换 |
+| PDF文档 | `.pdf` | PdfParser | `document` | 提取文本和图片 |
+| PowerPoint | `.ppt`, `.pptx` | PptxParser | `slideshow` | 提取幻灯片内容 |
+| Excel表格 | `.xls`, `.xlsx` | ExcelParser | `sheet` | 转换为表格和统计信息 |
+| CSV数据 | `.csv` | CsvParser | `sheet` | 数据分析和表格展示 |
+| 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp` | ImageParser | `image` | OCR和视觉识别 |
+
+### 代码文件（83+ 种语言）
+
+| 语言类别 | 支持的扩展名 | 输出格式 |
+|----------|-------------|----------|
+| **主流编程语言** | `.py`, `.js`, `.ts`, `.java`, `.cpp`, `.c`, `.cs`, `.go`, `.rs`, `.php`, `.rb` | 对应语言代码块 |
+| **前端技术** | `.html`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.jsx`, `.tsx`, `.svelte` | 对应语言代码块 |
+| **脚本语言** | `.r`, `.R`, `.lua`, `.perl`, `.pl`, `.sh`, `.bash`, `.zsh`, `.fish`, `.ps1` | 对应语言代码块 |
+| **配置文件** | `.json`, `.yaml`, `.yml`, `.toml`, `.xml`, `.ini`, `.cfg`, `.conf` | 对应语言代码块 |
+| **其他** | `.sql`, `.dockerfile`, `.makefile`, `.cmake`, `.gradle`, `.proto`, `.graphql` | 对应语言代码块 |
+
+**完整支持列表**：Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, 等83+种语言。
 
 ## 快速开始
 
@@ -41,7 +69,7 @@ cp .env.example .env
 
 # 编辑 .env 文件，设置你的 API Keys
 AGENT_API_KEYS=your-api-key-1,your-api-key-2
-OPENAI_API_KEY=your-openai-api-key  # 可选，用于图片识别
+VISION_API_KEY=your-vision-api-key  # 可选，用于图片识别
 ```
 
 3. 启动服务：
@@ -68,7 +96,7 @@ sudo apt-get install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng
 3. 设置环境变量：
 ```bash
 export AGENT_API_KEYS="dev-test-key-123"
-export OPENAI_API_KEY="your-openai-api-key"  # 可选
+export VISION_API_KEY="your-vision-api-key"  # 可选
 ```
 
 4. 启动服务：
@@ -83,17 +111,28 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```bash
 curl -X POST "https://file.medicnex.com/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
-  -F "file=@example.pdf"
+  -F "file=@example.py"
 ```
 
-响应示例：
+响应示例（Python文件）：
 ```json
 {
-  "filename": "example.pdf",
-  "size": 1024000,
-  "content_type": "application/pdf",
-  "markdown": "# 文档标题\n\n这是转换后的内容...",
-  "duration_ms": 1500
+  "filename": "example.py",
+  "size": 1024,
+  "content_type": "text/x-python",
+  "markdown": "```python\ndef hello_world():\n    print('Hello, World!')\n```",
+  "duration_ms": 150
+}
+```
+
+响应示例（图片文件）：
+```json
+{
+  "filename": "chart.png", 
+  "size": 204800,
+  "content_type": "image/png",
+  "markdown": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Description:\n这是一个显示月度销售趋势的柱状图...\n```",
+  "duration_ms": 2500
 }
 ```
 
@@ -154,11 +193,13 @@ app/
     ├── registry.py      # 解析器注册表
     ├── txt.py           # 文本解析器
     ├── docx.py          # Word解析器
+    ├── doc.py           # Word(旧版)解析器
     ├── pdf.py           # PDF解析器
     ├── pptx.py          # PowerPoint解析器
     ├── excel.py         # Excel解析器
     ├── csv.py           # CSV解析器
-    └── image.py         # 图片解析器
+    ├── image.py         # 图片解析器
+    └── code.py          # 代码文件解析器
 ```
 
 ## 性能优化
@@ -167,6 +208,7 @@ app/
 - 临时文件自动清理
 - 内存优化的流式处理
 - 支持大文件处理
+- 智能编码检测
 
 ## 安全特性
 
@@ -200,8 +242,12 @@ class CustomParser(BaseParser):
         return ['.custom']
     
     async def parse(self, file_path: str) -> str:
-        # 实现解析逻辑
-        return "解析后的Markdown内容"
+        # 读取文件内容
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        # 格式化为代码块
+        return f"```custom\n{content}\n```"
 ```
 
 ## 许可证

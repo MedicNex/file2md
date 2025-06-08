@@ -63,10 +63,16 @@ class PptxParser(BaseParser):
                 if len(slide_content) > 1:  # 有内容才添加
                     content_parts.append('\n\n'.join(slide_content))
             
-            markdown_content = '\n\n---\n\n'.join(content_parts)
+            raw_content = '\n\n---\n\n'.join(content_parts)
+            
+            # 处理换行符
+            raw_content = raw_content.replace('\\n', '\n')
+            
+            # 格式化为统一的代码块格式
+            markdown_content = f"```slideshow\n{raw_content or 'PowerPoint文件为空或无法提取内容'}\n```"
             
             logger.info(f"成功解析PPTX文件: {file_path}")
-            return markdown_content or "PowerPoint文件为空或无法提取内容"
+            return markdown_content
             
         except Exception as e:
             logger.error(f"解析PPTX文件失败 {file_path}: {e}")
