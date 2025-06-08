@@ -9,9 +9,6 @@ security = HTTPBearer()
 def get_api_keys() -> list[str]:
     """获取有效的API Keys列表"""
     keys_str = os.getenv("AGENT_API_KEYS", "")
-    if not keys_str:
-        # 开发环境默认key
-        return ["dev-test-key-123"]
     return [key.strip() for key in keys_str.split(",") if key.strip()]
 
 async def get_api_key(

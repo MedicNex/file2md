@@ -9,6 +9,7 @@ from .excel import ExcelParser
 from .csv import CsvParser
 from .image import ImageParser
 from .code import CodeParser
+from .markdown import MarkdownParser
 
 class ParserRegistry:
     """解析器注册表"""
@@ -28,7 +29,8 @@ class ParserRegistry:
             ExcelParser,
             CsvParser,
             ImageParser,
-            CodeParser
+            CodeParser,
+            MarkdownParser
         ]
         
         for parser_class in parsers:
