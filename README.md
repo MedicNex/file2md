@@ -9,6 +9,7 @@
 - 💻 **代码文件支持**：支持 83+ 种编程语言文件转换
 - 🖼️ **智能图片识别**：集成 OpenAI Vision API 和 Tesseract OCR
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
+- 🚀 **队列处理模式**：支持批量文档转换，限制最多5个并发任务
 - 🐳 **容器化部署**：提供 Docker 和 Docker Compose 支持
 - 📊 **统一输出格式**：所有文件类型统一输出为代码块格式
 
@@ -106,7 +107,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
 ## API 使用
 
-### 文件转换
+### 单文件转换（同步）
 
 ```bash
 curl -X POST "https://file.medicnex.com/v1/convert" \
@@ -122,6 +123,92 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
   "content_type": "text/x-python",
   "content": "```python\ndef hello_world():\n    print('Hello, World!')\n```",
   "duration_ms": 150
+}
+```
+
+### 批量文件转换（异步队列）
+
+使用队列模式批量提交多个文件，系统将控制并发数量最多为5个：
+
+```bash
+curl -X POST "https://file.medicnex.com/v1/convert-batch" \
+  -H "Authorization: Bearer your-api-key" \
+  -F "files=@document1.docx" \
+  -F "files=@image1.png" \
+  -F "files=@script.py"
+```
+
+响应示例：
+```json
+{
+  "submitted_tasks": [
+    {
+      "task_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "message": "任务已提交到转换队列",
+      "filename": "document1.docx",
+      "status": "pending"
+    },
+    {
+      "task_id": "b2c3d4e5-f6g7-8901-bcde-f12345678901",
+      "message": "任务已提交到转换队列",
+      "filename": "image1.png",
+      "status": "pending"
+    },
+    {
+      "task_id": "c3d4e5f6-g7h8-9012-cdef-123456789012",
+      "message": "任务已提交到转换队列",
+      "filename": "script.py",
+      "status": "pending"
+    }
+  ],
+  "total_count": 3,
+  "success_count": 3,
+  "failed_count": 0
+}
+```
+
+### 查询任务状态
+
+```bash
+curl -X GET "https://file.medicnex.com/v1/task/{task_id}" \
+  -H "Authorization: Bearer your-api-key"
+```
+
+响应示例（完成状态）：
+```json
+{
+  "task_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "filename": "document1.docx",
+  "file_size": 15970,
+  "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "status": "completed",
+  "created_at": "2024-01-20T10:30:00",
+  "started_at": "2024-01-20T10:30:05",
+  "completed_at": "2024-01-20T10:30:20",
+  "duration_ms": 15000,
+  "result": "```document\n文档内容...\n```",
+  "error": null
+}
+```
+
+### 查询队列状态
+
+```bash
+curl -X GET "https://file.medicnex.com/v1/queue/info" \
+  -H "Authorization: Bearer your-api-key"
+```
+
+响应示例：
+```json
+{
+  "max_concurrent": 5,
+  "queue_size": 2,
+  "active_tasks": 3,
+  "total_tasks": 10,
+  "pending_count": 2,
+  "processing_count": 3,
+  "completed_count": 4,
+  "failed_count": 1
 }
 ```
 
@@ -198,6 +285,57 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 curl -X GET "https://file.medicnex.com/v1/supported-types" \
   -H "Authorization: Bearer your-api-key"
 ```
+
+## 队列功能测试
+
+我们提供了一个完整的测试脚本来验证队列功能：
+
+```bash
+# 安装测试依赖
+pip install aiohttp
+
+# 设置环境变量（如果未设置）
+export AGENT_API_KEYS="dev-test-key-123"
+
+# 启动服务
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload &
+
+# 运行测试
+python test_queue.py
+
+# 或运行简单演示
+python demo_queue.py
+```
+
+测试脚本将验证以下功能：
+- ✅ 单文件同步转换
+- ✅ 批量文件异步提交
+- ✅ 任务状态查询  
+- ✅ 队列状态监控
+- ✅ 并发限制（最多5个）
+- ✅ 任务完成检测
+
+### 队列功能特点
+
+🚀 **新增队列模式的主要优势：**
+
+1. **并发控制**：限制最多5个文档同时处理，避免系统过载
+2. **异步处理**：客户端立即获得任务ID，无需等待处理完成
+3. **状态跟踪**：实时查询每个任务的处理状态和进度
+4. **队列管理**：自动排队处理，支持大批量文档转换
+5. **资源优化**：合理利用系统资源，提升整体吞吐量
+
+## 新的API端点总览
+
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/v1/convert` | POST | 单文件同步转换 |
+| `/v1/convert-batch` | POST | 批量文件异步提交 |
+| `/v1/task/{task_id}` | GET | 查询任务状态 |
+| `/v1/queue/info` | GET | 查询队列状态 |
+| `/v1/queue/cleanup` | POST | 清理过期任务 |
+| `/v1/supported-types` | GET | 获取支持的文件类型 |
+| `/v1/health` | GET | 健康检查（含队列状态）|
 
 ### 健康检查
 

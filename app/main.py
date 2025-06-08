@@ -7,8 +7,10 @@ import sys
 import json
 from dotenv import load_dotenv
 from pathlib import Path
+import asyncio
 
 from app.routers import convert
+from app.queue_manager import queue_manager
 
 # 自动加载.env文件，指定正确路径
 env_path = Path(__file__).parent.parent / '.env'
@@ -55,6 +57,25 @@ app.add_middleware(
 # 包含路由
 app.include_router(convert.router, prefix="/v1")
 
+@app.on_event("startup")
+async def startup_event():
+    """应用启动事件"""
+    logger.info("正在启动 MedicNex File2Markdown Service...")
+    
+    # 启动队列管理器
+    await queue_manager.start_worker()
+    logger.info("队列管理器已启动，支持最多5个并发文档转换")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """应用关闭事件"""
+    logger.info("正在关闭 MedicNex File2Markdown Service...")
+    
+    # 清理过期任务
+    cleaned_count = queue_manager.cleanup_old_tasks(max_age_hours=1)
+    if cleaned_count > 0:
+        logger.info(f"关闭时清理了 {cleaned_count} 个过期任务")
+
 @app.get("/v1/health")
 async def health_check():
     """健康检查端点"""
@@ -68,7 +89,11 @@ async def health_check():
         "components": {
             "api": {"status": "UP"},
             "parsers": {"status": "UP"},
-            "ocr": {"status": "UP"}
+            "ocr": {"status": "UP"},
+            "queue": {
+                "status": "UP",
+                "info": queue_manager.get_queue_info()
+            }
         }
     }
     
@@ -100,7 +125,16 @@ async def health_check():
 @app.get("/")
 async def root():
     """根路径"""
-    return {"message": "MedicNex File2Markdown Service", "version": "1.0.0"}
+    return {
+        "message": "MedicNex File2Markdown Service", 
+        "version": "1.0.0",
+        "features": {
+            "single_file_conversion": "支持单文件同步转换",
+            "batch_conversion": "支持批量异步转换（队列模式）",
+            "max_concurrent": queue_manager.max_concurrent,
+            "queue_info": queue_manager.get_queue_info()
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn
