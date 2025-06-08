@@ -1,29 +1,38 @@
 #!/bin/bash
 
-# MedicNex File2Markdown 服务启动脚本
+# 设置项目目录
+PROJECT_DIR="/www/wwwroot/medicnex-file2md"
+cd $PROJECT_DIR
 
-echo "🚀 启动 MedicNex File2Markdown 服务..."
+# 激活虚拟环境
+source $PROJECT_DIR/venv/bin/activate
 
-# 检查Python环境
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 未安装，请先安装 Python 3.11+"
-    exit 1
+# 加载环境变量
+if [ -f $PROJECT_DIR/.env ]; then
+    export $(cat $PROJECT_DIR/.env | grep -v '^#' | xargs)
 fi
 
-# 检查依赖
-echo "📦 检查依赖..."
-pip3 install -r requirements.txt
-
-# 设置环境变量（如果没有设置的话）
+# 设置默认环境变量（如果没有.env文件）
 export AGENT_API_KEYS=${AGENT_API_KEYS:-"dev-test-key-123"}
-export PORT=${PORT:-8080}
+export PORT=${PORT:-8999}
 
+echo "🚀 启动 MedicNex File2Markdown 服务..."
 echo "🔑 API Keys: $AGENT_API_KEYS"
 echo "🌐 端口: $PORT"
 
-# 启动服务
+# 检查Python环境
+echo "🐍 Python路径: $(which python3)"
+
+# 检查依赖
+echo "📦 检查uvicorn模块..."
+python3 -c "import uvicorn; print('✅ uvicorn可用')" || {
+    echo "❌ uvicorn未安装，正在安装依赖..."
+    pip install -r requirements.txt
+}
+
+# 启动服务（注意：使用app.main:app而不是main.py）
 echo "🎯 启动服务..."
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
 echo "✅ 服务已启动！"
 echo "📖 API 文档: http://localhost:$PORT/docs"
