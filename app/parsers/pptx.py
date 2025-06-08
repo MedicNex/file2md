@@ -42,23 +42,23 @@ class PptxParser(BaseParser):
                                         formatted_lines.append(line)
                             slide_content.append('\n'.join(formatted_lines))
                     
-                    # 处理图片
-                    if hasattr(shape, "image"):
-                        try:
-                            # 提取图片数据
-                            image = shape.image
-                            image_bytes = image.blob
-                            
-                            # 保存为临时文件
-                            temp_img_path = self.create_temp_file(suffix='.png', content=image_bytes)
-                            
-                            # 使用视觉模型解析图片
-                            img_markdown = await image_to_markdown(temp_img_path)
-                            slide_content.append(img_markdown)
-                            
-                        except Exception as img_error:
-                            logger.warning(f"PPT图片处理失败 幻灯片{slide_idx}: {img_error}")
-                            slide_content.append("*图片处理失败*")
+                    # 处理图片 - 已禁用
+                    # if hasattr(shape, "image"):
+                    #     try:
+                    #         # 提取图片数据
+                    #         image = shape.image
+                    #         image_bytes = image.blob
+                    #         
+                    #         # 保存为临时文件
+                    #         temp_img_path = self.create_temp_file(suffix='.png', content=image_bytes)
+                    #         
+                    #         # 使用视觉模型解析图片
+                    #         img_markdown = await image_to_markdown(temp_img_path)
+                    #         slide_content.append(img_markdown)
+                    #         
+                    #     except Exception as img_error:
+                    #         logger.warning(f"PPT图片处理失败 幻灯片{slide_idx}: {img_error}")
+                    #         slide_content.append("*图片处理失败*")
                 
                 if len(slide_content) > 1:  # 有内容才添加
                     content_parts.append('\n\n'.join(slide_content))
