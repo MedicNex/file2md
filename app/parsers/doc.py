@@ -4,6 +4,7 @@ import mammoth
 from markdownify import markdownify
 import os
 import base64
+import asyncio
 from app.vision import get_ocr_text, vision_client
 
 class DocParser(BaseParser):
@@ -13,11 +14,74 @@ class DocParser(BaseParser):
     def get_supported_extensions(cls) -> list[str]:
         return ['.doc']
     
+    async def _process_image_concurrent(self, temp_path: str, img_name: str, img_idx: int):
+        """并发处理单个图片的OCR和视觉识别"""
+        if not temp_path or not os.path.exists(temp_path):
+            return img_name, f'<img src="{img_name}" alt="图片提取失败" />'
+        
+        try:
+            # 并发执行OCR和视觉识别
+            ocr_task = get_ocr_text(temp_path)
+            vision_task = self._get_vision_description(temp_path)
+            
+            ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            
+            # 生成HTML标签格式
+            alt_text = f"# OCR: {ocr_text} # Description: {vision_description}"
+            html_img_tag = f'<img src="{img_name}" alt="{alt_text}" />'
+            
+            logger.info(f"成功处理DOC图片: {img_name}")
+            return img_name, html_img_tag
+            
+        except Exception as e:
+            logger.warning(f"DOC图片OCR/视觉识别失败: {e}")
+            html_img_tag = f'<img src="{img_name}" alt="图片处理失败" />'
+            return img_name, html_img_tag
+    
+    async def _get_vision_description(self, temp_img_path: str) -> str:
+        """获取视觉模型描述"""
+        if not vision_client:
+            return "视觉模型未配置"
+        
+        try:
+            # 读取图片并转换为base64
+            with open(temp_img_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            
+            response = vision_client.chat.completions.create(
+                model=os.getenv("VISION_MODEL", "gpt-4o-mini"),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{base64_image}"
+                                }
+                            },
+                            {
+                                "type": "text", 
+                                "text": "请详细描述这张图片的内容，包括：1. 图片的整体精准描述；2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=1000
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.warning(f"Vision API调用失败: {e}")
+            return "视觉模型识别失败"
+
     async def parse(self, file_path: str) -> str:
         """解析DOC文件"""
         try:
             image_counter = 0
             base_name = os.path.splitext(os.path.basename(file_path))[0]
+            
+            # 收集所有图片信息
+            image_info_list = []
             
             # 定义图片转换函数，用于处理嵌入的图片
             def convert_image(image):
@@ -35,34 +99,33 @@ class DocParser(BaseParser):
                     # 生成图片文件名
                     img_name = f"{base_name}_image_{image_counter}.png"
                     
-                    # 这里返回一个占位符，稍后会被替换为完整的HTML标签
-                    return {
+                    # 收集图片信息用于后续并发处理
+                    image_info = {
                         "src": img_name,
                         "temp_path": temp_img_path,
-                        "placeholder": f"__IMAGE_PLACEHOLDER_{image_counter}__"
+                        "placeholder": f"__IMAGE_PLACEHOLDER_{image_counter}__",
+                        "counter": image_counter
                     }
+                    image_info_list.append(image_info)
+                    
+                    return image_info["placeholder"]
                     
                 except Exception as e:
                     logger.warning(f"DOC图片处理失败: {e}")
-                    return {
+                    error_info = {
                         "src": f"{base_name}_image_{image_counter}.png",
                         "temp_path": None,
-                        "placeholder": f"__IMAGE_ERROR_{image_counter}__"
+                        "placeholder": f"__IMAGE_ERROR_{image_counter}__",
+                        "counter": image_counter
                     }
+                    image_info_list.append(error_info)
+                    return error_info["placeholder"]
             
             # 使用mammoth将DOC转换为HTML，同时处理图片
             with open(file_path, "rb") as doc_file:
-                # 创建图片转换器
-                image_results = []
-                
-                def image_converter(image):
-                    result = convert_image(image)
-                    image_results.append(result)
-                    return result["placeholder"]
-                
                 result = mammoth.convert_to_html(
                     doc_file,
-                    convert_image=mammoth.images.img_element(image_converter)
+                    convert_image=mammoth.images.img_element(convert_image)
                 )
                 html_content = result.value
                 
@@ -74,70 +137,49 @@ class DocParser(BaseParser):
             # 将HTML转换为Markdown
             raw_content = markdownify(html_content, heading_style="ATX")
             
-            # 处理图片占位符，替换为完整的HTML标签
-            for img_result in image_results:
-                placeholder = img_result["placeholder"]
-                img_name = img_result["src"]
-                temp_path = img_result["temp_path"]
+            # 并发处理所有图片
+            if image_info_list:
+                # 创建并发任务列表
+                image_tasks = []
+                for img_info in image_info_list:
+                    if img_info["temp_path"]:
+                        task = self._process_image_concurrent(
+                            img_info["temp_path"], 
+                            img_info["src"], 
+                            img_info["counter"]
+                        )
+                        image_tasks.append((img_info["placeholder"], task))
+                    else:
+                        # 图片提取失败的情况
+                        image_tasks.append((
+                            img_info["placeholder"], 
+                            asyncio.create_task(asyncio.coroutine(lambda: (img_info["src"], f'<img src="{img_info["src"]}" alt="图片提取失败" />'))())
+                        ))
                 
-                if temp_path and os.path.exists(temp_path):
-                    try:
-                        # 进行OCR和视觉识别
-                        ocr_text = await get_ocr_text(temp_path)
-                        
-                        vision_description = ""
-                        if vision_client:
-                            try:
-                                # 读取图片并转换为base64
-                                with open(temp_path, "rb") as image_file:
-                                    base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-                                
-                                response = vision_client.chat.completions.create(
-                                    model=os.getenv("VISION_MODEL", "gpt-4o-mini"),
-                                    messages=[
-                                        {
-                                            "role": "user",
-                                            "content": [
-                                                {
-                                                    "type": "image_url",
-                                                    "image_url": {
-                                                        "url": f"data:image/png;base64,{base64_image}"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "text", 
-                                                    "text": "请详细描述这张图片的内容，包括：1. 图片的整体精准描述；2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    max_tokens=1000
-                                )
-                                vision_description = response.choices[0].message.content
-                            except Exception as e:
-                                logger.warning(f"Vision API调用失败: {e}")
-                                vision_description = "视觉模型识别失败"
-                        else:
-                            vision_description = "视觉模型未配置"
-                        
-                        # 生成HTML标签格式
-                        alt_text = f"# OCR: {ocr_text} # Description: {vision_description}"
-                        html_img_tag = f'<img src="{img_name}" alt="{alt_text}" />'
-                        
-                        # 替换占位符
-                        raw_content = raw_content.replace(placeholder, html_img_tag)
-                        
-                        logger.info(f"成功处理DOC图片: {img_name}")
-                        
-                    except Exception as e:
-                        logger.warning(f"DOC图片OCR/视觉识别失败: {e}")
-                        # 替换为简单的图片标签
+                # 执行并发处理
+                try:
+                    results = await asyncio.gather(*[task for _, task in image_tasks], return_exceptions=True)
+                    
+                    # 替换占位符
+                    for i, (placeholder, _) in enumerate(image_tasks):
+                        if i < len(results):
+                            result = results[i]
+                            if isinstance(result, Exception):
+                                logger.error(f"图片并发处理异常: {result}")
+                                html_img_tag = f'<img src="error_{i}.png" alt="图片处理异常" />'
+                            else:
+                                _, html_img_tag = result
+                            
+                            raw_content = raw_content.replace(placeholder, html_img_tag)
+                
+                except Exception as e:
+                    logger.error(f"图片并发处理失败: {e}")
+                    # 回退到简单替换
+                    for img_info in image_info_list:
+                        placeholder = img_info["placeholder"]
+                        img_name = img_info["src"]
                         html_img_tag = f'<img src="{img_name}" alt="图片处理失败" />'
                         raw_content = raw_content.replace(placeholder, html_img_tag)
-                else:
-                    # 图片提取失败的情况
-                    html_img_tag = f'<img src="{img_name}" alt="图片提取失败" />'
-                    raw_content = raw_content.replace(placeholder, html_img_tag)
             
             # 处理换行符
             raw_content = raw_content.replace('\\n', '\n')

@@ -6,6 +6,7 @@ import openpyxl
 from openpyxl.drawing.image import Image as OpenpyxlImage
 import os
 import base64
+import asyncio
 from app.vision import get_ocr_text, vision_client
 
 class ExcelParser(BaseParser):
@@ -15,6 +16,69 @@ class ExcelParser(BaseParser):
     def get_supported_extensions(cls) -> list[str]:
         return ['.xls', '.xlsx']
     
+    async def _process_image_concurrent(self, image_data: bytes, img_name: str, sheet_name: str, sheet_image_counter: int):
+        """并发处理单个图片的OCR和视觉识别"""
+        try:
+            # 创建临时图片文件
+            temp_img_path = self.create_temp_file(suffix='.png')
+            
+            # 保存图片数据
+            with open(temp_img_path, 'wb') as img_file:
+                img_file.write(image_data)
+            
+            # 并发执行OCR和视觉识别
+            ocr_task = get_ocr_text(temp_img_path)
+            vision_task = self._get_vision_description(temp_img_path)
+            
+            ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            
+            # 生成HTML标签格式
+            alt_text = f"# OCR: {ocr_text} # Description: {vision_description}"
+            html_img_tag = f'<img src="{img_name}" alt="{alt_text}" />'
+            
+            logger.info(f"成功处理Excel图片 {sheet_name} 图片{sheet_image_counter}: {img_name}")
+            return f"### 工作表 {sheet_name} - 图片 {sheet_image_counter}\n\n{html_img_tag}"
+            
+        except Exception as e:
+            logger.warning(f"Excel图片处理失败 {sheet_name} 图片{sheet_image_counter}: {e}")
+            return f"### 工作表 {sheet_name} - 图片 {sheet_image_counter}\n\n*图片处理失败*"
+    
+    async def _get_vision_description(self, temp_img_path: str) -> str:
+        """获取视觉模型描述"""
+        if not vision_client:
+            return "视觉模型未配置"
+        
+        try:
+            # 读取图片并转换为base64
+            with open(temp_img_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            
+            response = vision_client.chat.completions.create(
+                model=os.getenv("VISION_MODEL", "gpt-4o-mini"),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{base64_image}"
+                                }
+                            },
+                            {
+                                "type": "text", 
+                                "text": "请详细描述这张图片的内容，包括：1. 图片的整体精准描述；2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=1000
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.warning(f"Vision API调用失败: {e}")
+            return "视觉模型识别失败"
+
     async def parse(self, file_path: str) -> str:
         """解析Excel文件"""
         try:
@@ -93,13 +157,13 @@ class ExcelParser(BaseParser):
     
     async def _extract_images_from_xlsx(self, file_path: str) -> list[str]:
         """从XLSX文件中提取图片并进行OCR+视觉识别"""
-        image_parts = []
-        
         try:
             # 使用openpyxl打开工作簿
             workbook = openpyxl.load_workbook(file_path)
             base_name = os.path.splitext(os.path.basename(file_path))[0]
-            total_image_counter = 0
+            
+            # 收集所有图片信息
+            all_image_info = []
             
             for sheet_name in workbook.sheetnames:
                 worksheet = workbook[sheet_name]
@@ -108,77 +172,62 @@ class ExcelParser(BaseParser):
                 # 检查工作表中的图片
                 if hasattr(worksheet, '_images') and worksheet._images:
                     for image in worksheet._images:
-                        try:
-                            total_image_counter += 1
-                            sheet_image_counter += 1
-                            
-                            # 创建临时图片文件
-                            temp_img_path = self.create_temp_file(suffix='.png')
-                            
-                            # 保存图片数据
-                            image_data = image._data()
-                            with open(temp_img_path, 'wb') as img_file:
-                                img_file.write(image_data)
-                            
-                            # 生成图片文件名
-                            img_name = f"{base_name}_{sheet_name}_image_{sheet_image_counter}.png"
-                            
-                            # 进行OCR和视觉识别
-                            ocr_text = await get_ocr_text(temp_img_path)
-                            
-                            vision_description = ""
-                            if vision_client:
-                                try:
-                                    # 读取图片并转换为base64
-                                    with open(temp_img_path, "rb") as image_file:
-                                        base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-                                    
-                                    response = vision_client.chat.completions.create(
-                                        model=os.getenv("VISION_MODEL", "gpt-4o-mini"),
-                                        messages=[
-                                            {
-                                                "role": "user",
-                                                "content": [
-                                                    {
-                                                        "type": "image_url",
-                                                        "image_url": {
-                                                            "url": f"data:image/png;base64,{base64_image}"
-                                                        }
-                                                    },
-                                                    {
-                                                        "type": "text", 
-                                                        "text": "请详细描述这张图片的内容，包括：1. 图片的整体精准描述；2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        max_tokens=1000
-                                    )
-                                    vision_description = response.choices[0].message.content
-                                except Exception as e:
-                                    logger.warning(f"Vision API调用失败: {e}")
-                                    vision_description = "视觉模型识别失败"
-                            else:
-                                vision_description = "视觉模型未配置"
-                            
-                            # 生成HTML标签格式
-                            alt_text = f"# OCR: {ocr_text} # Description: {vision_description}"
-                            html_img_tag = f'<img src="{img_name}" alt="{alt_text}" />'
-                            
-                            image_parts.append(f"### 工作表 {sheet_name} - 图片 {sheet_image_counter}\n\n{html_img_tag}")
-                            
-                            logger.info(f"成功处理Excel图片 {sheet_name} 图片{sheet_image_counter}: {img_name}")
-                            
-                        except Exception as img_error:
-                            logger.warning(f"Excel图片处理失败 {sheet_name} 图片{sheet_image_counter}: {img_error}")
-                            image_parts.append(f"### 工作表 {sheet_name} - 图片 {sheet_image_counter}\n\n*图片处理失败*")
+                        sheet_image_counter += 1
+                        
+                        # 生成图片文件名
+                        img_name = f"{base_name}_{sheet_name}_image_{sheet_image_counter}.png"
+                        
+                        # 获取图片数据
+                        image_data = image._data()
+                        
+                        all_image_info.append({
+                            'data': image_data,
+                            'name': img_name,
+                            'sheet': sheet_name,
+                            'counter': sheet_image_counter
+                        })
             
-            if total_image_counter > 0:
-                logger.info(f"Excel文档中共处理了 {total_image_counter} 张图片")
+            # 并发处理所有图片
+            if all_image_info:
+                image_tasks = [
+                    self._process_image_concurrent(
+                        img_info['data'],
+                        img_info['name'],
+                        img_info['sheet'],
+                        img_info['counter']
+                    )
+                    for img_info in all_image_info
+                ]
+                
+                try:
+                    image_parts = await asyncio.gather(*image_tasks, return_exceptions=True)
+                    
+                    # 处理结果
+                    final_image_parts = []
+                    for i, result in enumerate(image_parts):
+                        if isinstance(result, Exception):
+                            img_info = all_image_info[i]
+                            logger.error(f"Excel图片并发处理异常 {img_info['sheet']} 图片{img_info['counter']}: {result}")
+                            final_image_parts.append(f"### 工作表 {img_info['sheet']} - 图片 {img_info['counter']}\n\n*图片处理异常*")
+                        else:
+                            final_image_parts.append(result)
+                    
+                    total_image_counter = len(all_image_info)
+                    if total_image_counter > 0:
+                        logger.info(f"Excel文档中共处理了 {total_image_counter} 张图片")
+                    
+                    workbook.close()
+                    return final_image_parts
+                    
+                except Exception as e:
+                    logger.error(f"Excel图片并发处理失败: {e}")
+                    workbook.close()
+                    # 回退处理
+                    return [f"### 工作表 图片处理失败\n\n*图片并发处理失败*" for _ in range(len(all_image_info))]
             
             workbook.close()
+            return []
             
         except Exception as e:
             logger.warning(f"Excel图片提取过程失败: {e}")
-        
-        return image_parts 
+            return [] 

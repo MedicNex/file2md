@@ -99,8 +99,8 @@ docker-compose logs -f
 
 ### 支持的文件格式
 - **文档类**: TXT, MD, DOCX, DOC, PDF (90+ MB)
-- **演示文稿**: PPTX, PPT  
-- **表格数据**: XLSX, XLS, CSV
+- **演示文稿**: PPTX, PPT（提取文本内容，不使用视觉模型）  
+- **表格数据**: XLSX, XLS, CSV（转换为HTML表格格式）
 - **图像文件**: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP
 - **代码文件**: 83+ 种编程语言（Python, JavaScript, Java, C++, Go, Rust等）
 

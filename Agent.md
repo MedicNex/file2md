@@ -11,7 +11,7 @@
 | Web 框架      | **FastAPI** + Uvicorn                                                                                                                                            | 异步高性能，方便集成依赖注入与 OpenAPI |
 | 数据验证        | **Pydantic v2**                                                                                                                                                  | 请求/响应模型校验               |
 | 鉴权          | 自定义 API Key Header + HMAC/Redis 存储                                                                                                                               | 可水平扩展                   |
-| 文档解析        | • `python-docx`（DOCX）<br>• `mammoth`（DOC→HTML→MD）<br>• `pdfplumber`（PDF）<br>• `python-pptx`（PPT/PPTX）<br>• `pandas` + `tabulate`（XLS/XLSX/CSV）<br>• 内置解析（TXT/MD）<br>• `chardet`（代码文件） | 统一输出代码块格式           |
+| 文档解析        | • `python-docx`（DOCX）<br>• `mammoth`（DOC→HTML→MD）<br>• `pdfplumber`（PDF）<br>• `python-pptx`（PPT/PPTX，不含视觉）<br>• `pandas` + `tabulate`（XLS/XLSX/CSV→HTML表格）<br>• 内置解析（TXT/MD）<br>• `chardet`（代码文件） | 统一输出代码块格式           |
 | Markdown 生成 | **markdownify / mistune**                                                                                                                                        | 富文本 → MD                |
 | 图片识别        | **OpenAI Vision API**（或其他视觉大模型） + **Tesseract OCR**（可选）                                                                                                          | 返回标签、描述与文字              |
 | 日志          | **loguru**                                                                                                                                                       | JSON 结构化日志              |
@@ -26,11 +26,11 @@
 | 文件类型 | 输出格式 | 示例 |
 |----------|----------|------|
 | 代码文件 (83+语言) | `````python`, `````javascript` 等 | 对应语言的代码块 |
-| 幻灯片文件 | `````slideshow` | PowerPoint 内容 |
+| 幻灯片文件 | `````slideshow` | PowerPoint 文本内容（不使用视觉模型） |
 | 图像文件 | `````image` | OCR + 视觉描述 |
 | 纯文本文件 | `````text` | 文本内容 |
 | 文档文件 | `````document` | Word/PDF 内容 |
-| 表格文件 | `````sheet` | Excel/CSV 数据 |
+| 表格文件 | `````sheet` | Excel/CSV HTML表格数据 |
 
 ### 输出示例
 
@@ -178,9 +178,9 @@ Content-Type: text/x-python
 | **DOCX**       | `python-docx` 遍历段落→HTML→`markdownify`                       | `document` | python-docx, markdownify |
 | **DOC**        | `mammoth` ⟶ HTML ⟶ Markdown                                 | `document` | mammoth                  |
 | **PDF**        | `pdfplumber` 抽取文本；若页面含图，保存临时 PNG 送 vision API               | `document` | pdfplumber, pillow       |
-| **PPT / PPTX** | `python-pptx` 遍历 Slide→Shape；文本→列表，图片→临时文件                  | `slideshow` | python-pptx              |
-| **XLS / XLSX** | `pandas.read_excel()`→`tabulate(table, tablefmt="github")`  | `sheet` | pandas, tabulate         |
-| **CSV**        | `pandas.read_csv()` 同上                                      | `sheet` | pandas, tabulate         |
+| **PPT / PPTX** | `python-pptx` 遍历 Slide→Shape；仅提取文本内容（不处理图片）                  | `slideshow` | python-pptx              |
+| **XLS / XLSX** | `pandas.read_excel()`→`tabulate(table, tablefmt="html")`  | `sheet` | pandas, tabulate         |
+| **CSV**        | `pandas.read_csv()` 同上，输出HTML表格格式                                      | `sheet` | pandas, tabulate         |
 | **Image**      | Base64 → Vision API（标签，描述）+ `pytesseract.image_to_string()` | `image` | openai, pytesseract      |
 | **Code Files** | 自动识别83+种编程语言，`chardet` 检测编码                              | 对应语言 | chardet                  |
 

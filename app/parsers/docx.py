@@ -7,6 +7,7 @@ import os
 from PIL import Image
 from app.vision import image_to_markdown, get_ocr_text, vision_client
 import base64
+import asyncio
 
 class DocxParser(BaseParser):
     """DOCX文件解析器"""
@@ -15,6 +16,69 @@ class DocxParser(BaseParser):
     def get_supported_extensions(cls) -> list[str]:
         return ['.docx']
     
+    async def _process_image_concurrent(self, image_data: bytes, img_name: str, image_counter: int):
+        """并发处理单个图片的OCR和视觉识别"""
+        try:
+            # 创建临时图片文件
+            temp_img_path = self.create_temp_file(suffix='.png')
+            
+            # 保存图片
+            with open(temp_img_path, 'wb') as img_file:
+                img_file.write(image_data)
+            
+            # 并发执行OCR和视觉识别
+            ocr_task = get_ocr_text(temp_img_path)
+            vision_task = self._get_vision_description(temp_img_path)
+            
+            ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            
+            # 生成HTML标签格式
+            alt_text = f"# OCR: {ocr_text} # Description: {vision_description}"
+            html_img_tag = f'<img src="{img_name}" alt="{alt_text}" />'
+            
+            logger.info(f"成功处理DOCX图片 {image_counter}: {img_name}")
+            return f"### 图片 {image_counter}\n\n{html_img_tag}"
+            
+        except Exception as e:
+            logger.warning(f"DOCX图片提取失败 图片{image_counter}: {e}")
+            return f"### 图片 {image_counter}\n\n*图片提取失败*"
+    
+    async def _get_vision_description(self, temp_img_path: str) -> str:
+        """获取视觉模型描述"""
+        if not vision_client:
+            return "视觉模型未配置"
+        
+        try:
+            # 读取图片并转换为base64
+            with open(temp_img_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            
+            response = vision_client.chat.completions.create(
+                model=os.getenv("VISION_MODEL", "gpt-4o-mini"),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{base64_image}"
+                                }
+                            },
+                            {
+                                "type": "text", 
+                                "text": "请详细描述这张图片的内容，包括：1. 图片的整体精准描述；2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=1000
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.warning(f"Vision API调用失败: {e}")
+            return "视觉模型识别失败"
+
     async def parse(self, file_path: str) -> str:
         """解析DOCX文件"""
         try:
@@ -82,85 +146,64 @@ class DocxParser(BaseParser):
     
     async def _extract_images(self, doc, file_path: str) -> list[str]:
         """提取DOCX文档中的图片并进行OCR+视觉识别"""
-        image_parts = []
-        
         try:
             # 获取文档的关系部分来访问图片
             rels = doc.part.rels
+            base_name = os.path.splitext(os.path.basename(file_path))[0]
+            
+            # 收集所有图片信息
+            image_data_list = []
             image_counter = 0
             
             for rel_id, rel in rels.items():
                 if "image" in rel.target_ref:
-                    try:
-                        image_counter += 1
-                        # 获取图片数据
-                        image_data = rel.target_part.blob
-                        
-                        # 创建临时图片文件
-                        temp_img_path = self.create_temp_file(suffix='.png')
-                        
-                        # 保存图片
-                        with open(temp_img_path, 'wb') as img_file:
-                            img_file.write(image_data)
-                        
-                        # 生成图片文件名
-                        base_name = os.path.splitext(os.path.basename(file_path))[0]
-                        img_name = f"{base_name}_image_{image_counter}.png"
-                        
-                        # 进行OCR和视觉识别
-                        ocr_text = await get_ocr_text(temp_img_path)
-                        
-                        vision_description = ""
-                        if vision_client:
-                            try:
-                                # 读取图片并转换为base64
-                                with open(temp_img_path, "rb") as image_file:
-                                    base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-                                
-                                response = vision_client.chat.completions.create(
-                                    model=os.getenv("VISION_MODEL", "gpt-4o-mini"),
-                                    messages=[
-                                        {
-                                            "role": "user",
-                                            "content": [
-                                                {
-                                                    "type": "image_url",
-                                                    "image_url": {
-                                                        "url": f"data:image/png;base64,{base64_image}"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "text", 
-                                                    "text": "请详细描述这张图片的内容，包括：1. 图片的整体精准描述；2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    max_tokens=1000
-                                )
-                                vision_description = response.choices[0].message.content
-                            except Exception as e:
-                                logger.warning(f"Vision API调用失败: {e}")
-                                vision_description = "视觉模型识别失败"
-                        else:
-                            vision_description = "视觉模型未配置"
-                        
-                        # 生成HTML标签格式
-                        alt_text = f"# OCR: {ocr_text} # Description: {vision_description}"
-                        html_img_tag = f'<img src="{img_name}" alt="{alt_text}" />'
-                        
-                        image_parts.append(f"### 图片 {image_counter}\n\n{html_img_tag}")
-                        
-                        logger.info(f"成功处理DOCX图片 {image_counter}: {img_name}")
-                        
-                    except Exception as img_error:
-                        logger.warning(f"DOCX图片提取失败 图片{image_counter}: {img_error}")
-                        image_parts.append(f"### 图片 {image_counter}\n\n*图片提取失败*")
+                    image_counter += 1
+                    # 获取图片数据
+                    image_data = rel.target_part.blob
+                    # 生成图片文件名
+                    img_name = f"{base_name}_image_{image_counter}.png"
+                    
+                    image_data_list.append({
+                        'data': image_data,
+                        'name': img_name,
+                        'counter': image_counter
+                    })
             
-            if image_counter > 0:
-                logger.info(f"DOCX文档中共提取到 {image_counter} 张图片")
+            # 并发处理所有图片
+            if image_data_list:
+                image_tasks = [
+                    self._process_image_concurrent(
+                        img_info['data'], 
+                        img_info['name'], 
+                        img_info['counter']
+                    ) 
+                    for img_info in image_data_list
+                ]
+                
+                try:
+                    image_parts = await asyncio.gather(*image_tasks, return_exceptions=True)
+                    
+                    # 处理结果
+                    final_image_parts = []
+                    for i, result in enumerate(image_parts):
+                        if isinstance(result, Exception):
+                            logger.error(f"DOCX图片并发处理异常 图片{i+1}: {result}")
+                            final_image_parts.append(f"### 图片 {i+1}\n\n*图片处理异常*")
+                        else:
+                            final_image_parts.append(result)
+                    
+                    if image_counter > 0:
+                        logger.info(f"DOCX文档中共提取到 {image_counter} 张图片")
+                    
+                    return final_image_parts
+                    
+                except Exception as e:
+                    logger.error(f"DOCX图片并发处理失败: {e}")
+                    # 回退处理
+                    return [f"### 图片 {i+1}\n\n*图片处理失败*" for i in range(len(image_data_list))]
+            
+            return []
             
         except Exception as e:
             logger.warning(f"DOCX图片提取过程失败: {e}")
-        
-        return image_parts 
+            return [] 
