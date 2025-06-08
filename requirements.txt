@@ -13,10 +13,11 @@ markdownify==0.11.6
 mistune==3.0.2
 pillow==10.1.0
 pytesseract==0.3.10
-openai==1.6.1
+openai==1.84.0
 redis==5.0.1
 slowapi==0.1.9
 openpyxl==3.1.2
 aiofiles==23.2.0
 chardet==5.2.0
-requests==2.31.0 
+requests==2.31.0
+python-dotenv==1.0.0 

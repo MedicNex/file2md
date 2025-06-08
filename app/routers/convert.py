@@ -5,10 +5,22 @@ import os
 import time
 import tempfile
 from pathlib import Path
+import json
 
 from app.auth import get_api_key
 from app.models import ConvertResponse, ErrorResponse
 from app.parsers.registry import parser_registry
+
+# 自定义JSON响应类，确保中文字符正确显示
+class UnicodeJSONResponse(JSONResponse):
+    def render(self, content) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=None,
+            separators=(",", ":"),
+        ).encode("utf-8")
 
 router = APIRouter()
 
@@ -71,13 +83,23 @@ async def convert_file(
         
         logger.info(f"文件转换成功: {file.filename} ({len(content)} bytes) -> {len(markdown_content)} characters")
         
-        return ConvertResponse(
-            filename=file.filename,
-            size=len(content),
-            content_type=file.content_type or "application/octet-stream",
-            content=markdown_content,
-            duration_ms=duration_ms
-        )
+        # 记录转换结果内容（如果内容太长则截断显示）
+        if len(markdown_content) <= 1000:
+            logger.info(f"转换结果内容:\n{markdown_content}")
+        else:
+            logger.info(f"转换结果内容（前500字符）:\n{markdown_content[:500]}...")
+            logger.info(f"转换结果内容（后500字符）:\n...{markdown_content[-500:]}")
+        
+        # 使用自定义响应类确保中文正确显示
+        response_data = {
+            "filename": file.filename,
+            "size": len(content),
+            "content_type": file.content_type or "application/octet-stream",
+            "content": markdown_content,
+            "duration_ms": duration_ms
+        }
+        
+        return UnicodeJSONResponse(content=response_data)
         
     except HTTPException:
         # 重新抛出HTTP异常
@@ -114,7 +136,8 @@ async def get_supported_types(api_key: str = Depends(get_api_key)):
     """
     获取支持的文件类型列表
     """
-    return {
+    response_data = {
         "supported_extensions": parser_registry.get_supported_extensions(),
         "total_count": len(parser_registry.get_supported_extensions())
-    } 
+    }
+    return UnicodeJSONResponse(content=response_data) 

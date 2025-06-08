@@ -5,8 +5,14 @@ from loguru import logger
 import os
 import sys
 import json
+from dotenv import load_dotenv
+from pathlib import Path
 
 from app.routers import convert
+
+# 自动加载.env文件，指定正确路径
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(env_path)
 
 # 配置日志
 logger.remove()
@@ -52,7 +58,44 @@ app.include_router(convert.router, prefix="/v1")
 @app.get("/v1/health")
 async def health_check():
     """健康检查端点"""
-    return {"status": "UP", "service": "file2markdown"}
+    from app.vision import vision_client, VISION_API_KEY, VISION_API_BASE, VISION_MODEL
+    
+    # 基础服务状态
+    health_status = {
+        "status": "UP",
+        "service": "file2markdown",
+        "version": "1.0.0",
+        "components": {
+            "api": {"status": "UP"},
+            "parsers": {"status": "UP"},
+            "ocr": {"status": "UP"}
+        }
+    }
+    
+    # 检查视觉模型状态
+    if vision_client is not None:
+        health_status["components"]["vision"] = {
+            "status": "UP",
+            "api_base": VISION_API_BASE,
+            "model": VISION_MODEL,
+            "configured": True
+        }
+    elif VISION_API_KEY:
+        health_status["components"]["vision"] = {
+            "status": "DOWN",
+            "api_base": VISION_API_BASE,
+            "model": VISION_MODEL,
+            "configured": True,
+            "error": "初始化失败"
+        }
+    else:
+        health_status["components"]["vision"] = {
+            "status": "DISABLED",
+            "configured": False,
+            "message": "未配置视觉API密钥"
+        }
+    
+    return health_status
 
 @app.get("/")
 async def root():

@@ -26,6 +26,25 @@ MedicNex File2Markdown 是一个文档转换微服务，支持将多种格式的
 | 文档文件 | ```document | Word/PDF文档 |
 | 表格文件 | ```sheet | Excel/CSV数据 |
 
+### 🎨 新增功能特性
+
+1. **文档内图片识别**: DOCX、PDF、DOC、Excel 等文档中的图片将被自动提取并进行 OCR 文字识别和 AI 视觉分析
+2. **HTML 标签输出**: 文档中的代码块将转换为 HTML `<code>` 标签，图片将转换为 `<img>` 标签
+3. **智能内容识别**: 结合 OCR 和 Vision AI 提供更准确的图片内容描述
+
+#### 图片输出格式
+```html
+<img src="图片文件名.png" alt="# OCR: OCR识别的文字内容 # Description: AI视觉分析描述" />
+```
+
+#### 代码块输出格式
+```html
+<code class="language-python">
+def hello():
+    print("hello world")
+</code>
+```
+
 ## 🔐 认证机制
 
 所有API请求（除健康检查外）都需要在请求头中携带API密钥：
@@ -134,16 +153,82 @@ Content-Type: multipart/form-data
 }
 ```
 
-**响应示例（Word文档）**:
+**响应示例（Word文档含图片和代码块）**:
 ```json
 {
   "filename": "document.docx",
   "size": 1280345,
   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "content": "```document\n# 文档标题\n\n这是文档内容...\n\n## 章节2\n\n更多内容...\n```",
+  "content": "```document\n# 文档标题\n\n这是文档内容...\n\n<code class=\"language-python\">\ndef hello():\n    print(\"hello world\")\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: 图片中的文字内容 # Description: 图片的详细描述...\" />\n\n## 章节2\n\n更多内容...\n```",
   "duration_ms": 420
 }
 ```
+
+## 🚀 实战转换示例
+
+以下是一个真实的转换示例，演示系统处理包含代码和图片的复杂文档的能力：
+
+### 输入
+- **文件**: `test_doc_with_image_and_codeblock.docx` (15,970 bytes)
+- **内容**: Python代码块 + 界面截图
+
+### API调用
+```javascript
+const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+
+const response = await fetch('/v1/convert', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-api-key'
+  },
+  body: formData
+});
+
+const result = await response.json();
+```
+
+### 实际输出
+```json
+{
+  "filename": "test_doc_with_image_and_codeblock.docx",
+  "size": 15970,
+  "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorla!\n\nom! # Description: ### 1. 整体精准描述\n\n这张图片展示了一个简单的用户界面元素，背景为浅蓝色。图中包含一个白色边框的矩形区域，矩形内包含两行不同颜色的文本。整体布局简洁，内容和结构清晰易辨。\n\n### 2. 主要元素和结构\n\n- **背景：** 整个图片的背景为统一的浅蓝色，没有其他图案或装饰。\n- **矩形框：** 位于图片中央，是一个白色矩形框，具有黑色边框，背景颜色为纯白色，显得十分醒目。\n- **文本内容：**\n  - 第一行文本内容为\\\"Hello World!\\\"，字体为黑色，字体大小适中，位于矩形框顶部稍靠左的位置。\n  - 第二行文本内容为\\\" fascinated! \\\"，字体为红色，较第一行字体稍小，紧接在第一行的下方，同样是稍微偏左对齐。\n- **布局：** 两行文本在矩形框内垂直排列，具有一定的间距，并且都是左对齐，保持一定的对齐美感。\n\n### 3. 表格、图表及其他内容\n\n该图片中并未包含任何表格、图表等其他复杂元素，仅包含两段文字。内容上没有多余修饰，主要聚焦于两行文本信息的展示。\" />\n```",
+  "duration_ms": 14208
+}
+```
+
+### 前端处理建议
+
+1. **代码高亮显示**：
+   ```javascript
+   // 提取并渲染代码块
+   const codeBlocks = content.match(/<code class="language-(\w+)">(.*?)<\/code>/gs);
+   codeBlocks?.forEach(block => {
+     // 使用 Prism.js 或 highlight.js 进行语法高亮
+     highlightCode(block);
+   });
+   ```
+
+2. **图片展示**：
+   ```javascript
+   // 提取图片信息
+   const images = content.match(/<img src="([^"]*)" alt="([^"]*)" \/>/g);
+   images?.forEach(img => {
+     const [, src, alt] = img.match(/src="([^"]*)" alt="([^"]*)"/);
+     // 显示图片和OCR/AI分析结果
+     displayImageWithAnalysis(src, alt);
+   });
+   ```
+
+3. **性能监控**：
+   ```javascript
+   // 监控转换性能
+   console.log(`文档转换完成: ${result.filename}`);
+   console.log(`处理时间: ${result.duration_ms}ms`);
+   console.log(`内容长度: ${result.content.length} 字符`);
+   ```
 
 ## 🎯 JavaScript SDK 示例
 

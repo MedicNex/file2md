@@ -6,6 +6,12 @@ from typing import Optional
 import pytesseract
 from PIL import Image
 import httpx
+from dotenv import load_dotenv
+from pathlib import Path
+
+# 确保加载环境变量，指定.env文件路径
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(env_path)
 
 # 配置视觉API客户端
 VISION_API_KEY = os.getenv("VISION_API_KEY")

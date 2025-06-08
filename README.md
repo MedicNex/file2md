@@ -136,6 +136,62 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 }
 ```
 
+## 完整功能示例
+
+以下是一个包含代码块和图片的DOCX文档转换的完整示例，展示了系统的所有核心功能：
+
+### 输入文件
+上传一个包含Python代码和图片的Word文档 `test_doc_with_image_and_codeblock.docx`
+
+### 转换结果
+```bash
+curl -X POST "https://file.medicnex.com/v1/convert" \
+  -H "Authorization: Bearer your-api-key" \
+  -F "file=@test_doc_with_image_and_codeblock.docx"
+```
+
+**响应内容**：
+```json
+{
+  "filename": "test_doc_with_image_and_codeblock.docx",
+  "size": 15970,
+  "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorla!\n\nom! # Description: ### 1. 整体精准描述\n\n这张图片展示了一个简单的用户界面元素，背景为浅蓝色。图中包含一个白色边框的矩形区域，矩形内包含两行不同颜色的文本。整体布局简洁，内容和结构清晰易辨。\n\n### 2. 主要元素和结构\n\n- **背景：** 整个图片的背景为统一的浅蓝色，没有其他图案或装饰。\n- **矩形框：** 位于图片中央，是一个白色矩形框，具有黑色边框，背景颜色为纯白色，显得十分醒目。\n- **文本内容：**\n  - 第一行文本内容为\"Hello World!\"，字体为黑色，字体大小适中，位于矩形框顶部稍靠左的位置。\n  - 第二行文本内容为\" fascinated! \"，字体为红色，较第一行字体稍小，紧接在第一行的下方，同样是稍微偏左对齐。\n- **布局：** 两行文本在矩形框内垂直排列，具有一定的间距，并且都是左对齐，保持一定的对齐美感。\n\n### 3. 表格、图表及其他内容\n\n该图片中并未包含任何表格、图表等其他复杂元素，仅包含两段文字。内容上没有多余修饰，主要聚焦于两行文本信息的展示。\" />\n```",
+  "duration_ms": 14208
+}
+```
+
+### 功能说明
+
+从上面的示例可以看出系统的核心功能：
+
+1. **🔧 代码块转换**：
+   - 原始Markdown代码块：````python
+   - 转换为HTML标签：`<code class="language-python">`
+   - 保持代码格式和语法高亮信息
+
+2. **🖼️ 图片提取与OCR**：
+   - 自动提取DOCX文档中的嵌入图片
+   - 使用Tesseract OCR识别图片中的文字："HelloWorla! om!"
+   - 生成唯一的图片文件名：`document_image_1.png`
+
+3. **🤖 AI视觉识别**：
+   - 使用视觉大模型（Qwen/Qwen2.5-VL-72B-Instruct）进行图片分析
+   - 提供详细的图片描述，包括：
+     - 整体布局和设计（浅蓝色背景，白色矩形框）
+     - 文本内容分析（"Hello World!"黑色字体，红色"fascinated!"）
+     - 结构和排版信息
+
+4. **📝 HTML标签输出**：
+   - 图片转换为：`<img src="图片名" alt="# OCR: ... # Description: ..." />`
+   - alt属性包含完整的OCR结果和AI描述
+   - 便于前端展示和无障碍访问
+
+5. **⚡ 性能统计**：
+   - 处理时间：14.2秒（包含AI视觉分析）
+   - 文件大小：15,970字节
+   - 输出内容：详细的结构化Markdown
+
 ### 获取支持的文件类型
 
 ```bash
@@ -223,6 +279,11 @@ app/
 - 健康检查端点
 - 处理时间统计
 - 错误追踪和报告
+
+## 📚 更多资源
+
+- **[转换示例文档](EXAMPLES.md)** - 详细的实际转换案例和功能演示
+- **[前端集成指南](FRONTEND_API.md)** - 前端开发者接入文档
 
 ## 扩展开发
 

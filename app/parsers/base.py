@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Union
 import os
 import tempfile
+import re
 
 class BaseParser(ABC):
     """文档解析器基类"""
@@ -40,6 +41,36 @@ class BaseParser(ABC):
         temp_file.close()
         self.temp_files.append(temp_file.name)
         return temp_file.name
+    
+    def convert_code_blocks_to_html(self, content: str) -> str:
+        """
+        将Markdown代码块转换为HTML code标签
+        
+        Args:
+            content: 包含Markdown代码块的文本
+            
+        Returns:
+            转换后的文本，代码块被替换为HTML标签
+        """
+        # 匹配 ```language 开头和 ``` 结尾的代码块
+        def replace_code_block(match):
+            language = match.group(1).strip() if match.group(1) else ""
+            code_content = match.group(2)
+            
+            # 如果有语言标识，添加到class中
+            if language:
+                return f'<code class="language-{language}">\n{code_content}\n</code>'
+            else:
+                return f'<code>\n{code_content}\n</code>'
+        
+        # 更精确的正则表达式匹配代码块
+        # 匹配 ```可选语言标识符
+        # 然后匹配代码内容（非贪婪匹配）
+        # 最后匹配结束的```
+        pattern = r'```(\w+)?\s*\n(.*?)\n```'
+        result = re.sub(pattern, replace_code_block, content, flags=re.DOTALL)
+        
+        return result
     
     def cleanup(self):
         """清理临时文件"""
