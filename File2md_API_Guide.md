@@ -124,25 +124,27 @@ Authorization: Bearer your-api-key
 {
   "supported_extensions": [
     ".txt", ".md", ".markdown", ".text",
-    ".docx", ".doc", 
+    ".docx", ".doc", ".rtf", ".odt",
     ".pdf",
     ".pptx", ".ppt",
     ".csv",
     ".xlsx", ".xls",
-    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp",
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp", ".ico", ".tga",
+    ".svg",
     ".py", ".js", ".ts", ".java", ".cpp", ".c", ".cs", ".go", ".rs",
     ".html", ".css", ".json", ".yaml", ".xml", ".sql", ".sh"
   ],
-  "total_count": 90
+  "total_count": 106
 }
 ```
 
 **支持的文件类型**:
-- **文档类**: TXT, MD, DOCX, DOC, PDF
+- **文档类**: TXT, MD, DOCX, DOC, RTF, ODT, PDF
 - **演示文稿**: PPTX, PPT  
 - **表格数据**: XLSX, XLS, CSV
-- **图像文件**: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP
-- **代码文件**: 83+种编程语言（Python, JavaScript, Java, C++, Go, Rust等）
+- **图像文件**: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP, ICO, TGA
+- **SVG文件**: SVG（识别为代码格式）
+- **代码文件**: 85+种编程语言（Python, JavaScript, Java, C++, Go, Rust等）
 
 ### 3. 单文件转换（同步）
 

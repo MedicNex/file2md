@@ -10,6 +10,9 @@ from .csv import CsvParser
 from .image import ImageParser
 from .code import CodeParser
 from .markdown import MarkdownParser
+from .svg import SvgParser
+from .rtf import RtfParser
+from .odt import OdtParser
 
 class ParserRegistry:
     """解析器注册表"""
@@ -29,8 +32,11 @@ class ParserRegistry:
             ExcelParser,
             CsvParser,
             ImageParser,
+            SvgParser,  # SVG优先于CodeParser，因为SVG有专门处理
             CodeParser,
-            MarkdownParser
+            MarkdownParser,
+            RtfParser,
+            OdtParser
         ]
         
         for parser_class in parsers:

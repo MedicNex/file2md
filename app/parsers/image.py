@@ -7,7 +7,7 @@ class ImageParser(BaseParser):
     
     @classmethod
     def get_supported_extensions(cls) -> list[str]:
-        return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp']
+        return ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.ico', '.tga']
     
     async def parse(self, file_path: str) -> str:
         """解析图片文件"""

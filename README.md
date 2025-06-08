@@ -5,8 +5,8 @@
 ## 功能特性
 
 - 🔐 **API Key 鉴权**：支持多个 API Key 管理
-- 📄 **多格式支持**：支持 TXT、MD、DOCX、DOC、PDF、PPTX、XLS、XLSX、CSV、图片、代码文件等格式
-- 💻 **代码文件支持**：支持 83+ 种编程语言文件转换
+- 📄 **多格式支持**：支持 TXT、MD、DOCX、DOC、RTF、ODT、PDF、PPTX、XLS、XLSX、CSV、图片(包括SVG)、代码文件等格式
+- 💻 **代码文件支持**：支持 85+ 种编程语言文件转换
 - 🖼️ **智能图片识别**：集成 OpenAI Vision API 和 Tesseract OCR
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
 - 🚀 **队列处理模式**：支持批量文档转换，限制最多5个并发任务
@@ -36,13 +36,16 @@
 | 纯文本 | `.txt`, `.md`, `.markdown`, `.text` | PlainParser | `text` | 直接读取文本内容 |
 | Word文档 | `.docx` | DocxParser | `document` | 提取文本、表格和格式，**并发处理图片** |
 | Word文档 | `.doc` | DocParser | `document` | 通过 mammoth 转换，**并发处理图片** |
+| RTF文档 | `.rtf` | RtfParser | `document` | 支持RTF格式，优先使用Pandoc，备用striprtf |
+| ODT文档 | `.odt` | OdtParser | `document` | OpenDocument文本，支持表格和列表 |
 | PDF文档 | `.pdf` | PdfParser | `document` | 提取文本和图片，**并发处理图片** |
 | PowerPoint | `.ppt`, `.pptx` | PptxParser | `slideshow` | 提取幻灯片文本内容（不使用视觉模型） |
 | Excel表格 | `.xls`, `.xlsx` | ExcelParser | `sheet` | 转换为HTML表格格式和统计信息，**并发处理图片** |
 | CSV数据 | `.csv` | CsvParser | `sheet` | 转换为HTML表格格式和数据分析 |
-| 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp` | ImageParser | `image` | OCR和视觉识别 |
+| 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | OCR和视觉识别 |
+| SVG文件 | `.svg` | SvgParser | `svg` | 识别为代码格式，保持XML结构 |
 
-### 代码文件（83+ 种语言）
+### 代码文件（85+ 种语言）
 
 | 语言类别 | 支持的扩展名 | 输出格式 |
 |----------|-------------|----------|
@@ -52,7 +55,7 @@
 | **配置文件** | `.json`, `.yaml`, `.yml`, `.toml`, `.xml`, `.ini`, `.cfg`, `.conf` | 对应语言代码块 |
 | **其他** | `.sql`, `.dockerfile`, `.makefile`, `.cmake`, `.gradle`, `.proto`, `.graphql` | 对应语言代码块 |
 
-**完整支持列表**：Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, 等83+种语言。
+**完整支持列表**：Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, 等85+种语言。
 
 ## 快速开始
 
