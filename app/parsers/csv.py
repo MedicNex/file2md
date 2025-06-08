@@ -32,13 +32,13 @@ class CsvParser(BaseParser):
             content_parts.append(f"**数据行数**: {len(df)}")
             content_parts.append(f"**数据列数**: {len(df.columns)}")
             
-            # 转换为Markdown表格
+            # 转换为HTML表格
             content_parts.append("## 数据内容")
             
             # 如果数据太多，只显示前100行
             display_df = df.head(100) if len(df) > 100 else df
-            markdown_table = tabulate(display_df, headers='keys', tablefmt='github', showindex=False)
-            content_parts.append(markdown_table)
+            html_table = tabulate(display_df, headers='keys', tablefmt='html', showindex=False)
+            content_parts.append(html_table)
             
             if len(df) > 100:
                 content_parts.append(f"*注意: 为了便于阅读，此处仅显示前100行数据，实际文件包含{len(df)}行数据*")
@@ -59,7 +59,7 @@ class CsvParser(BaseParser):
                     ])
                 
                 stats_df = pd.DataFrame(stats_data, columns=['列名', '计数', '平均值', '标准差', '最小值', '最大值'])
-                stats_table = tabulate(stats_df, headers='keys', tablefmt='github', showindex=False)
+                stats_table = tabulate(stats_df, headers='keys', tablefmt='html', showindex=False)
                 content_parts.append(stats_table)
             
             # 添加文本列信息
@@ -73,7 +73,7 @@ class CsvParser(BaseParser):
                     text_info.append([col, f"{unique_count}", str(most_common)[:50]])
                 
                 text_df = pd.DataFrame(text_info, columns=['列名', '唯一值数量', '最常见值'])
-                text_table = tabulate(text_df, headers='keys', tablefmt='github', showindex=False)
+                text_table = tabulate(text_df, headers='keys', tablefmt='html', showindex=False)
                 content_parts.append(text_table)
             
             raw_content = '\n\n'.join(content_parts)

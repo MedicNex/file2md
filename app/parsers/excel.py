@@ -38,9 +38,9 @@ class ExcelParser(BaseParser):
                     # 添加工作表标题
                     content_parts.append(f"## 工作表: {sheet_name}")
                     
-                    # 转换为Markdown表格
-                    markdown_table = tabulate(df, headers='keys', tablefmt='github', showindex=False)
-                    content_parts.append(markdown_table)
+                    # 转换为HTML表格
+                    html_table = tabulate(df, headers='keys', tablefmt='html', showindex=False)
+                    content_parts.append(html_table)
                     
                     # 添加基本统计信息
                     numeric_cols = df.select_dtypes(include=['number']).columns
@@ -57,7 +57,7 @@ class ExcelParser(BaseParser):
                             ])
                         
                         stats_df = pd.DataFrame(stats_data, columns=['列名', '计数', '平均值', '最小值', '最大值'])
-                        stats_table = tabulate(stats_df, headers='keys', tablefmt='github', showindex=False)
+                        stats_table = tabulate(stats_df, headers='keys', tablefmt='html', showindex=False)
                         content_parts.append(stats_table)
                     
                 except Exception as sheet_error:
