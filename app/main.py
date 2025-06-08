@@ -52,7 +52,7 @@ app.include_router(convert.router, prefix="/v1")
 @app.get("/v1/health")
 async def health_check():
     """健康检查端点"""
-    return {"status": "healthy", "service": "file2markdown"}
+    return {"status": "UP", "service": "file2markdown"}
 
 @app.get("/")
 async def root():

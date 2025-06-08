@@ -126,7 +126,7 @@ Content-Type: text/x-python
   "filename": "example.py",
   "size": 1024,
   "content_type": "text/x-python",
-  "markdown": "```python\ndef hello_world():\n    print('Hello, World!')\n    return 'success'\n```",
+  "content": "```python\ndef hello_world():\n    print('Hello, World!')\n    return 'success'\n```",
   "duration_ms": 150
 }
 ```
@@ -137,7 +137,7 @@ Content-Type: text/x-python
   "filename": "chart.png",
   "size": 204800,
   "content_type": "image/png",
-  "markdown": "```image\n# OCR:\n图表标题：销售数据\n\n# Description:\n这是一个显示销售趋势的柱状图...\n```",
+  "content": "```image\n# OCR:\n图表标题：销售数据\n\n# Description:\n这是一个显示销售趋势的柱状图...\n```",
   "duration_ms": 2500
 }
 ```

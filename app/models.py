@@ -6,7 +6,7 @@ class ConvertResponse(BaseModel):
     filename: str
     size: int
     content_type: str
-    markdown: str
+    content: str
     duration_ms: int
 
 class ErrorResponse(BaseModel):

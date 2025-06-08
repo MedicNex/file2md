@@ -120,7 +120,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
   "filename": "example.py",
   "size": 1024,
   "content_type": "text/x-python",
-  "markdown": "```python\ndef hello_world():\n    print('Hello, World!')\n```",
+  "content": "```python\ndef hello_world():\n    print('Hello, World!')\n```",
   "duration_ms": 150
 }
 ```
@@ -131,7 +131,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
   "filename": "chart.png", 
   "size": 204800,
   "content_type": "image/png",
-  "markdown": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Description:\n这是一个显示月度销售趋势的柱状图...\n```",
+  "content": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Description:\n这是一个显示月度销售趋势的柱状图...\n```",
   "duration_ms": 2500
 }
 ```

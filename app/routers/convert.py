@@ -75,7 +75,7 @@ async def convert_file(
             filename=file.filename,
             size=len(content),
             content_type=file.content_type or "application/octet-stream",
-            markdown=markdown_content,
+            content=markdown_content,
             duration_ms=duration_ms
         )
         

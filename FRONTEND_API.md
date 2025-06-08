@@ -8,7 +8,7 @@ MedicNex File2Markdown 是一个文档转换微服务，支持将多种格式的
 
 - **API版本**: v1
 - **基础URL**: `https://file.medicnex.com/v1`
-- **协议**: HTTPS (推荐) / HTTP
+- **协议**: HTTPS
 - **认证方式**: Bearer Token
 - **请求格式**: multipart/form-data (文件上传)
 - **响应格式**: JSON
@@ -50,7 +50,7 @@ Authorization: Bearer your-api-key
 **响应示例**:
 ```json
 {
-  "status": "healthy",
+  "status": "UP",
   "service": "file2markdown"
 }
 ```
@@ -118,7 +118,7 @@ Content-Type: multipart/form-data
   "filename": "example.py",
   "size": 1024,
   "content_type": "text/x-python",
-  "markdown": "```python\ndef hello_world():\n    print('Hello, World!')\n    return 'success'\n```",
+  "content": "```python\ndef hello_world():\n    print('Hello, World!')\n    return 'success'\n```",
   "duration_ms": 150
 }
 ```
@@ -129,7 +129,7 @@ Content-Type: multipart/form-data
   "filename": "chart.png",
   "size": 204800,
   "content_type": "image/png",
-  "markdown": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Description:\n这是一个显示月度销售趋势的柱状图，包含了12个月的销售数据...\n```",
+  "content": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Description:\n这是一个显示月度销售趋势的柱状图，包含了12个月的销售数据...\n```",
   "duration_ms": 2500
 }
 ```
@@ -140,7 +140,7 @@ Content-Type: multipart/form-data
   "filename": "document.docx",
   "size": 1280345,
   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "markdown": "```document\n# 文档标题\n\n这是文档内容...\n\n## 章节2\n\n更多内容...\n```",
+  "content": "```document\n# 文档标题\n\n这是文档内容...\n\n## 章节2\n\n更多内容...\n```",
   "duration_ms": 420
 }
 ```
@@ -266,21 +266,21 @@ const FileConverter = () => {
   };
 
   // 解析代码块类型
-  const parseCodeBlock = (markdown) => {
-    const match = markdown.match(/^```(\w+)\n([\s\S]*?)```$/);
+  const parseCodeBlock = (content) => {
+    const match = content.match(/^```(\w+)\n([\s\S]*?)```$/);
     if (match) {
       return {
         language: match[1],
         content: match[2]
       };
     }
-    return { language: 'text', content: markdown };
+    return { language: 'text', content: content };
   };
 
   const renderResult = () => {
     if (!result) return null;
 
-    const { language, content } = parseCodeBlock(result.markdown);
+    const { language, content } = parseCodeBlock(result.content);
 
     return (
       <div className="result">

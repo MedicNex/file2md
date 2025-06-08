@@ -150,7 +150,7 @@ curl http://localhost:8080/v1/health
 预期响应：
 ```json
 {
-  "status": "healthy",
+  "status": "UP",
   "service": "file2markdown"
 }
 ```
@@ -177,7 +177,7 @@ curl -X POST http://localhost:8080/v1/convert \
   "filename": "test.py",
   "size": 22,
   "content_type": "text/x-python",
-  "markdown": "```python\nprint(\"Hello, World!\")\n```",
+  "content": "```python\nprint(\"Hello, World!\")\n```",
   "duration_ms": 45
 }
 ```
@@ -349,11 +349,11 @@ curl -w "@curl-format.txt" -s -o /dev/null \
 ENDPOINT="http://localhost:8080/v1/health"
 RESPONSE=$(curl -s $ENDPOINT)
 
-if [[ $RESPONSE == *"healthy"* ]]; then
-    echo "Service is healthy"
+if [[ $RESPONSE == *"UP"* ]]; then
+    echo "Service is UP"
     exit 0
 else
-    echo "Service is unhealthy"
+    echo "Service is DOWN"
     exit 1
 fi
 ```

@@ -122,22 +122,22 @@ server {
 ```javascript
 module.exports = {
   apps: [{
-    name: 'medicnex-file2md',
+    name: 'file.medicnex.com',
     script: 'python3',
     args: ['-m', 'uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8999'],
-    cwd: '/www/wwwroot/medicnex-file2md',
+    cwd: '/www/wwwroot/file.medicnex.com',
     instances: 2,
     exec_mode: 'fork',
     watch: false,
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PYTHONPATH: '/www/wwwroot/medicnex-file2md',
+      PYTHONPATH: '/www/wwwroot/file.medicnex.com',
       PYTHONUNBUFFERED: '1'
     },
-    error_file: '/www/wwwlogs/medicnex-file2md-error.log',
-    out_file: '/www/wwwlogs/medicnex-file2md-out.log',
-    log_file: '/www/wwwlogs/medicnex-file2md.log',
+    error_file: '/www/wwwlogs/file.medicnex.com-error.log',
+    out_file: '/www/wwwlogs/file.medicnex.com-out.log',
+    log_file: '/www/wwwlogs/file.medicnex.com.log',
     time: true,
     autorestart: true,
     restart_delay: 1000
@@ -166,7 +166,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # 项目配置
-PROJECT_NAME="medicnex-file2md"
+PROJECT_NAME="file.medicnex.com"
 PROJECT_PATH="/www/wwwroot/${PROJECT_NAME}"
 DOMAIN="file.medicnex.com"
 PYTHON_VERSION="3.9"
@@ -215,7 +215,7 @@ curl -f https://${DOMAIN}/health || {
 echo "✅ 部署成功！"
 echo "🌐 服务地址: https://${DOMAIN}"
 echo "📚 API文档: https://${DOMAIN}/docs"
-echo "🔍 健康检查: https://${DOMAIN}/health"
+echo "🔍 健康检查: https://${DOMAIN}/v1/health"
 
 # 显示服务状态
 pm2 status
@@ -227,16 +227,16 @@ pm2 status
 
 ```bash
 # 启动服务
-pm2 start medicnex-file2md
+pm2 start file.medicnex.com
 
 # 停止服务
-pm2 stop medicnex-file2md
+pm2 stop file.medicnex.com
 
 # 重启服务
-pm2 restart medicnex-file2md
+pm2 restart file.medicnex.com
 
 # 查看日志
-pm2 logs medicnex-file2md
+pm2 logs file.medicnex.com
 
 # 查看服务状态
 pm2 status
@@ -281,7 +281,7 @@ df -h
 
 ```bash
 # 应用日志
-tail -f /www/wwwlogs/medicnex-file2md.log
+tail -f /www/wwwlogs/file.medicnex.com.log
 
 # Nginx访问日志
 tail -f /www/wwwlogs/file.medicnex.com.log
@@ -325,20 +325,20 @@ crontab -e
 echo "🔄 开始更新服务..."
 
 # 停止服务
-pm2 stop medicnex-file2md
+pm2 stop file.medicnex.com
 
 # 备份当前版本
-cp -r /www/wwwroot/medicnex-file2md /www/wwwroot/medicnex-file2md.backup.$(date +%Y%m%d)
+cp -r /www/wwwroot/file.medicnex.com /www/wwwroot/file.medicnex.com.backup.$(date +%Y%m%d)
 
 # 更新代码（假设使用Git）
-cd /www/wwwroot/medicnex-file2md
+cd /www/wwwroot/file.medicnex.com
 git pull origin main
 
 # 更新依赖
 pip3 install -r requirements.txt
 
 # 重启服务
-pm2 start medicnex-file2md
+pm2 start file.medicnex.com
 
 echo "✅ 更新完成！"
 
@@ -361,4 +361,4 @@ curl -f https://file.medicnex.com/health && echo "✅ 服务正常" || echo "❌
 **🎉 部署完成后访问地址：**
 - **主服务**: https://file.medicnex.com
 - **API文档**: https://file.medicnex.com/docs  
-- **健康检查**: https://file.medicnex.com/health 
+- **健康检查**: https://file.medicnex.com/v1/health 
