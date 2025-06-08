@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
 import os
 import sys
+import json
 
 from app.routers import convert
 
@@ -14,13 +16,25 @@ logger.add(
     level="INFO"
 )
 
+# 自定义JSON响应类，确保中文字符正确显示
+class UnicodeJSONResponse(JSONResponse):
+    def render(self, content) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=None,
+            separators=(",", ":"),
+        ).encode("utf-8")
+
 # 创建FastAPI应用
 app = FastAPI(
     title="MedicNex File2Markdown Service",
     description="将各种文档格式转换为Markdown的微服务",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    default_response_class=UnicodeJSONResponse
 )
 
 # 添加CORS中间件
