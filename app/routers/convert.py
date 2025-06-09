@@ -79,6 +79,28 @@ async def convert_file(
                 }
             )
         
+        # 检查文件大小
+        content = await file.read()
+        file_size = len(content)
+        
+        if file_size > config.MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail={
+                    "code": "FILE_TOO_LARGE",
+                    "message": f"文件过大: {file_size} bytes，最大允许: {config.MAX_FILE_SIZE} bytes ({config.MAX_FILE_SIZE // 1024 // 1024} MB)"
+                }
+            )
+        
+        if file_size == 0:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "EMPTY_FILE",
+                    "message": "文件为空"
+                }
+            )
+        
         # 获取文件扩展名
         file_extension = Path(file.filename).suffix.lower()
         
@@ -99,7 +121,6 @@ async def convert_file(
         temp_file_path = temp_file.name
         
         # 写入文件内容
-        content = await file.read()
         temp_file.write(content)
         temp_file.close()
         

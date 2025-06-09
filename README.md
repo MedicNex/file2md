@@ -302,13 +302,7 @@ pip install aiohttp
 export AGENT_API_KEYS="dev-test-key-123"
 
 # 启动服务
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload &
-
-# 运行测试
-python test_queue.py
-
-# 或运行简单演示
-python demo_queue.py
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 测试脚本将验证以下功能：

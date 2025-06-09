@@ -72,6 +72,11 @@ class Config:
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "100")) * 1024 * 1024  # MB to bytes
     TEMP_DIR: str = os.getenv("TEMP_DIR", "/tmp")
     
+    # 文本文件处理配置
+    MAX_TEXT_LINES: int = int(os.getenv("MAX_TEXT_LINES", "50000"))  # 最大行数
+    MAX_TEXT_CHARS: int = int(os.getenv("MAX_TEXT_CHARS", "10000000"))  # 最大字符数 (约10MB文本)
+    TEXT_CHUNK_SIZE: int = int(os.getenv("TEXT_CHUNK_SIZE", "1048576"))  # 文本块大小 (1MB)
+    
     # CORS配置
     CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "*").split(",")
     CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
@@ -103,6 +108,15 @@ class Config:
         if cls.MAX_FILE_SIZE < 1024:  # 最小1KB
             errors.append(f"最大文件大小无效: {cls.MAX_FILE_SIZE}")
         
+        if cls.MAX_TEXT_LINES < 1:
+            errors.append(f"最大文本行数无效: {cls.MAX_TEXT_LINES}")
+        
+        if cls.MAX_TEXT_CHARS < 1024:  # 最小1KB文本
+            errors.append(f"最大文本字符数无效: {cls.MAX_TEXT_CHARS}")
+        
+        if cls.TEXT_CHUNK_SIZE < 1024:  # 最小1KB块
+            errors.append(f"文本块大小无效: {cls.TEXT_CHUNK_SIZE}")
+        
         if errors:
             error_msg = "配置验证失败:\n" + "\n".join(f"- {error}" for error in errors)
             logger.error(error_msg)
@@ -121,6 +135,9 @@ class Config:
         logger.info(f"最大并发: {cls.MAX_CONCURRENT}")
         logger.info(f"日志级别: {cls.LOG_LEVEL}")
         logger.info(f"详细日志: {cls.ENABLE_DETAILED_LOGGING}")
+        logger.info(f"最大文件大小: {cls.MAX_FILE_SIZE // 1024 // 1024} MB")
+        logger.info(f"最大文本行数: {cls.MAX_TEXT_LINES}")
+        logger.info(f"最大文本字符数: {cls.MAX_TEXT_CHARS}")
         logger.info(f"视觉API: {'已启用' if cls.is_vision_enabled() else '未启用'}")
         logger.info(f"API密钥验证: {'必需' if cls.REQUIRE_API_KEY else '可选'}")
         logger.info("==================")
