@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr tesseract-ocr-chi-sim
+        sudo apt-get install -y libreoffice
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-test.txt
+
+    - name: Create test environment file
+      run: |
+        echo "API_KEY=test-key" > .env
+        echo "REQUIRE_API_KEY=false" >> .env
+        echo "LOG_LEVEL=DEBUG" >> .env
+
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: true
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+
+    - name: Run black
+      run: black --check app/ tests/
+
+    - name: Run isort
+      run: isort --check-only app/ tests/
+
+    - name: Run flake8
+      run: flake8 app/ tests/
+
+    - name: Run mypy
+      run: mypy app/
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+
+    - name: Run bandit security linter
+      run: bandit -r app/
+
+    - name: Check dependencies for security vulnerabilities
+      run: safety check
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker build -t medicnex-file2md:test .
+
+    - name: Test Docker image
+      run: |
+        docker run -d --name test-container -p 8080:8080 -e API_KEY=test-key medicnex-file2md:test
+        sleep 10
+        curl -f http://localhost:8080/v1/health || exit 1
+        docker stop test-container
+        docker rm test-container 

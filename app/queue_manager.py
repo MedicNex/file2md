@@ -39,7 +39,11 @@ class ConversionTask:
 
 
 class ConversionQueueManager:
-    """文档转换队列管理器，限制并发数量为5"""
+    """
+    文档转换队列管理器
+    
+    提供异步队列处理和优雅关闭功能
+    """
     
     def __init__(self, max_concurrent: int = 5):
         self.max_concurrent = max_concurrent
@@ -48,32 +52,86 @@ class ConversionQueueManager:
         self.queue: asyncio.Queue = asyncio.Queue()
         self.active_tasks: Dict[str, asyncio.Task] = {}
         self._worker_started = False
+        self._worker_task: Optional[asyncio.Task] = None
+        self._shutdown_event = asyncio.Event()
         
     async def start_worker(self):
         """启动队列处理工作器"""
         if not self._worker_started:
             self._worker_started = True
-            asyncio.create_task(self._queue_worker())
+            self._worker_task = asyncio.create_task(self._queue_worker())
             logger.info(f"队列管理器已启动，最大并发数: {self.max_concurrent}")
+    
+    async def shutdown(self):
+        """优雅关闭队列管理器"""
+        logger.info("开始关闭队列管理器...")
+        
+        # 设置关闭标志
+        self._shutdown_event.set()
+        
+        # 取消工作器任务
+        if self._worker_task and not self._worker_task.done():
+            self._worker_task.cancel()
+            try:
+                await self._worker_task
+            except asyncio.CancelledError:
+                logger.info("队列工作器已取消")
+        
+        # 取消所有活跃任务
+        if self.active_tasks:
+            logger.info(f"取消 {len(self.active_tasks)} 个活跃任务")
+            for task_id, task in self.active_tasks.items():
+                if not task.done():
+                    task.cancel()
+            
+            # 等待所有任务完成或被取消
+            await asyncio.gather(*self.active_tasks.values(), return_exceptions=True)
+        
+        # 清理资源
+        await self._cleanup_resources()
+        
+        logger.info("队列管理器已关闭")
+    
+    async def _cleanup_resources(self):
+        """清理所有资源"""
+        for task in self.tasks.values():
+            if task.temp_file_path and os.path.exists(task.temp_file_path):
+                try:
+                    os.unlink(task.temp_file_path)
+                except Exception as e:
+                    logger.warning(f"清理临时文件失败 {task.temp_file_path}: {e}")
     
     async def _queue_worker(self):
         """队列工作器，持续处理队列中的任务"""
-        while True:
-            try:
-                # 从队列中获取任务
-                task_id = await self.queue.get()
-                
-                if task_id in self.tasks:
-                    # 创建处理任务的协程
-                    task_coroutine = self._process_task(task_id)
-                    self.active_tasks[task_id] = asyncio.create_task(task_coroutine)
+        logger.info("队列工作器已启动")
+        
+        try:
+            while not self._shutdown_event.is_set():
+                try:
+                    # 使用超时等待任务，以便定期检查关闭信号
+                    task_id = await asyncio.wait_for(self.queue.get(), timeout=1.0)
                     
-                # 标记队列任务完成
-                self.queue.task_done()
-                
-            except Exception as e:
-                logger.error(f"队列工作器处理异常: {e}")
-                await asyncio.sleep(1)
+                    if task_id in self.tasks:
+                        # 创建处理任务的协程
+                        task_coroutine = self._process_task(task_id)
+                        self.active_tasks[task_id] = asyncio.create_task(task_coroutine)
+                    
+                    # 标记队列任务完成
+                    self.queue.task_done()
+                    
+                except asyncio.TimeoutError:
+                    # 超时是正常的，继续循环检查关闭信号
+                    continue
+                except asyncio.CancelledError:
+                    logger.info("队列工作器收到取消信号")
+                    break
+                except Exception as e:
+                    logger.error(f"队列工作器处理异常: {e}")
+                    await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            logger.info("队列工作器被取消")
+        finally:
+            logger.info("队列工作器已退出")
     
     async def _process_task(self, task_id: str):
         """处理单个转换任务"""
@@ -229,8 +287,4 @@ class ConversionQueueManager:
             del self.tasks[task_id]
             logger.info(f"清理过期任务: {task_id}")
         
-        return len(to_remove)
-
-
-# 全局队列管理器实例
-queue_manager = ConversionQueueManager(max_concurrent=5) 
+        return len(to_remove) 

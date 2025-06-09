@@ -8,13 +8,14 @@ from pathlib import Path
 import json
 from typing import List
 
+from app.config import config
 from app.auth import get_api_key
 from app.models import (
     ConvertResponse, ErrorResponse, TaskSubmitResponse, 
     BatchSubmitResponse, TaskStatusResponse, QueueInfoResponse
 )
 from app.parsers.registry import parser_registry
-from app.queue_manager import queue_manager, TaskStatus
+from app.queue_manager import TaskStatus
 
 # 自定义JSON响应类，确保中文字符正确显示
 class UnicodeJSONResponse(JSONResponse):
@@ -26,6 +27,32 @@ class UnicodeJSONResponse(JSONResponse):
             indent=None,
             separators=(",", ":"),
         ).encode("utf-8")
+
+def log_conversion_result(filename: str, content: str, file_size: int) -> None:
+    """
+    记录转换结果的摘要信息
+    
+    Args:
+        filename: 文件名
+        content: 转换后的内容
+        file_size: 原文件大小
+    """
+    content_length = len(content)
+    logger.info(f"文件转换成功: {filename} ({file_size} bytes) -> {content_length} characters")
+    
+    if config.ENABLE_DETAILED_LOGGING:
+        if content_length <= config.MAX_LOG_CONTENT_LENGTH * 2:
+            logger.debug(f"转换结果内容:\n{content}")
+        else:
+            # 记录开头和结尾的部分内容
+            start_content = content[:config.MAX_LOG_CONTENT_LENGTH]
+            end_content = content[-config.MAX_LOG_CONTENT_LENGTH:]
+            logger.debug(f"转换结果内容（前{config.MAX_LOG_CONTENT_LENGTH}字符）:\n{start_content}")
+            logger.debug(f"转换结果内容（后{config.MAX_LOG_CONTENT_LENGTH}字符）:\n...{end_content}")
+    else:
+        # 只记录摘要信息
+        lines_count = content.count('\n') + 1
+        logger.info(f"转换结果摘要: {content_length} 字符, {lines_count} 行")
 
 router = APIRouter()
 
@@ -86,14 +113,7 @@ async def convert_file(
         # 计算处理时间
         duration_ms = int((time.time() - start_time) * 1000)
         
-        logger.info(f"文件转换成功: {file.filename} ({len(content)} bytes) -> {len(markdown_content)} characters")
-        
-        # 记录转换结果内容（如果内容太长则截断显示）
-        if len(markdown_content) <= 1000:
-            logger.info(f"转换结果内容:\n{markdown_content}")
-        else:
-            logger.info(f"转换结果内容（前500字符）:\n{markdown_content[:500]}...")
-            logger.info(f"转换结果内容（后500字符）:\n...{markdown_content[-500:]}")
+        log_conversion_result(file.filename, markdown_content, len(content))
         
         # 使用自定义响应类确保中文正确显示
         response_data = {
@@ -142,8 +162,11 @@ async def convert_batch_files(
     api_key: str = Depends(get_api_key)
 ):
     """
-    批量提交文件转换任务到队列（异步处理，最多5个并发）
+    批量提交文件转换任务到队列（异步处理，基于配置的并发数）
     """
+    # 获取队列管理器实例
+    from app.main import queue_manager
+    
     # 确保队列管理器已启动
     await queue_manager.start_worker()
     
@@ -196,6 +219,8 @@ async def get_task_status(
     """
     获取指定任务的状态和结果
     """
+    from app.main import queue_manager
+    
     task = queue_manager.get_task_status(task_id)
     
     if not task:
@@ -228,6 +253,7 @@ async def get_queue_info(api_key: str = Depends(get_api_key)):
     """
     获取转换队列的状态信息
     """
+    from app.main import queue_manager
     queue_info = queue_manager.get_queue_info()
     return UnicodeJSONResponse(content=queue_info)
 
@@ -239,6 +265,7 @@ async def cleanup_old_tasks(
     """
     清理超过指定时间的已完成任务
     """
+    from app.main import queue_manager
     cleaned_count = queue_manager.cleanup_old_tasks(max_age_hours)
     
     response_data = {

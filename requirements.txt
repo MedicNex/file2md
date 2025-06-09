@@ -17,7 +17,7 @@ openai==1.84.0
 redis==5.0.1
 slowapi==0.1.9
 openpyxl==3.1.2
-aiofiles==23.2.0
+aiofiles>=23.2.0
 chardet==5.2.0
 requests==2.31.0
 python-dotenv==1.0.0

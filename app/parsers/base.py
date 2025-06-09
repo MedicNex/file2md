@@ -1,14 +1,21 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, List, Optional
 import os
 import tempfile
 import re
+import aiofiles
+import aiofiles.os
+from loguru import logger
 
 class BaseParser(ABC):
-    """文档解析器基类"""
+    """
+    文档解析器基类
+    
+    提供异步文件操作和临时文件管理功能
+    """
     
     def __init__(self):
-        self.temp_files = []
+        self.temp_files: List[str] = []
     
     @abstractmethod
     async def parse(self, file_path: str) -> str:
@@ -20,16 +27,98 @@ class BaseParser(ABC):
             
         Returns:
             Markdown格式的文本内容
+            
+        Raises:
+            FileNotFoundError: 文件不存在
+            PermissionError: 文件权限不足
+            Exception: 解析过程中的其他错误
         """
         pass
     
     @classmethod
-    def get_supported_extensions(cls) -> list[str]:
+    def get_supported_extensions(cls) -> List[str]:
         """返回支持的文件扩展名列表"""
         return []
     
-    def create_temp_file(self, suffix: str = "", content: Union[str, bytes] = None) -> str:
-        """创建临时文件"""
+    async def read_file_async(self, file_path: str, mode: str = 'r', encoding: str = 'utf-8') -> Union[str, bytes]:
+        """
+        异步读取文件内容
+        
+        Args:
+            file_path: 文件路径
+            mode: 读取模式 ('r' 或 'rb')
+            encoding: 文本编码（仅在文本模式下使用）
+            
+        Returns:
+            文件内容（字符串或字节）
+        """
+        try:
+            if 'b' in mode:
+                async with aiofiles.open(file_path, mode) as f:
+                    return await f.read()
+            else:
+                async with aiofiles.open(file_path, mode, encoding=encoding) as f:
+                    return await f.read()
+        except Exception as e:
+            logger.error(f"异步读取文件失败 {file_path}: {e}")
+            raise
+    
+    async def write_file_async(self, file_path: str, content: Union[str, bytes], mode: str = 'w', encoding: str = 'utf-8') -> None:
+        """
+        异步写入文件内容
+        
+        Args:
+            file_path: 文件路径
+            content: 要写入的内容
+            mode: 写入模式 ('w' 或 'wb')
+            encoding: 文本编码（仅在文本模式下使用）
+        """
+        try:
+            if 'b' in mode:
+                async with aiofiles.open(file_path, mode) as f:
+                    await f.write(content)
+            else:
+                async with aiofiles.open(file_path, mode, encoding=encoding) as f:
+                    await f.write(content)
+        except Exception as e:
+            logger.error(f"异步写入文件失败 {file_path}: {e}")
+            raise
+    
+    async def create_temp_file_async(self, suffix: str = "", content: Union[str, bytes, None] = None) -> str:
+        """
+        异步创建临时文件
+        
+        Args:
+            suffix: 临时文件后缀
+            content: 要写入的内容（可选）
+            
+        Returns:
+            临时文件路径
+        """
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        temp_file_path = temp_file.name
+        temp_file.close()  # 关闭文件描述符，以便异步写入
+        
+        if content:
+            if isinstance(content, str):
+                await self.write_file_async(temp_file_path, content, mode='w')
+            else:
+                await self.write_file_async(temp_file_path, content, mode='wb')
+        
+        self.temp_files.append(temp_file_path)
+        return temp_file_path
+    
+    def create_temp_file(self, suffix: str = "", content: Union[str, bytes, None] = None) -> str:
+        """
+        创建临时文件（同步版本，保持向后兼容）
+        
+        Args:
+            suffix: 临时文件后缀
+            content: 要写入的内容（可选）
+            
+        Returns:
+            临时文件路径
+        """
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
         
         if content:
@@ -72,14 +161,24 @@ class BaseParser(ABC):
         
         return result
     
-    def cleanup(self):
-        """清理临时文件"""
+    async def cleanup_async(self) -> None:
+        """异步清理临时文件"""
+        for temp_file in self.temp_files:
+            try:
+                if await aiofiles.os.path.exists(temp_file):
+                    await aiofiles.os.unlink(temp_file)
+            except Exception as e:
+                logger.warning(f"异步清理临时文件失败 {temp_file}: {e}")
+        self.temp_files.clear()
+    
+    def cleanup(self) -> None:
+        """清理临时文件（同步版本，保持向后兼容）"""
         for temp_file in self.temp_files:
             try:
                 if os.path.exists(temp_file):
                     os.unlink(temp_file)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"清理临时文件失败 {temp_file}: {e}")
         self.temp_files.clear()
     
     def __del__(self):
