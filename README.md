@@ -507,7 +507,7 @@ class CustomParser(BaseParser):
 
 ## 许可证
 
-本项目为 MedicNex 私有项目
+本项目为 MedicNex 私有项目。
 
 ## 贡献
 
