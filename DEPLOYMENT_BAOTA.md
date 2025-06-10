@@ -62,7 +62,7 @@ tesseract --version
 在项目根目录创建 `.env` 文件：
 ```env
 # API密钥配置（必需）
-AGENT_API_KEYS=your-api-key-1,your-api-key-2
+API_KEY=your-api-key-1,your-api-key-2
 
 # 视觉API配置（可选，用于图片识别）
 VISION_API_KEY=your-vision-api-key

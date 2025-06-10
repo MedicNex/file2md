@@ -13,13 +13,14 @@ if [ -f $PROJECT_DIR/.env ]; then
 fi
 
 # 设置默认环境变量（如果没有.env文件）
-export AGENT_API_KEYS=${AGENT_API_KEYS:-"dev-test-key-123"}
+export API_KEY=${API_KEY:-"dev-test-key-123"}
 export PORT=${PORT:-8999}
+export MAX_CONCURRENT=${MAX_CONCURRENT:-"10"}
 # ImageMagick环境变量
 export MAGICK_HOME=/opt/homebrew/opt/imagemagick
 
 echo "🚀 启动 MedicNex File2Markdown 服务..."
-echo "🔑 API Keys: $AGENT_API_KEYS"
+echo "🔑 API Keys: $API_KEY"
 echo "🌐 端口: $PORT"
 
 # 检查Python环境
@@ -55,9 +56,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '8999',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-0-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-0-out.log'
@@ -74,9 +76,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '9002',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-1-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-1-out.log'
@@ -93,9 +96,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '9003',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-2-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-2-out.log'
@@ -112,10 +116,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '9004',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-3-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-3-out.log'
@@ -132,10 +136,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9005',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9005',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-4-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-4-out.log'
@@ -152,10 +156,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9006',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9006',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-5-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-5-out.log'
@@ -172,10 +176,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9007',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9007',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-6-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-6-out.log'
@@ -192,10 +196,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9008',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9008',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-7-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-7-out.log'
@@ -212,10 +216,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9009',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9009',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-8-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-8-out.log'
@@ -232,10 +236,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9010',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9010',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-9-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-9-out.log'
@@ -252,10 +256,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9011',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9011',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-10-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-10-out.log'
@@ -272,10 +276,10 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
-        PORT: 'PORT: '9012',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        PORT: '9012',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
+        MAX_CONCURRENT: '10'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-11-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-11-out.log'

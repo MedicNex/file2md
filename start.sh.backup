@@ -13,13 +13,13 @@ if [ -f $PROJECT_DIR/.env ]; then
 fi
 
 # 设置默认环境变量（如果没有.env文件）
-export AGENT_API_KEYS=${AGENT_API_KEYS:-"dev-test-key-123"}
+export API_KEY=${API_KEY:-"dev-test-key-123"}
 export PORT=${PORT:-8999}
 # ImageMagick环境变量
 export MAGICK_HOME=/opt/homebrew/opt/imagemagick
 
 echo "🚀 启动 MedicNex File2Markdown 服务..."
-echo "🔑 API Keys: $AGENT_API_KEYS"
+echo "🔑 API Keys: $API_KEY"
 echo "🌐 端口: $PORT"
 
 # 检查Python环境
@@ -55,7 +55,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '8999',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -74,7 +74,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '9002',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -93,7 +93,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '9003',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -112,7 +112,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: '9004',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
@@ -132,7 +132,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9005' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -151,7 +151,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9006' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -170,7 +170,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9007' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -189,7 +189,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9008' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -208,7 +208,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9009' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -227,7 +227,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9010' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -246,7 +246,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9011' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },
@@ -265,7 +265,7 @@ module.exports = {
       env: { 
         NODE_ENV: 'production', 
         PYTHONPATH: '/www/wwwroot/medicnex-file2md', 
-        AGENT_API_KEYS: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
+        API_KEY: 'sk-J4WdRKQNTaapOJ5p0VcjCxYa4BRvZhiHNZFu1255nT',
         PORT: 'PORT: '9012' ,
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick'
       },

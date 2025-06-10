@@ -154,7 +154,7 @@ Content-Type: text/x-python
 
 ## 5. 鉴权策略
 
-1. **配置**：环境变量 `AGENT_API_KEYS="key1,key2,..."` 或持久化存储（Redis/PostgreSQL）。
+1. **配置**：环境变量 `API_KEY="key1,key2,..."` 或持久化存储（Redis/PostgreSQL）。
 2. **客户端**：须在 `Authorization` 头携带 `Bearer <API_KEY>`。
 3. **服务端**：
 
@@ -300,7 +300,7 @@ $ docker build -t file2markdown:latest .
 
 # 2. 运行
 $ docker run -d -p 8080:8080 \
-  -e AGENT_API_KEYS="sk-prod-123" \
+  -e API_KEY="sk-prod-123" \
   -e VISION_API_KEY="sk-vision-456" \
   file2markdown:latest
 ```

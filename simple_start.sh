@@ -1,7 +1,7 @@
 #!/bin/bash
 cd /www/wwwroot/medicnex-file2md
 source venv/bin/activate
-export AGENT_API_KEYS=${AGENT_API_KEYS:-"sk-sfncynyftubpujczaokfwiopimnmtxwxgnzmbwanwuavdhoc"}
+export API_KEY=${API_KEY:-"sk-sfncynyftubpujczaokfwiopimnmtxwxgnzmbwanwuavdhoc"}
 export PORT=${PORT:-8999}
 # ImageMagick环境变量
 export MAGICK_HOME=/opt/homebrew/opt/imagemagick

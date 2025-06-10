@@ -12,11 +12,6 @@ def get_api_keys() -> list[str]:
     # 优先使用新的配置系统
     if config.API_KEY:
         return [config.API_KEY]
-    
-    # 兼容旧的配置方式
-    import os
-    keys_str = os.getenv("AGENT_API_KEYS", "")
-    return [key.strip() for key in keys_str.split(",") if key.strip()]
 
 async def get_api_key(
     authorization: Optional[str] = Header(None, alias="X-API-Key"),
@@ -34,7 +29,7 @@ async def get_api_key(
             status_code=500,
             detail={
                 "code": "API_KEY_NOT_CONFIGURED",
-                "message": "服务器未配置API密钥，请联系管理员配置API_KEY或AGENT_API_KEYS环境变量。"
+                "message": "服务器未配置API密钥，请联系管理员配置API_KEY环境变量。"
             }
         )
     

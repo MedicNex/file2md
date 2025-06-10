@@ -1,11 +1,11 @@
 # MedicNex File2Markdown
 
-MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**106种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、82+种编程语言等）转换为统一的 Markdown 代码块格式。
+MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**109种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、Apple iWork套件、82+种编程语言等）转换为统一的 Markdown 代码块格式。
 
 ## 功能特性
 
 - 🔐 **API Key 鉴权**：支持多个 API Key 管理
-- 📄 **全面格式支持**：支持 **106种文件格式**，包含 13种解析器类型
+- 📄 **全面格式支持**：支持 **109种文件格式**，包含 16种解析器类型
 - 💻 **代码文件支持**：支持 **82+ 种编程语言**文件转换，涵盖主流、函数式、脚本、配置等语言
 - 🖼️ **智能图片识别**：集成 Vision API 和 Tesseract OCR，支持 SVG 转 PNG 识别
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
@@ -39,6 +39,9 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**106种�
 | RTF文档 | `.rtf` | RtfParser | `document` | 支持RTF格式，优先使用Pandoc，备用striprtf |
 | ODT文档 | `.odt` | OdtParser | `document` | OpenDocument文本，支持表格和列表 |
 | PDF文档 | `.pdf` | PdfParser | `document` | 提取文本和图片，**并发处理图片** |
+| Keynote演示文稿 | `.key` | KeynoteParser | `slideshow` | Apple Keynote演示文稿，提取元数据和结构信息 |
+| Pages文档 | `.pages` | PagesParser | `document` | Apple Pages文字处理文档，提取元数据和结构信息 |
+| Numbers表格 | `.numbers` | NumbersParser | `sheet` | Apple Numbers电子表格，支持表格数据提取 |
 | PowerPoint | `.ppt`, `.pptx` | PptxParser | `slideshow` | 提取幻灯片文本内容（不使用视觉模型） |
 | Excel表格 | `.xls`, `.xlsx` | ExcelParser | `sheet` | 转换为HTML表格格式和统计信息，**并发处理图片** |
 | CSV数据 | `.csv` | CsvParser | `sheet` | 转换为HTML表格格式和数据分析 |
@@ -78,7 +81,7 @@ cd medicnex-file2md
 cp .env.example .env
 
 # 编辑 .env 文件，设置你的 API Keys
-AGENT_API_KEYS=your-api-key-1,your-api-key-2
+API_KEY=your-api-key-1,your-api-key-2
 VISION_API_KEY=your-vision-api-key  # 可选，用于图片识别
 ```
 
@@ -139,7 +142,7 @@ brew install cairo pkg-config  # Cairo支持
 
 3. 设置环境变量：
 ```bash
-export AGENT_API_KEYS="dev-test-key-123"
+export API_KEY="dev-test-key-123"
 export VISION_API_KEY="your-vision-api-key"  # 可选
 ```
 
@@ -349,7 +352,7 @@ curl -X GET "https://file.medicnex.com/v1/supported-types" \
 pip install aiohttp
 
 # 设置环境变量（如果未设置）
-export AGENT_API_KEYS="dev-test-key-123"
+export API_KEY="dev-test-key-123"
 
 # 启动服务
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
@@ -397,7 +400,7 @@ curl -X GET "https://file.medicnex.com/v1/health"
 
 | 变量名 | 说明 | 默认值 | 必需 |
 |--------|------|--------|------|
-| `AGENT_API_KEYS` | API密钥列表（逗号分隔） | `dev-test-key-123` | 是 |
+| `API_KEY` | API密钥列表（逗号分隔） | `dev-test-key-123` | 是 |
 | `VISION_API_KEY` | 视觉API密钥 | - | 否 |
 | `VISION_API_BASE` | 视觉API基础URL | `https://api.openai.com/v1` | 否 |
 | `VISION_MODEL` | 视觉识别模型名称 | `gpt-4o-mini` | 否 |
@@ -514,7 +517,16 @@ class CustomParser(BaseParser):
 
 ## 📈 最新更新
 
-### v2.2.0 (2025-01-15)
+### v2.3.0
+- 📱 **Apple iWork 支持**：新增对 Apple iWork 套件的支持
+  - **Keynote (.key)**：演示文稿文件，提取元数据和结构信息，输出为 `slideshow` 格式
+  - **Pages (.pages)**：文字处理文档，提取元数据和结构信息，输出为 `document` 格式
+  - **Numbers (.numbers)**：电子表格文件，支持表格数据提取，输出为 `sheet` 格式
+  - **智能解析**：Numbers文件优先使用 `numbers-parser` 库提取完整表格数据，回退到基础解析
+- 📊 **统计更新**：支持格式从106种增加到**109种**，解析器从13个增加到**16个**
+- 🔧 **依赖更新**：添加 `numbers-parser==4.4.6` 依赖以支持Numbers文件解析
+
+### v2.2.0 
 - 📊 **数据更新**：完整测试并更新支持格式列表
   - **106种文件格式**：完整验证所有支持的扩展名
   - **13个解析器**：优化分类和统计信息
@@ -523,7 +535,7 @@ class CustomParser(BaseParser):
 - 🖼️ **SVG功能**：完善SVG转PNG的视觉识别功能（ImageMagick支持）
 - 🛡️ **安全改进**：健康检查API移除敏感信息暴露
 
-### v2.1.0 (2025-01-15)
+### v2.1.0 
 - ✨ **新增**：并发图片处理功能
   - PDF、DOC、DOCX、Excel 文档中的多张图片现在可以并发处理
   - OCR 和 AI 视觉识别同时进行，大幅提升处理速度
@@ -534,4 +546,3 @@ class CustomParser(BaseParser):
 ---
 
 > 开发者：Kris  
-> 最后更新：2025-01-15 

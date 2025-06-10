@@ -43,7 +43,7 @@ sudo yum install tesseract tesseract-langpack-chi_sim tesseract-langpack-eng
 
 或手动启动：
 ```bash
-export AGENT_API_KEYS="your-api-key-here"
+export API_KEY="your-api-key-here"
 export VISION_API_KEY="your-vision-api-key"  # 可选
 python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
@@ -59,7 +59,7 @@ docker build -t medicnex-file2md .
 ```bash
 docker run -d \
   -p 8080:8080 \
-  -e AGENT_API_KEYS="your-api-key-here" \
+  -e API_KEY="your-api-key-here" \
   -e VISION_API_KEY="your-vision-api-key" \
   -e VISION_API_BASE="https://api.openai.com/v1" \
   -e VISION_MODEL="gpt-4o-mini" \
@@ -110,7 +110,7 @@ docker-compose logs -f
 
 | 变量名 | 说明 | 示例 |
 |--------|------|------|
-| `AGENT_API_KEYS` | API密钥列表，用逗号分隔 | `key1,key2,key3` |
+| `API_KEY` | API密钥列表，用逗号分隔 | `key1,key2,key3` |
 
 ### 可选环境变量
 
@@ -128,7 +128,7 @@ docker-compose logs -f
 **.env 文件**:
 ```bash
 # 必需配置
-AGENT_API_KEYS=sk-prod-key-1,sk-prod-key-2
+API_KEY=sk-prod-key-1,sk-prod-key-2
 
 # 视觉识别配置（推荐）
 VISION_API_KEY=sk-vision-api-key

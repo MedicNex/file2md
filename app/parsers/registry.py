@@ -13,6 +13,9 @@ from .markdown import MarkdownParser
 from .svg import SvgParser
 from .rtf import RtfParser
 from .odt import OdtParser
+from .keynote import KeynoteParser
+from .pages import PagesParser
+from .numbers import NumbersParser
 
 class ParserRegistry:
     """解析器注册表"""
@@ -36,7 +39,10 @@ class ParserRegistry:
             CodeParser,
             MarkdownParser,
             RtfParser,
-            OdtParser
+            OdtParser,
+            KeynoteParser,
+            PagesParser,
+            NumbersParser
         ]
         
         for parser_class in parsers:
