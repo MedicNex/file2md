@@ -15,8 +15,8 @@ class RtfParser(BaseParser):
         """解析RTF文件"""
         try:
             # 使用pandoc将RTF转换为Markdown
-            # 创建临时输出文件
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as temp_md:
+            # 创建临时输出文件，指定UTF-8编码
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as temp_md:
                 temp_md_path = temp_md.name
             
             self.temp_files.append(temp_md_path)
@@ -53,8 +53,25 @@ class RtfParser(BaseParser):
         try:
             from striprtf.striprtf import rtf_to_text
             
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                rtf_content = f.read()
+            # 使用更robust的编码读取策略
+            rtf_content = None
+            encodings_to_try = ['utf-8', 'latin-1', 'cp1252', 'windows-1252']
+            
+            for encoding in encodings_to_try:
+                try:
+                    with open(file_path, 'r', encoding=encoding) as f:
+                        rtf_content = f.read()
+                    logger.info(f"RTF文件使用编码 {encoding} 读取成功")
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if rtf_content is None:
+                # 最后尝试二进制读取
+                with open(file_path, 'rb') as f:
+                    raw_data = f.read()
+                rtf_content = raw_data.decode('utf-8', errors='replace')
+                logger.warning("RTF文件使用utf-8 errors='replace'模式读取")
             
             # 提取纯文本
             text_content = rtf_to_text(rtf_content)

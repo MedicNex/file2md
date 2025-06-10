@@ -33,7 +33,7 @@ class DocxParser(BaseParser):
             ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
             
             # 生成HTML标签格式
-            alt_text = f"# OCR: {ocr_text} # Description: {vision_description}"
+            alt_text = f"# OCR: {ocr_text} # Visual_Features: {vision_description}"
             html_img_tag = f'<img src="{img_name}" alt="{alt_text}" />'
             
             logger.info(f"成功处理DOCX图片 {image_counter}: {img_name}")
@@ -67,7 +67,7 @@ class DocxParser(BaseParser):
                             },
                             {
                                 "type": "text", 
-                                "text": "请详细描述这张图片的内容，包括：1. 图片的整体精准描述；2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
+                                "text": "Please provide a detailed description of this image, including: 1. Overall accurate description of the image; 2. Main elements and structure of the image; 3. If there are tables, charts, etc., please describe their content and layout in detail."
                             }
                         ]
                     }

@@ -106,15 +106,11 @@ async def health_check():
     if vision_client is not None:
         health_status["components"]["vision"] = {
             "status": "UP",
-            "api_base": config.VISION_API_BASE,
-            "model": config.VISION_MODEL,
             "configured": True
         }
     elif config.is_vision_enabled():
         health_status["components"]["vision"] = {
             "status": "DOWN",
-            "api_base": config.VISION_API_BASE,
-            "model": config.VISION_MODEL,
             "configured": True,
             "error": "初始化失败"
         }

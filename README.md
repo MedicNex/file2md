@@ -1,6 +1,6 @@
-# MedicNex File2Markdown 服务
+# MedicNex File2Markdown
 
-一个基于 FastAPI 的微服务，可以将各种文档格式（Word、PDF、PowerPoint、Excel、CSV、图片、代码文件等）转换为 Markdown 文本。
+MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将各种文档格式（Word、PDF、PowerPoint、Excel、CSV、图片、代码文件等）转换为 Markdown 文本。
 
 ## 功能特性
 
@@ -43,7 +43,7 @@
 | Excel表格 | `.xls`, `.xlsx` | ExcelParser | `sheet` | 转换为HTML表格格式和统计信息，**并发处理图片** |
 | CSV数据 | `.csv` | CsvParser | `sheet` | 转换为HTML表格格式和数据分析 |
 | 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | OCR和视觉识别 |
-| SVG文件 | `.svg` | SvgParser | `svg` | 识别为代码格式，保持XML结构 |
+| SVG文件 | `.svg` | SvgParser | `svg` | 同时识别代码结构和视觉特征，**转换为PNG进行OCR和AI视觉分析**（需要ImageMagick或Cairo库） |
 
 ### 代码文件（85+ 种语言）
 
@@ -93,9 +93,43 @@ docker-compose up -d
 pip install -r requirements.txt
 ```
 
-2. 安装系统依赖（Ubuntu/Debian）：
+2. 安装系统依赖：
+
+**Ubuntu/Debian：**
 ```bash
-sudo apt-get install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng
+# 基础OCR支持
+sudo apt-get update
+sudo apt-get install -y tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng
+
+# SVG视觉识别支持（推荐ImageMagick）
+sudo apt-get install -y imagemagick libmagickwand-dev pkg-config
+
+# Python开发工具
+sudo apt-get install -y python3-dev python3-pip build-essential
+```
+
+**CentOS/RHEL：**
+```bash
+# 基础OCR支持
+sudo yum update -y
+sudo yum install -y epel-release
+sudo yum install -y tesseract tesseract-langpack-chi-sim tesseract-langpack-eng
+
+# SVG视觉识别支持
+sudo yum install -y ImageMagick ImageMagick-devel pkgconfig
+
+# Python开发工具
+sudo yum install -y python3-devel python3-pip gcc gcc-c++ make
+```
+
+**macOS：**
+```bash
+brew install tesseract tesseract-lang
+
+# 可选：SVG视觉识别支持（二选一）
+brew install freetype imagemagick  # ImageMagick支持
+# 或者
+brew install cairo pkg-config  # Cairo支持
 ```
 
 3. 设置环境变量：
@@ -222,8 +256,19 @@ curl -X GET "https://file.medicnex.com/v1/queue/info" \
   "filename": "chart.png", 
   "size": 204800,
   "content_type": "image/png",
-  "content": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Description:\n这是一个显示月度销售趋势的柱状图...\n```",
+  "content": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Visual_Features:\n这是一个显示月度销售趋势的柱状图...\n```",
   "duration_ms": 2500
+}
+```
+
+响应示例（SVG文件）：
+```json
+{
+  "filename": "icon.svg",
+  "size": 1024,
+  "content_type": "image/svg+xml",
+  "content": "```svg\n# Code\n<code class=\"language-svg\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\">\n  <path d=\"M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z\"/>\n</svg>\n</code>\n\n# Visual_Features: 这是一个五角星图标，使用简洁的线条设计，星形完整对称，适合用作评分或收藏功能的图标元素。\n```",
+  "duration_ms": 3200
 }
 ```
 
@@ -247,7 +292,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
   "filename": "test_doc_with_image_and_codeblock.docx",
   "size": 15970,
   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorla!\n\nom! # Description: ### 1. 整体精准描述\n\n这张图片展示了一个简单的用户界面元素，背景为浅蓝色。图中包含一个白色边框的矩形区域，矩形内包含两行不同颜色的文本。整体布局简洁，内容和结构清晰易辨。\n\n### 2. 主要元素和结构\n\n- **背景：** 整个图片的背景为统一的浅蓝色，没有其他图案或装饰。\n- **矩形框：** 位于图片中央，是一个白色矩形框，具有黑色边框，背景颜色为纯白色，显得十分醒目。\n- **文本内容：**\n  - 第一行文本内容为\"Hello World!\"，字体为黑色，字体大小适中，位于矩形框顶部稍靠左的位置。\n  - 第二行文本内容为\" fascinated! \"，字体为红色，较第一行字体稍小，紧接在第一行的下方，同样是稍微偏左对齐。\n- **布局：** 两行文本在矩形框内垂直排列，具有一定的间距，并且都是左对齐，保持一定的对齐美感。\n\n### 3. 表格、图表及其他内容\n\n该图片中并未包含任何表格、图表等其他复杂元素，仅包含两段文字。内容上没有多余修饰，主要聚焦于两行文本信息的展示。\" />\n```",
+  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorla!\n\nom! # Visual_Features: ### 1. 整体精准描述\n\n这张图片展示了一个简单的用户界面元素，背景为浅蓝色。图中包含一个白色边框的矩形区域，矩形内包含两行不同颜色的文本。整体布局简洁，内容和结构清晰易辨。\n\n### 2. 主要元素和结构\n\n- **背景：** 整个图片的背景为统一的浅蓝色，没有其他图案或装饰。\n- **矩形框：** 位于图片中央，是一个白色矩形框，具有黑色边框，背景颜色为纯白色，显得十分醒目。\n- **文本内容：**\n  - 第一行文本内容为\"Hello World!\"，字体为黑色，字体大小适中，位于矩形框顶部稍靠左的位置。\n  - 第二行文本内容为\" fascinated! \"，字体为红色，较第一行字体稍小，紧接在第一行的下方，同样是稍微偏左对齐。\n- **布局：** 两行文本在矩形框内垂直排列，具有一定的间距，并且都是左对齐，保持一定的对齐美感。\n\n### 3. 表格、图表及其他内容\n\n该图片中并未包含任何表格、图表等其他复杂元素，仅包含两段文字。内容上没有多余修饰，主要聚焦于两行文本信息的展示。\" />\n```",
   "duration_ms": 14208
 }
 ```
@@ -274,7 +319,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
      - 结构和排版信息
 
 4. **📝 HTML标签输出**：
-   - 图片转换为：`<img src="图片名" alt="# OCR: ... # Description: ..." />`
+   - 图片转换为：`<img src="图片名" alt="# OCR: ... # Visual_Features: ..." />`
    - alt属性包含完整的OCR结果和AI描述
    - 便于前端展示和无障碍访问
 

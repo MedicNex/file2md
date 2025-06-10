@@ -32,8 +32,8 @@ class OdtParser(BaseParser):
     async def _pandoc_parse(self, file_path: str) -> str:
         """使用pandoc解析ODT文件"""
         try:
-            # 创建临时输出文件
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as temp_md:
+            # 创建临时输出文件，指定UTF-8编码
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as temp_md:
                 temp_md_path = temp_md.name
             
             self.temp_files.append(temp_md_path)

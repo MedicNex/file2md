@@ -48,7 +48,7 @@ def hello_world():
 # OCR:
 识别的文字内容
 
-# Description:
+# Visual_Features:
 视觉模型的详细描述
 ```
 
@@ -137,7 +137,7 @@ Content-Type: text/x-python
   "filename": "chart.png",
   "size": 204800,
   "content_type": "image/png",
-  "content": "```image\n# OCR:\n图表标题：销售数据\n\n# Description:\n这是一个显示销售趋势的柱状图...\n```",
+  "content": "```image\n# OCR:\n图表标题：销售数据\n\n# Visual_Features:\n这是一个显示销售趋势的柱状图...\n```",
   "duration_ms": 2500
 }
 ```
@@ -223,7 +223,7 @@ def image_to_md(img_path: str) -> str:
                             "url": f"data:image/png;base64,{b64}"
                         }
                     },
-                    {"type": "text", "text": "请详细描述这张图片的内容，包括主要元素和布局。"}
+                    {"type": "text", "text": "Please provide a detailed description of this image, including main elements and layout."}
                 ],
             }
         ],
@@ -231,7 +231,7 @@ def image_to_md(img_path: str) -> str:
     vision_description = rsp.choices[0].message.content
     
     # 返回统一格式
-    return f"```image\n# OCR:\n{ocr_text}\n\n# Description:\n{vision_description}\n```"
+    return f"```image\n# OCR:\n{ocr_text}\n\n# Visual_Features:\n{vision_description}\n```"
 ```
 
 ---

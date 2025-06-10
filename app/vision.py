@@ -165,9 +165,11 @@ async def image_to_markdown(image_path: str) -> str:
         
         if vision_client:
             try:
-                prompt = ("请详细描述这张图片的内容，包括：1. 图片的整体精准描述；"
-                         "2. 图片的主要元素和结构；3. 如果有表格、图表等，请详细描述其内容和布局。"
-                         "请只返回描述内容，不要包含OCR文字提取。")
+                prompt = ("Please provide a detailed description of this image, including: "
+                         "1. Overall accurate description of the image; "
+                         "2. Main elements and structure of the image; "
+                         "3. If there are tables, charts, etc., please describe their content and layout in detail. "
+                         "Please only return the description content, do not include OCR text extraction.")
                 
                 vision_description = await call_vision_api_with_retry(base64_image, prompt)
                 
@@ -234,7 +236,7 @@ def format_image_result(ocr_text: str, vision_description: str) -> str:
     vision_description = vision_description.replace('\\n', '\n')
     
     # 使用统一的代码块格式
-    result = f"```image\n# OCR:\n{ocr_text}\n\n# Description:\n{vision_description}\n```"
+    result = f"```image\n# OCR:\n{ocr_text}\n\n# Visual_Features:\n{vision_description}\n```"
     return result
 
 async def fallback_ocr(image_path: str) -> str:
