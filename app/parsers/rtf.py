@@ -3,6 +3,7 @@ from loguru import logger
 import subprocess
 import tempfile
 import os
+import re
 
 class RtfParser(BaseParser):
     """RTF文档解析器"""
@@ -14,6 +15,10 @@ class RtfParser(BaseParser):
     async def parse(self, file_path: str) -> str:
         """解析RTF文件"""
         try:
+            # 安全性检查
+            if not self._validate_file_security(file_path):
+                raise Exception("文件安全验证失败")
+                
             # 使用pandoc将RTF转换为Markdown
             # 创建临时输出文件，指定UTF-8编码
             with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as temp_md:
@@ -25,19 +30,26 @@ class RtfParser(BaseParser):
             try:
                 result = subprocess.run([
                     'pandoc', 
-                    file_path,
+                    os.path.abspath(file_path),  # 使用绝对路径防止路径遍历
                     '-t', 'markdown',
                     '-o', temp_md_path,
-                    '--wrap=none'  # 不自动换行
-                ], capture_output=True, text=True, check=True)
+                    '--wrap=none',  # 不自动换行
+                    '--sandbox'  # 启用沙箱模式
+                ], capture_output=True, text=True, check=True, timeout=30)  # 添加超时
                 
                 # 读取转换后的Markdown内容
                 with open(temp_md_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
+                # 内容清理
+                content = self._sanitize_content(content)
+                
                 logger.info(f"成功解析RTF文件: {file_path}")
                 return content.strip()
                 
+            except subprocess.TimeoutExpired:
+                logger.error(f"Pandoc转换RTF超时: {file_path}")
+                return await self._fallback_parse(file_path)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Pandoc转换RTF失败: {e}")
                 # 如果pandoc失败，尝试简单的文本提取
@@ -95,4 +107,49 @@ class RtfParser(BaseParser):
             raise Exception("RTF解析需要安装striprtf库: pip install striprtf")
         except Exception as e:
             logger.error(f"备用RTF解析失败: {e}")
-            raise Exception(f"RTF文件解析错误: {str(e)}") 
+            raise Exception(f"RTF文件解析错误: {str(e)}")
+    
+    def _validate_file_security(self, file_path: str) -> bool:
+        """验证文件安全性"""
+        try:
+            # 检查文件是否存在
+            if not os.path.exists(file_path):
+                logger.error(f"文件不存在: {file_path}")
+                return False
+            
+            # 检查文件大小（限制为50MB）
+            file_size = os.path.getsize(file_path)
+            if file_size > 50 * 1024 * 1024:
+                logger.error(f"文件过大: {file_size} bytes")
+                return False
+            
+            # 检查文件路径，防止路径遍历攻击
+            abs_path = os.path.abspath(file_path)
+            if '..' in file_path or abs_path != os.path.normpath(abs_path):
+                logger.error(f"检测到可疑文件路径: {file_path}")
+                return False
+            
+            return True
+        except Exception as e:
+            logger.error(f"文件安全验证失败: {e}")
+            return False
+    
+    def _sanitize_content(self, content: str) -> str:
+        """清理内容，防止注入攻击"""
+        if not content:
+            return content
+        
+        # 移除潜在的危险字符和模式
+        # 限制内容长度
+        if len(content) > 1000000:  # 1MB 文本限制
+            content = content[:1000000] + "\n\n... (内容被截断，超过限制)"
+        
+        # 清理潜在的markdown注入
+        # 转义可能的代码块标记
+        content = content.replace('```', '\\`\\`\\`')
+        
+        # 清理HTML标签（保留基本格式）
+        content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        content = re.sub(r'<iframe[^>]*>.*?</iframe>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        
+        return content

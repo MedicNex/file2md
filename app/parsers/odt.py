@@ -17,13 +17,18 @@ class OdtParser(BaseParser):
     async def parse(self, file_path: str) -> str:
         """解析ODT文件"""
         try:
+            # 安全性检查
+            if not self._validate_file_security(file_path):
+                raise Exception("文件安全验证失败")
+                
             # 首先尝试使用pandoc转换
             content = await self._pandoc_parse(file_path)
             if content:
-                return content
+                return self._sanitize_content(content)
             
             # 如果pandoc失败，使用内置解析器
-            return await self._internal_parse(file_path)
+            content = await self._internal_parse(file_path)
+            return self._sanitize_content(content)
                 
         except Exception as e:
             logger.error(f"解析ODT文件失败 {file_path}: {e}")
@@ -41,11 +46,12 @@ class OdtParser(BaseParser):
             # 使用pandoc转换ODT到Markdown
             result = subprocess.run([
                 'pandoc', 
-                file_path,
+                os.path.abspath(file_path),  # 使用绝对路径防止路径遍历
                 '-t', 'markdown',
                 '-o', temp_md_path,
-                '--wrap=none'  # 不自动换行
-            ], capture_output=True, text=True, check=True)
+                '--wrap=none',  # 不自动换行
+                '--sandbox'  # 启用沙箱模式
+            ], capture_output=True, text=True, check=True, timeout=30)  # 添加超时
             
             # 读取转换后的Markdown内容
             with open(temp_md_path, 'r', encoding='utf-8') as f:
@@ -54,6 +60,9 @@ class OdtParser(BaseParser):
             logger.info(f"使用pandoc成功解析ODT文件: {file_path}")
             return content.strip()
             
+        except subprocess.TimeoutExpired:
+            logger.warning(f"Pandoc转换ODT超时: {file_path}")
+            return None
         except subprocess.CalledProcessError as e:
             logger.warning(f"Pandoc转换ODT失败: {e}")
             return None
@@ -189,4 +198,58 @@ class OdtParser(BaseParser):
         except Exception as e:
             logger.warning(f"表格提取失败: {e}")
         
-        return None 
+        return None
+    
+    def _validate_file_security(self, file_path: str) -> bool:
+        """验证文件安全性"""
+        try:
+            # 检查文件是否存在
+            if not os.path.exists(file_path):
+                logger.error(f"文件不存在: {file_path}")
+                return False
+            
+            # 检查文件大小（限制为50MB）
+            file_size = os.path.getsize(file_path)
+            if file_size > 50 * 1024 * 1024:
+                logger.error(f"文件过大: {file_size} bytes")
+                return False
+            
+            # 检查文件路径，防止路径遍历攻击
+            abs_path = os.path.abspath(file_path)
+            if '..' in file_path or abs_path != os.path.normpath(abs_path):
+                logger.error(f"检测到可疑文件路径: {file_path}")
+                return False
+            
+            # 验证ZIP文件结构（ODT是ZIP格式）
+            try:
+                with zipfile.ZipFile(file_path, 'r') as zip_file:
+                    # 检查是否包含必要的ODT文件
+                    if 'content.xml' not in zip_file.namelist():
+                        logger.error("无效的ODT文件结构")
+                        return False
+            except zipfile.BadZipFile:
+                logger.error("文件不是有效的ZIP/ODT格式")
+                return False
+            
+            return True
+        except Exception as e:
+            logger.error(f"文件安全验证失败: {e}")
+            return False
+    
+    def _sanitize_content(self, content: str) -> str:
+        """清理内容，防止注入攻击"""
+        if not content:
+            return content
+        
+        # 限制内容长度
+        if len(content) > 1000000:  # 1MB 文本限制
+            content = content[:1000000] + "\n\n... (内容被截断，超过限制)"
+        
+        # 清理潜在的markdown注入
+        content = content.replace('```', '\\`\\`\\`')
+        
+        # 清理HTML标签（保留基本格式）
+        content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        content = re.sub(r'<iframe[^>]*>.*?</iframe>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        
+        return content

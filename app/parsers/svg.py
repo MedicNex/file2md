@@ -3,6 +3,7 @@ from loguru import logger
 import chardet
 import os
 import asyncio
+import re
 from app.vision import get_ocr_text, call_vision_api_with_retry, vision_client
 from app.config import config
 import base64
@@ -78,14 +79,22 @@ class SvgParser(BaseParser):
             with Color('white') as background_color:
                 img.background_color = background_color
             
+            # 设置安全选项
+            img.options['svg:xml-parse-huge'] = 'false'
+            img.options['svg:xml-parse-nonet'] = 'true'
+            
             # 读取SVG文件
-            img.read(filename=svg_path)
+            img.read(filename=os.path.abspath(svg_path))
+            
+            # 限制输出尺寸
+            if img.width > 2000 or img.height > 2000:
+                img.resize(2000, 2000)
             
             # 设置输出格式为PNG
             img.format = 'png'
             
-            # 设置分辨率提高质量
-            img.resolution = (300, 300)
+            # 设置分辨率提高质量（限制最大分辨率）
+            img.resolution = (min(300, 300), min(300, 300))
             
             # 保存为PNG
             img.save(filename=png_path)
@@ -116,6 +125,10 @@ class SvgParser(BaseParser):
     async def parse(self, file_path: str) -> str:
         """解析SVG文件为代码格式和视觉特征"""
         try:
+            # 安全性检查
+            if not self._validate_svg_security(file_path):
+                raise Exception("SVG文件安全验证失败")
+                
             # 检测文件编码
             with open(file_path, 'rb') as f:
                 raw_data = f.read()
@@ -124,6 +137,9 @@ class SvgParser(BaseParser):
             # 读取SVG文件内容
             with open(file_path, 'r', encoding=encoding) as f:
                 svg_content = f.read()
+            
+            # 清理SVG内容
+            svg_content = self._sanitize_svg_content(svg_content)
             
             # 格式化SVG代码块
             code_section = f'<code class="language-svg">\n{svg_content.strip()}\n</code>'
@@ -162,4 +178,76 @@ class SvgParser(BaseParser):
             
         except Exception as e:
             logger.error(f"解析SVG文件失败 {file_path}: {e}")
-            raise Exception(f"SVG文件解析错误: {str(e)}") 
+            raise Exception(f"SVG文件解析错误: {str(e)}")
+    
+    def _validate_svg_security(self, file_path: str) -> bool:
+        """验证SVG文件安全性"""
+        try:
+            # 检查文件是否存在
+            if not os.path.exists(file_path):
+                logger.error(f"文件不存在: {file_path}")
+                return False
+            
+            # 检查文件大小（限制为10MB）
+            file_size = os.path.getsize(file_path)
+            if file_size > 10 * 1024 * 1024:
+                logger.error(f"SVG文件过大: {file_size} bytes")
+                return False
+            
+            # 检查文件路径，防止路径遍历攻击
+            abs_path = os.path.abspath(file_path)
+            if '..' in file_path or abs_path != os.path.normpath(abs_path):
+                logger.error(f"检测到可疑文件路径: {file_path}")
+                return False
+            
+            # 检查SVG内容是否包含危险元素
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # 检查是否包含危险的SVG元素
+                dangerous_patterns = [
+                    r'<script[^>]*>',
+                    r'javascript:',
+                    r'on\w+\s*=',  # onclick, onload等事件
+                    r'<foreignObject',
+                    r'<iframe',
+                    r'<object',
+                    r'<embed'
+                ]
+                
+                for pattern in dangerous_patterns:
+                    if re.search(pattern, content, re.IGNORECASE):
+                        logger.error(f"SVG包含危险元素: {pattern}")
+                        return False
+                        
+            except UnicodeDecodeError:
+                logger.error("SVG文件编码错误")
+                return False
+            
+            return True
+        except Exception as e:
+            logger.error(f"SVG安全验证失败: {e}")
+            return False
+    
+    def _sanitize_svg_content(self, content: str) -> str:
+        """清理SVG内容，移除危险元素"""
+        if not content:
+            return content
+        
+        # 限制内容长度
+        if len(content) > 500000:  # 500KB 文本限制
+            content = content[:500000] + "\n<!-- 内容被截断，超过限制 -->"
+        
+        # 移除危险的脚本和事件处理器
+        content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        content = re.sub(r'javascript:[^"\']*', '', content, flags=re.IGNORECASE)
+        content = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', '', content, flags=re.IGNORECASE)
+        
+        # 移除危险的嵌入元素
+        content = re.sub(r'<foreignObject[^>]*>.*?</foreignObject>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        content = re.sub(r'<iframe[^>]*>.*?</iframe>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        content = re.sub(r'<object[^>]*>.*?</object>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        content = re.sub(r'<embed[^>]*/?>', '', content, flags=re.IGNORECASE)
+        
+        return content

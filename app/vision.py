@@ -231,6 +231,10 @@ def format_image_result(ocr_text: str, vision_description: str) -> str:
     Returns:
         格式化的Markdown内容
     """
+    # 清理和验证输入内容
+    ocr_text = _sanitize_text_content(ocr_text or "")
+    vision_description = _sanitize_text_content(vision_description or "")
+    
     # 处理换行符
     ocr_text = ocr_text.replace('\\n', '\n')
     vision_description = vision_description.replace('\\n', '\n')
@@ -255,4 +259,51 @@ async def fallback_ocr(image_path: str) -> str:
         return format_image_result(ocr_text, vision_description)
     except OCRError as e:
         logger.error(f"回退OCR失败: {e}")
-        return f"*OCR处理失败: {str(e)}*" 
+        return f"*OCR处理失败: {str(e)}*"
+
+def _sanitize_text_content(content: str) -> str:
+    """
+    清理文本内容，防止注入攻击
+    
+    Args:
+        content: 原始文本内容
+        
+    Returns:
+        清理后的安全文本内容
+    """
+    if not content:
+        return ""
+    
+    # 限制内容长度
+    max_length = 50000  # 50KB 文本限制
+    if len(content) > max_length:
+        content = content[:max_length] + "\n\n... (内容被截断，超过长度限制)"
+    
+    # 移除或转义危险的markdown语法
+    # 转义代码块标记，防止markdown注入
+    content = content.replace('```', '\\`\\`\\`')
+    
+    # 移除HTML标签（除了基本的格式标签）
+    import re
+    # 移除脚本和危险标签
+    content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.IGNORECASE | re.DOTALL)
+    content = re.sub(r'<iframe[^>]*>.*?</iframe>', '', content, flags=re.IGNORECASE | re.DOTALL)
+    content = re.sub(r'<object[^>]*>.*?</object>', '', content, flags=re.IGNORECASE | re.DOTALL)
+    content = re.sub(r'<embed[^>]*/?>', '', content, flags=re.IGNORECASE)
+    content = re.sub(r'<link[^>]*/?>', '', content, flags=re.IGNORECASE)
+    content = re.sub(r'<meta[^>]*/?>', '', content, flags=re.IGNORECASE)
+    
+    # 移除潜在的XSS攻击向量
+    content = re.sub(r'javascript:', '', content, flags=re.IGNORECASE)
+    content = re.sub(r'on\w+\s*=', '', content, flags=re.IGNORECASE)
+    
+    # 清理控制字符和不可见字符
+    content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', content)
+    
+    # 标准化换行符
+    content = re.sub(r'\r\n|\r', '\n', content)
+    
+    # 移除过多的连续换行符
+    content = re.sub(r'\n{4,}', '\n\n\n', content)
+    
+    return content.strip()
