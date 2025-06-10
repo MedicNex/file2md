@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - API_KEY=dev-test-key-123,prod-key-456
+      - API_KEY=${API_KEY}
       - VISION_API_KEY=${VISION_API_KEY:-}
       - VISION_API_BASE=${VISION_API_BASE:-https://api.openai.com/v1}
       - VISION_MODEL=${VISION_MODEL:-gpt-4o-mini}

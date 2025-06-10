@@ -110,6 +110,10 @@ class NumbersParser(BaseParser):
     async def _parse_basic(self, file_path: str) -> str:
         """基础解析方法"""
         try:
+            # 安全性检查
+            if not self._validate_archive_security(file_path):
+                raise Exception("存档文件安全验证失败")
+                
             # Numbers文件实际上是一个ZIP包
             with zipfile.ZipFile(file_path, 'r') as zip_file:
                 content_parts = []
@@ -159,6 +163,57 @@ class NumbersParser(BaseParser):
         except Exception as e:
             logger.error(f"基础解析Numbers文件失败 {file_path}: {e}")
             raise
+    
+    def _validate_archive_security(self, file_path: str) -> bool:
+        """验证存档文件安全性"""
+        try:
+            # 检查文件是否存在
+            if not os.path.exists(file_path):
+                logger.error(f"文件不存在: {file_path}")
+                return False
+            
+            # 检查文件大小（限制为100MB）
+            file_size = os.path.getsize(file_path)
+            if file_size > 100 * 1024 * 1024:
+                logger.error(f"Numbers文件过大: {file_size} bytes")
+                return False
+                
+            # 检查是否为有效的ZIP文件
+            try:
+                with zipfile.ZipFile(file_path, 'r') as zip_file:
+                    # 检查ZIP文件内容总大小（解压后）
+                    total_size = 0
+                    for info in zip_file.infolist():
+                        # 防止路径遍历攻击
+                        if os.path.isabs(info.filename) or '..' in info.filename:
+                            logger.error(f"检测到可疑文件路径: {info.filename}")
+                            return False
+                        
+                        # 检查单个文件大小
+                        if info.file_size > 50 * 1024 * 1024:  # 50MB限制
+                            logger.error(f"存档中文件过大: {info.filename} ({info.file_size} bytes)")
+                            return False
+                            
+                        total_size += info.file_size
+                        
+                        # 检查总解压大小（防止ZIP炸弹）
+                        if total_size > 500 * 1024 * 1024:  # 500MB限制
+                            logger.error(f"存档解压后总大小过大: {total_size} bytes")
+                            return False
+                    
+                    # 检查文件数量
+                    if len(zip_file.infolist()) > 10000:
+                        logger.error("存档包含过多文件")
+                        return False
+                        
+            except zipfile.BadZipFile:
+                logger.error("文件不是有效的ZIP格式")
+                return False
+            
+            return True
+        except Exception as e:
+            logger.error(f"存档安全验证失败: {e}")
+            return False
     
     def _extract_preview_content(self, zip_file: zipfile.ZipFile) -> str:
         """提取预览内容"""

@@ -79,16 +79,36 @@ async def convert_file(
                 }
             )
         
-        # 检查文件大小
-        content = await file.read()
-        file_size = len(content)
+        # 检查文件大小（使用流式读取避免内存问题）
+        file_size = 0
+        content = b""
+        chunk_size = 8192  # 8KB 块大小
         
-        if file_size > config.MAX_FILE_SIZE:
+        try:
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                file_size += len(chunk)
+                
+                # 检查是否超过大小限制，避免继续读取
+                if file_size > config.MAX_FILE_SIZE:
+                    raise HTTPException(
+                        status_code=413,
+                        detail={
+                            "code": "FILE_TOO_LARGE",
+                            "message": f"文件过大: {file_size} bytes，最大允许: {config.MAX_FILE_SIZE} bytes ({config.MAX_FILE_SIZE // 1024 // 1024} MB)"
+                        }
+                    )
+                content += chunk
+        except HTTPException:
+            raise
+        except Exception as e:
             raise HTTPException(
-                status_code=413,
+                status_code=422,
                 detail={
-                    "code": "FILE_TOO_LARGE",
-                    "message": f"文件过大: {file_size} bytes，最大允许: {config.MAX_FILE_SIZE} bytes ({config.MAX_FILE_SIZE // 1024 // 1024} MB)"
+                    "code": "FILE_READ_ERROR",
+                    "message": f"文件读取失败: {str(e)}"
                 }
             )
         

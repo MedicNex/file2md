@@ -79,22 +79,45 @@ class SvgParser(BaseParser):
             with Color('white') as background_color:
                 img.background_color = background_color
             
-            # 设置安全选项
+            # 设置安全选项和资源限制
             img.options['svg:xml-parse-huge'] = 'false'
             img.options['svg:xml-parse-nonet'] = 'true'
+            img.options['svg:xml-parse-noent'] = 'true'  # 禁用实体解析
+            
+            # 设置资源限制（防止DoS攻击）
+            from wand.api import library
+            try:
+                # 设置内存限制为50MB
+                library.MagickSetResourceLimit(library.MemoryResource, 50 * 1024 * 1024)
+                # 设置磁盘限制为100MB
+                library.MagickSetResourceLimit(library.DiskResource, 100 * 1024 * 1024)
+                # 设置像素处理时间限制为30秒
+                library.MagickSetResourceLimit(library.TimeResource, 30)
+                # 设置最大文件描述符数量
+                library.MagickSetResourceLimit(library.FileResource, 10)
+                # 设置最大线程数
+                library.MagickSetResourceLimit(library.ThreadResource, 1)
+            except Exception as e:
+                logger.warning(f"设置ImageMagick资源限制失败: {e}")
             
             # 读取SVG文件
             img.read(filename=os.path.abspath(svg_path))
             
-            # 限制输出尺寸
-            if img.width > 2000 or img.height > 2000:
-                img.resize(2000, 2000)
+            # 限制输出尺寸（防止内存耗尽）
+            max_dimension = 2000
+            if img.width > max_dimension or img.height > max_dimension:
+                # 计算缩放比例，保持宽高比
+                scale = min(max_dimension / img.width, max_dimension / img.height)
+                new_width = int(img.width * scale)
+                new_height = int(img.height * scale)
+                img.resize(new_width, new_height)
+                logger.info(f"SVG图片被缩放至: {new_width}x{new_height}")
             
             # 设置输出格式为PNG
             img.format = 'png'
             
-            # 设置分辨率提高质量（限制最大分辨率）
-            img.resolution = (min(300, 300), min(300, 300))
+            # 设置分辨率（限制最大分辨率）
+            img.resolution = (min(150, 150), min(150, 150))
             
             # 保存为PNG
             img.save(filename=png_path)

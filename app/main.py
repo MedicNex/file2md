@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -82,9 +82,14 @@ async def shutdown_event():
         logger.info(f"关闭时清理了 {cleaned_count} 个过期任务")
 
 @app.get("/v1/health")
-async def health_check():
-    """健康检查端点"""
+async def health_check(response: Response):
+    """健康检查端点 - 允许所有来源访问"""
     from app.vision import vision_client
+    
+    # 设置 CORS 头，允许所有来源访问健康检查端点
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     
     # 基础服务状态
     health_status = {
@@ -122,6 +127,14 @@ async def health_check():
         }
     
     return health_status
+
+@app.options("/v1/health")
+async def health_check_options(response: Response):
+    """健康检查端点的 OPTIONS 预检请求处理"""
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return {"message": "OK"}
 
 @app.get("/")
 async def root():

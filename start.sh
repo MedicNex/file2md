@@ -39,7 +39,7 @@ export MAX_CONCURRENT=${MAX_CONCURRENT:-"10"}
 export MAGICK_HOME=/opt/homebrew/opt/imagemagick
 
 echo "🚀 启动 MedicNex File2Markdown 服务..."
-echo "🔑 API Keys: $API_KEY"
+echo "🔑 API Keys: [已配置，长度:$(echo $API_KEY | wc -c)字符]"
 echo "🌐 端口: $PORT"
 
 # 检查Python环境
@@ -78,7 +78,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '8999',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-0-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-0-out.log'
@@ -98,7 +99,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9002',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-1-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-1-out.log'
@@ -118,7 +120,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9003',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-2-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-2-out.log'
@@ -138,7 +141,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9004',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-3-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-3-out.log'
@@ -158,7 +162,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9005',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-4-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-4-out.log'
@@ -178,7 +183,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9006',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-5-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-5-out.log'
@@ -198,7 +204,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9007',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-6-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-6-out.log'
@@ -218,7 +225,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9008',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-7-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-7-out.log'
@@ -238,7 +246,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9009',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-8-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-8-out.log'
@@ -258,7 +267,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9010',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-9-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-9-out.log'
@@ -278,7 +288,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9011',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-10-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-10-out.log'
@@ -298,7 +309,8 @@ module.exports = {
         API_KEY: '$API_KEY',
         PORT: '9012',
         MAGICK_HOME: '/opt/homebrew/opt/imagemagick',
-        MAX_CONCURRENT: '10'
+        MAX_CONCURRENT: '10',
+        CORS_ORIGINS: '$CORS_ORIGINS'
       },
       error_file: '/www/wwwlogs/pm2/medicnex-11-error.log',
       out_file: '/www/wwwlogs/pm2/medicnex-11-out.log'

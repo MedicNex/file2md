@@ -78,7 +78,7 @@ class Config:
     TEXT_CHUNK_SIZE: int = int(os.getenv("TEXT_CHUNK_SIZE", "1048576"))  # 文本块大小 (1MB)
     
     # CORS配置
-    CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "*").split(",")
+    CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
     CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
     
     @classmethod
