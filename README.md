@@ -1,13 +1,13 @@
 # MedicNex File2Markdown
 
-MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将各种文档格式（Word、PDF、PowerPoint、Excel、CSV、图片、代码文件等）转换为 Markdown 文本。
+MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**106种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、82+种编程语言等）转换为统一的 Markdown 代码块格式。
 
 ## 功能特性
 
 - 🔐 **API Key 鉴权**：支持多个 API Key 管理
-- 📄 **多格式支持**：支持 TXT、MD、DOCX、DOC、RTF、ODT、PDF、PPTX、XLS、XLSX、CSV、图片(包括SVG)、代码文件等格式
-- 💻 **代码文件支持**：支持 85+ 种编程语言文件转换
-- 🖼️ **智能图片识别**：集成 OpenAI Vision API 和 Tesseract OCR
+- 📄 **全面格式支持**：支持 **106种文件格式**，包含 13种解析器类型
+- 💻 **代码文件支持**：支持 **82+ 种编程语言**文件转换，涵盖主流、函数式、脚本、配置等语言
+- 🖼️ **智能图片识别**：集成 Vision API 和 Tesseract OCR，支持 SVG 转 PNG 识别
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
 - 🚀 **队列处理模式**：支持批量文档转换，限制最多5个并发任务
 - 🎯 **并发图片处理**：文档中多张图片同时进行 OCR 和 AI 视觉识别，处理速度提升 2-10 倍
@@ -45,17 +45,22 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将各种文
 | 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | OCR和视觉识别 |
 | SVG文件 | `.svg` | SvgParser | `svg` | 同时识别代码结构和视觉特征，**转换为PNG进行OCR和AI视觉分析**（需要ImageMagick或Cairo库） |
 
-### 代码文件（85+ 种语言）
+### 代码文件（82+ 种语言）
 
 | 语言类别 | 支持的扩展名 | 输出格式 |
 |----------|-------------|----------|
 | **主流编程语言** | `.py`, `.js`, `.ts`, `.java`, `.cpp`, `.c`, `.cs`, `.go`, `.rs`, `.php`, `.rb` | 对应语言代码块 |
 | **前端技术** | `.html`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.jsx`, `.tsx`, `.svelte` | 对应语言代码块 |
-| **脚本语言** | `.r`, `.R`, `.lua`, `.perl`, `.pl`, `.sh`, `.bash`, `.zsh`, `.fish`, `.ps1` | 对应语言代码块 |
+| **脚本语言** | `.r`, `.lua`, `.perl`, `.pl`, `.sh`, `.bash`, `.zsh`, `.fish`, `.ps1` | 对应语言代码块 |
 | **配置文件** | `.json`, `.yaml`, `.yml`, `.toml`, `.xml`, `.ini`, `.cfg`, `.conf` | 对应语言代码块 |
-| **其他** | `.sql`, `.dockerfile`, `.makefile`, `.cmake`, `.gradle`, `.proto`, `.graphql` | 对应语言代码块 |
+| **数据库和其他** | `.sql`, `.dockerfile`, `.makefile`, `.cmake`, `.gradle`, `.proto`, `.graphql` | 对应语言代码块 |
+| **函数式语言** | `.hs`, `.lhs`, `.clj`, `.cljs`, `.elm`, `.erl`, `.ex`, `.exs`, `.fs`, `.fsx` | 对应语言代码块 |
+| **系统和工具** | `.vim`, `.vimrc`, `.env`, `.gitignore`, `.gitattributes`, `.editorconfig` | 对应语言代码块 |
+| **Web框架** | `.astro`, `.postcss`, `.styl` | 对应语言代码块 |
+| **科学计算** | `.m`, `.mat`, `.tex`, `.jl` | 对应语言代码块 |
+| **移动开发** | `.swift`, `.kt`, `.dart` | 对应语言代码块 |
 
-**完整支持列表**：Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, 等85+种语言。
+**完整支持列表**：Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, Haskell, Clojure, Elm, Erlang, Elixir, F#, Swift, Kotlin, Dart, Julia, MATLAB, LaTeX, Vim, 等82+种语言。
 
 ## 快速开始
 
@@ -467,6 +472,7 @@ app/
 
 ## 📚 更多资源
 
+- **[支持的文件格式](SUPPORTED_FORMATS.md)** - 详细的106种支持格式列表和功能说明
 - **[转换示例文档](EXAMPLES.md)** - 详细的实际转换案例和功能演示
 - **[前端集成指南](FRONTEND_API.md)** - 前端开发者接入文档
 
@@ -507,6 +513,15 @@ class CustomParser(BaseParser):
 ---
 
 ## 📈 最新更新
+
+### v2.2.0 (2025-01-15)
+- 📊 **数据更新**：完整测试并更新支持格式列表
+  - **106种文件格式**：完整验证所有支持的扩展名
+  - **13个解析器**：优化分类和统计信息
+  - **新增文档**：创建详细的[支持格式列表](SUPPORTED_FORMATS.md)
+- 🔧 **API增强**：`/v1/supported-types` 端点返回准确的格式信息
+- 🖼️ **SVG功能**：完善SVG转PNG的视觉识别功能（ImageMagick支持）
+- 🛡️ **安全改进**：健康检查API移除敏感信息暴露
 
 ### v2.1.0 (2025-01-15)
 - ✨ **新增**：并发图片处理功能
