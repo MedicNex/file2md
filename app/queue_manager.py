@@ -198,6 +198,8 @@ class ConversionQueueManager:
     
     async def submit_task(self, file: UploadFile) -> str:
         """提交文件转换任务到队列"""
+        from app.config import config
+        
         # 验证文件
         if not file.filename:
             raise ValueError("文件名不能为空")
@@ -218,8 +220,42 @@ class ConversionQueueManager:
         temp_file_path = temp_file.name
         
         try:
+            # 使用流式读取检查文件大小，避免内存耗尽
+            file_size = 0
+            content = b""
+            chunk_size = 8192  # 8KB 块大小
+            
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                file_size += len(chunk)
+                
+                # 检查是否超过大小限制，避免继续读取和内存耗尽
+                if file_size > config.MAX_FILE_SIZE:
+                    # 立即关闭并清理临时文件
+                    temp_file.close()
+                    if os.path.exists(temp_file_path):
+                        try:
+                            os.unlink(temp_file_path)
+                        except:
+                            pass
+                    raise ValueError(
+                        f"文件过大: {file_size} bytes，最大允许: {config.MAX_FILE_SIZE} bytes "
+                        f"({config.MAX_FILE_SIZE // 1024 // 1024} MB)"
+                    )
+                content += chunk
+            
+            if file_size == 0:
+                temp_file.close()
+                if os.path.exists(temp_file_path):
+                    try:
+                        os.unlink(temp_file_path)
+                    except:
+                        pass
+                raise ValueError("文件为空")
+            
             # 写入文件内容
-            content = await file.read()
             temp_file.write(content)
             temp_file.close()
             
@@ -227,7 +263,7 @@ class ConversionQueueManager:
             task = ConversionTask(
                 task_id=task_id,
                 filename=file.filename,
-                file_size=len(content),
+                file_size=file_size,
                 content_type=file.content_type or "application/octet-stream",
                 temp_file_path=temp_file_path
             )
@@ -238,7 +274,7 @@ class ConversionQueueManager:
             # 将任务ID加入队列
             await self.queue.put(task_id)
             
-            logger.info(f"任务已提交到队列: {file.filename} (ID: {task_id})")
+            logger.info(f"任务已提交到队列: {file.filename} (ID: {task_id}), 大小: {file_size} bytes")
             
             return task_id
             

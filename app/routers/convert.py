@@ -229,7 +229,22 @@ async def convert_batch_files(
             
             success_count += 1
             
+        except ValueError as e:
+            # 处理文件验证错误（文件大小、类型等）
+            error_message = str(e)
+            logger.warning(f"文件验证失败 {file.filename}: {error_message}")
+            
+            submitted_tasks.append(TaskSubmitResponse(
+                task_id="",
+                message=f"文件验证失败: {error_message}",
+                filename=file.filename,
+                status="failed"
+            ))
+            
+            failed_count += 1
+            
         except Exception as e:
+            # 处理其他未预期的错误
             logger.error(f"提交任务失败 {file.filename}: {e}")
             
             submitted_tasks.append(TaskSubmitResponse(
