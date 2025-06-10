@@ -1,27 +1,47 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-python-multipart==0.0.6
-loguru==0.7.2
-python-docx==0.8.11
-mammoth==1.6.0
-pdfplumber==0.9.0
-python-pptx==0.6.23
-pandas==2.1.4
-tabulate==0.9.0
-markdownify==0.11.6
-mistune==3.0.2
-pillow==10.1.0
-pytesseract==0.3.10
-openai==1.84.0
-redis==5.0.1
-slowapi==0.1.9
-openpyxl==3.1.2
+# 更新的依赖包版本 - 修复已知安全漏洞
+# 原文件: requirements.txt
+
+# 核心 Web 框架 - 修复 CVE-2024-24762 ReDoS 漏洞
+fastapi>=0.109.1
+uvicorn[standard]>=0.30.0
+pydantic>=2.10.0
+python-multipart>=0.0.10
+
+# 日志
+loguru>=0.7.2
+
+# 文档处理
+python-docx>=0.8.11
+mammoth>=1.6.0
+pdfplumber>=0.9.0
+python-pptx>=0.6.23
+pandas>=2.2.0
+tabulate>=0.9.0
+markdownify>=0.11.6
+mistune>=3.0.2
+
+# 图像处理 - 修复 CVE-2021-25287/25288 缓冲区越界漏洞
+pillow>=10.4.0
+pytesseract>=0.3.10
+
+# AI/API
+openai>=1.84.0
+
+# 缓存和限流
+redis>=5.0.1
+slowapi>=0.1.9
+
+# Excel 处理
+openpyxl>=3.1.2
+
+# 文件和网络
 aiofiles>=23.2.0
-chardet==5.2.0
-requests==2.31.0
-python-dotenv==1.0.0
-striprtf==0.0.26
-Wand==0.6.13
-cairosvg==2.8.2
-numbers-parser>=4.15.1
+chardet>=5.2.0
+requests>=2.32.0  # 安全更新
+python-dotenv>=1.0.0
+
+# 其他格式处理
+striprtf>=0.0.26
+Wand>=0.6.13
+cairosvg>=2.8.2
+numbers-parser>=4.15.1 

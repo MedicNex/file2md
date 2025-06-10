@@ -1,13 +1,13 @@
 # 支持的文件格式详细列表
 
-MedicNex File2Markdown 支持 **106 种文件格式**，分布在 **13 个解析器**中。
+MedicNex File2Markdown 支持 **109 种文件格式**，分布在 **16 个解析器**中。
 
 ## 📊 统计概览
 
-- **总支持扩展名数量**: 106 种
-- **解析器数量**: 13 个
+- **总支持扩展名数量**: 109 种
+- **解析器数量**: 16 个
 - **最大类别**: 代码文件（82种）
-- **文档类型**: 9种
+- **文档类型**: 12种
 - **图片类型**: 10种
 
 ## 🔧 按解析器分类
@@ -49,11 +49,11 @@ MedicNex File2Markdown 支持 **106 种文件格式**，分布在 **13 个解析
 ### 2. ImageParser（9种）
 `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga`
 
-### 3. MarkdownParser（2种）
-`.md`, `.markdown`
-
-### 4. PlainParser（2种）
+### 3. PlainParser（2种）
 `.txt`, `.text`
+
+### 4. MarkdownParser（2种）
+`.md`, `.markdown`
 
 ### 5. PptxParser（2种）
 `.ppt`, `.pptx`
@@ -82,9 +82,18 @@ MedicNex File2Markdown 支持 **106 种文件格式**，分布在 **13 个解析
 ### 13. CsvParser（1种）
 `.csv`
 
+### 14. KeynoteParser（1种）
+`.key`
+
+### 15. PagesParser（1种）
+`.pages`
+
+### 16. NumbersParser（1种）
+`.numbers`
+
 ## 📋 完整格式列表（按字母排序）
 
-`.astro`, `.bash`, `.bat`, `.bmp`, `.c`, `.cc`, `.cfg`, `.clj`, `.cljs`, `.cmake`, `.cmd`, `.conf`, `.cpp`, `.cs`, `.css`, `.csv`, `.cxx`, `.dart`, `.doc`, `.dockerfile`, `.dockerignore`, `.docx`, `.editorconfig`, `.elm`, `.env`, `.erl`, `.ex`, `.exs`, `.fish`, `.fs`, `.fsx`, `.gif`, `.gitattributes`, `.gitignore`, `.go`, `.gql`, `.gradle`, `.graphql`, `.groovy`, `.h`, `.hpp`, `.hs`, `.htm`, `.html`, `.ico`, `.ini`, `.java`, `.jl`, `.jpeg`, `.jpg`, `.js`, `.json`, `.jsx`, `.kt`, `.less`, `.lhs`, `.lua`, `.m`, `.make`, `.makefile`, `.markdown`, `.mat`, `.md`, `.odt`, `.pdf`, `.perl`, `.php`, `.pl`, `.png`, `.postcss`, `.ppt`, `.pptx`, `.proto`, `.ps1`, `.py`, `.r`, `.rb`, `.rs`, `.rtf`, `.sass`, `.scala`, `.scss`, `.sh`, `.sql`, `.styl`, `.svelte`, `.svg`, `.swift`, `.tex`, `.text`, `.tga`, `.tiff`, `.toml`, `.ts`, `.tsx`, `.txt`, `.vim`, `.vimrc`, `.vue`, `.webp`, `.xls`, `.xlsx`, `.xml`, `.yaml`, `.yml`, `.zsh`
+`.astro`, `.bash`, `.bat`, `.bmp`, `.c`, `.cc`, `.cfg`, `.clj`, `.cljs`, `.cmake`, `.cmd`, `.conf`, `.cpp`, `.cs`, `.css`, `.csv`, `.cxx`, `.dart`, `.doc`, `.dockerfile`, `.dockerignore`, `.docx`, `.editorconfig`, `.elm`, `.env`, `.erl`, `.ex`, `.exs`, `.fish`, `.fs`, `.fsx`, `.gif`, `.gitattributes`, `.gitignore`, `.go`, `.gql`, `.gradle`, `.graphql`, `.groovy`, `.h`, `.hpp`, `.hs`, `.htm`, `.html`, `.ico`, `.ini`, `.java`, `.jl`, `.jpeg`, `.jpg`, `.js`, `.json`, `.jsx`, `.key`, `.kt`, `.less`, `.lhs`, `.lua`, `.m`, `.make`, `.makefile`, `.markdown`, `.mat`, `.md`, `.numbers`, `.odt`, `.pages`, `.pdf`, `.perl`, `.php`, `.pl`, `.png`, `.postcss`, `.ppt`, `.pptx`, `.proto`, `.ps1`, `.py`, `.r`, `.rb`, `.rs`, `.rtf`, `.sass`, `.scala`, `.scss`, `.sh`, `.sql`, `.styl`, `.svelte`, `.svg`, `.swift`, `.tex`, `.text`, `.tga`, `.tiff`, `.toml`, `.ts`, `.tsx`, `.txt`, `.vim`, `.vimrc`, `.vue`, `.webp`, `.xls`, `.xlsx`, `.xml`, `.yaml`, `.yml`, `.zsh`
 
 ## 🎯 特殊功能说明
 
@@ -138,9 +147,11 @@ MedicNex File2Markdown 支持 **106 种文件格式**，分布在 **13 个解析
 | CsvParser | `sheet` | ````sheet` |
 | RtfParser | `document` | ````document` |
 | OdtParser | `document` | ````document` |
+| KeynoteParser | `slideshow` | ````slideshow` |
+| PagesParser | `document` | ````document` |
+| NumbersParser | `sheet` | ````sheet` |
 
 ---
 
-> 最后更新：2025-01-15  
-> 统计数据：106种格式 / 13个解析器  
-> 测试脚本：`test_supported_types.py` 
+> 最后更新：2025-06-11  
+> 统计数据：109种格式 / 16个解析器  
