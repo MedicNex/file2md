@@ -1,6 +1,6 @@
 # MedicNex File2Markdown
 
-MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式。
+MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、音频、视频、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式，对于 LLM 理解友好。
 
 ## 功能特性
 
@@ -14,24 +14,63 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 - 🐳 **容器化部署**：提供 Docker 和 Docker Compose 支持
 - 📊 **统一输出格式**：所有文件类型统一输出为代码块格式
 
-## 统一输出格式
+## 📑 目录
 
-所有文件转换结果都采用统一的代码块格式输出：
+- [📋 统一输出格式](#-统一输出格式)
+- [📂 支持的文件格式](#-支持的文件格式)
+  - [📄 文档和数据文件](#-文档和数据文件)
+  - [💻 代码文件（82 种编程语言）](#-代码文件82-种编程语言)
+- [🚀 快速开始](#-快速开始)
+  - [🐳 使用 Docker Compose（推荐）](#-使用-docker-compose推荐)
+  - [💻 本地开发环境](#-本地开发环境)
+- [🎵 音频和视频处理功能](#-音频和视频处理功能)
+  - [音频文件处理特性](#音频文件处理特性)
+  - [视频文件处理特性](#视频文件处理特性)
+  - [音频处理示例](#音频处理示例)
+  - [视频处理示例](#视频处理示例)
+  - [技术配置](#技术配置)
+  - [性能优化](#性能优化)
+- [🔗 API 使用指南](#-api-使用指南)
+  - [📤 单文件转换（同步模式）](#-单文件转换同步模式)
+  - [📦 批量文件转换（异步队列模式）](#-批量文件转换异步队列模式)
+  - [📋 查询任务状态](#-查询任务状态)
+  - [📊 查询队列状态](#-查询队列状态)
+  - [📋 获取支持的文件类型](#-获取支持的文件类型)
+- [完整功能示例](#完整功能示例)
+- [🧪 队列功能测试](#-队列功能测试)
+- [🔗 API 端点总览](#-api-端点总览)
+- [⚙️ 配置说明](#️-配置说明)
+  - [🔧 环境变量](#-环境变量)
+  - [🔑 API Key 管理](#-api-key-管理)
+- [❌ 错误处理](#-错误处理)
+- [🏗️ 架构设计](#️-架构设计)
+- [⚡ 性能优化](#-性能优化)
+- [🔒 安全特性](#-安全特性)
+- [📊 监控和日志](#-监控和日志)
+- [📚 更多资源](#-更多资源)
+- [🔧 扩展开发](#-扩展开发)
+- [📄 许可证](#-许可证)
+- [🤝 贡献](#-贡献)
+- [📈 最新更新](#-最新更新)
 
-| 文件类型 | 输出格式 | 示例 |
-|----------|----------|------|
-| 幻灯片文件 | `````slideshow` | PowerPoint 内容 |
-| 图像文件 | `````image` | OCR + 视觉描述 |
-| 纯文本文件 | `````text` | 文本内容 |
-| 文档文件 | `````document` | Word/PDF 内容 |
-| 表格文件 | `````sheet` | Excel/CSV 数据 |
-| 音频文件 | `````audio` | 语音转录 + 时间轴 |
-| 视频文件 | `````video` | SRT字幕 + 音频转录 |
-| 代码文件 | `````python`、`````javascript` 等 | 对应语言代码块 |
+## 📋 统一输出格式
 
-## 支持的文件格式
+所有文件转换结果都采用统一的代码块格式输出，便于 LLM 理解和处理：
 
-### 文档和数据文件
+| 📁 文件类型 | 🏷️ 输出格式 | 📄 内容示例 |
+|------------|-------------|-------------|
+| 🎞️ 幻灯片文件 | ```slideshow | PowerPoint/Keynote 演示内容 |
+| 🖼️ 图像文件 | ```image | OCR 文字识别 + AI 视觉描述 |
+| 📝 纯文本文件 | ```text | 原始文本内容 |
+| 📄 文档文件 | ```document | Word/PDF/Pages 结构化内容 |
+| 📊 表格文件 | ```sheet | CSV/Excel/Numbers 数据表格 |
+| 🎵 音频文件 | ```audio | 语音转录 + 时间轴信息 |
+| 🎬 视频文件 | ```video | SRT 字幕 + 音频转录 |
+| 💻 代码文件 | ```python/javascript/... 等 | 语法高亮的代码块 |
+
+## 📂 支持的文件格式
+
+### 📄 文档和数据文件
 
 | 格式 | 扩展名 | 解析器 | 输出格式 | 说明 |
 |------|--------|--------|----------|------|
@@ -52,7 +91,7 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 | 音频文件 | `.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` | AudioParser | `audio` | **智能语音分析和ASR转换**，基于RMS能量分析自动分割，并发语音识别，自适应阈值检测 |
 | 视频文件 | `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` | AudioParser | `video` | **视频音频提取和字幕生成**，自动提取音频轨道进行ASR转换，生成SRT格式字幕文件 |
 
-### 代码文件（82 种语言）
+### 💻 代码文件（82 种语言）
 
 | 语言类别 | 支持的扩展名 | 输出格式 |
 |----------|-------------|----------|
@@ -69,13 +108,13 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 
 **完整支持列表**：Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, Haskell, Clojure, Elm, Erlang, Elixir, F#, Swift, Kotlin, Dart, Julia, MATLAB, LaTeX, Vim, 等82种语言。
 
-## 快速开始
+## 🚀 快速开始
 
-### 使用 Docker Compose（推荐）
+### 🐳 使用 Docker Compose（推荐）
 
 1. 克隆项目：
 ```bash
-git clone <repository-url>
+git clone https://github.com/MedicNex/medicnex-file2md.git
 cd medicnex-file2md
 ```
 
@@ -98,7 +137,7 @@ docker-compose up -d
 - API 文档：https://file.medicnex.com/docs
 - 健康检查：https://file.medicnex.com/v1/health
 
-### 本地开发
+### 💻 本地开发环境
 
 1. 安装依赖：
 ```bash
@@ -265,9 +304,9 @@ brew install ffmpeg
 - **内存优化**：流式处理大文件，避免内存溢出
 - **错误恢复**：ASR失败时自动回退到时间分割模式
 
-## API 使用
+## 🔗 API 使用指南
 
-### 单文件转换（同步）
+### 📤 单文件转换（同步模式）
 
 ```bash
 curl -X POST "https://file.medicnex.com/v1/convert" \
@@ -286,7 +325,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 }
 ```
 
-### 批量文件转换（异步队列）
+### 📦 批量文件转换（异步队列模式）
 
 使用队列模式批量提交多个文件，系统将控制并发数量最多为5个：
 
@@ -327,7 +366,7 @@ curl -X POST "https://file.medicnex.com/v1/convert-batch" \
 }
 ```
 
-### 查询任务状态
+### 📋 查询任务状态
 
 ```bash
 curl -X GET "https://file.medicnex.com/v1/task/{task_id}" \
@@ -351,7 +390,7 @@ curl -X GET "https://file.medicnex.com/v1/task/{task_id}" \
 }
 ```
 
-### 查询队列状态
+### 📊 查询队列状态
 
 ```bash
 curl -X GET "https://file.medicnex.com/v1/queue/info" \
@@ -414,7 +453,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
   "filename": "test_doc_with_image_and_codeblock.docx",
   "size": 15970,
   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorla!\n\nom! # Visual_Features: ### 1. 整体精准描述\n\n这张图片展示了一个简单的用户界面元素，背景为浅蓝色。图中包含一个白色边框的矩形区域，矩形内包含两行不同颜色的文本。整体布局简洁，内容和结构清晰易辨。\n\n### 2. 主要元素和结构\n\n- **背景：** 整个图片的背景为统一的浅蓝色，没有其他图案或装饰。\n- **矩形框：** 位于图片中央，是一个白色矩形框，具有黑色边框，背景颜色为纯白色，显得十分醒目。\n- **文本内容：**\n  - 第一行文本内容为\"Hello World!\"，字体为黑色，字体大小适中，位于矩形框顶部稍靠左的位置。\n  - 第二行文本内容为\" fascinated! \"，字体为红色，较第一行字体稍小，紧接在第一行的下方，同样是稍微偏左对齐。\n- **布局：** 两行文本在矩形框内垂直排列，具有一定的间距，并且都是左对齐，保持一定的对齐美感。\n\n### 3. 表格、图表及其他内容\n\n该图片中并未包含任何表格、图表等其他复杂元素，仅包含两段文字。内容上没有多余修饰，主要聚焦于两行文本信息的展示。\" />\n```",
+  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorld! # Visual_Features: ### 1. 整体精准描述\n\n这张图片展示了一个简单的用户界面元素，背景为浅蓝色。图中包含一个白色边框的矩形区域，矩形内包含两行不同颜色的文本。整体布局简洁，内容和结构清晰易辨。\n\n### 2. 主要元素和结构\n\n- **背景：** 整个图片的背景为统一的浅蓝色，没有其他图案或装饰。\n- **矩形框：** 位于图片中央，是一个白色矩形框，具有黑色边框，背景颜色为纯白色，显得十分醒目。\n- **文本内容：**\n  - 第一行文本内容为\"Hello World!\"，字体为黑色，字体大小适中，位于矩形框顶部稍靠左的位置。\n  - 第二行文本内容为\" fascinated! \"，字体为红色，较第一行字体稍小，紧接在第一行的下方，同样是稍微偏左对齐。\n- **布局：** 两行文本在矩形框内垂直排列，具有一定的间距，并且都是左对齐，保持一定的对齐美感。\n\n### 3. 表格、图表及其他内容\n\n该图片中并未包含任何表格、图表等其他复杂元素，仅包含两段文字。内容上没有多余修饰，主要聚焦于两行文本信息的展示。\" />\n```",
   "duration_ms": 14208
 }
 ```
@@ -430,11 +469,11 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 
 2. **🖼️ 图片提取与OCR**：
    - 自动提取DOCX文档中的嵌入图片
-   - 使用Tesseract OCR识别图片中的文字："HelloWorla! om!"
+   - 使用Tesseract OCR识别图片中的文字："HelloWorld!"
    - 生成唯一的图片文件名：`document_image_1.png`
 
 3. **🤖 AI视觉识别**：
-   - 使用视觉大模型（Qwen/Qwen2.5-VL-72B-Instruct）进行图片分析
+   - 使用 VLM 进行图片分析
    - 提供详细的图片描述，包括：
      - 整体布局和设计（浅蓝色背景，白色矩形框）
      - 文本内容分析（"Hello World!"黑色字体，红色"fascinated!"）
@@ -450,14 +489,14 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
    - 文件大小：15,970字节
    - 输出内容：详细的结构化Markdown
 
-### 获取支持的文件类型
+### 📋 获取支持的文件类型
 
 ```bash
 curl -X GET "https://file.medicnex.com/v1/supported-types" \
   -H "Authorization: Bearer your-api-key"
 ```
 
-## 队列功能测试
+## 🧪 队列功能测试
 
 我们提供了一个完整的测试脚本来验证队列功能：
 
@@ -477,20 +516,20 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 - ✅ 批量文件异步提交
 - ✅ 任务状态查询  
 - ✅ 队列状态监控
-- ✅ 并发限制（最多5个）
+- ✅ 并发限制
 - ✅ 任务完成检测
 
 ### 队列功能特点
 
 🚀 **新增队列模式的主要优势：**
 
-1. **并发控制**：限制最多5个文档同时处理，避免系统过载
+1. **并发控制**：通过 `.env` 中的变量 "MAX_CONCURRENT" 限制多个文档同时处理，避免系统过载
 2. **异步处理**：客户端立即获得任务ID，无需等待处理完成
 3. **状态跟踪**：实时查询每个任务的处理状态和进度
 4. **队列管理**：自动排队处理，支持大批量文档转换
 5. **资源优化**：合理利用系统资源，提升整体吞吐量
 
-## 新的API端点总览
+## 🔗 API 端点总览
 
 | 端点 | 方法 | 描述 |
 |------|------|------|
@@ -508,9 +547,9 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 curl -X GET "https://file.medicnex.com/v1/health"
 ```
 
-## 配置说明
+## ⚙️ 配置说明
 
-### 环境变量
+### 🔧 环境变量
 
 | 变量名 | 说明 | 默认值 | 必需 |
 |--------|------|--------|------|
@@ -525,13 +564,12 @@ curl -X GET "https://file.medicnex.com/v1/health"
 | `PORT` | 服务端口 | `8080` | 否 |
 | `LOG_LEVEL` | 日志级别 | `INFO` | 否 |
 
-### API Key 管理
+### 🔑 API Key 管理
 
 - 支持多个 API Key，用逗号分隔
 - 在 `Authorization` 头中使用 `Bearer <API_KEY>` 格式
-- 开发环境默认提供测试密钥：`dev-test-key-123`
 
-## 错误处理
+## ❌ 错误处理
 
 | HTTP状态码 | 错误代码 | 说明 |
 |------------|----------|------|
@@ -540,32 +578,43 @@ curl -X GET "https://file.medicnex.com/v1/health"
 | 422 | `PARSE_ERROR` | 文件解析失败 |
 | 422 | `INVALID_FILE` | 文件无效 |
 
-## 架构设计
+## 🏗️ 架构设计
 
 ```
 app/
 ├── main.py              # FastAPI 应用入口
+├── config.py            # 配置管理
 ├── auth.py              # API Key 鉴权
 ├── models.py            # Pydantic 数据模型
 ├── vision.py            # 视觉识别服务
+├── queue_manager.py     # 队列管理器
+├── utils.py             # 工具函数
+├── exceptions.py        # 异常处理
 ├── routers/
 │   └── convert.py       # 转换API路由
 └── parsers/
     ├── base.py          # 解析器基类
     ├── registry.py      # 解析器注册表
-    ├── txt.py           # 文本解析器
-    ├── docx.py          # Word解析器
-    ├── doc.py           # Word(旧版)解析器
-    ├── pdf.py           # PDF解析器
-    ├── pptx.py          # PowerPoint解析器
-    ├── excel.py         # Excel解析器
-    ├── csv.py           # CSV解析器
-    ├── image.py         # 图片解析器
     ├── audio.py         # 音频/视频解析器（智能分块+ASR）
-    └── code.py          # 代码文件解析器
+    ├── code.py          # 代码文件解析器（82种语言）
+    ├── pdf.py           # PDF解析器
+    ├── doc.py           # Word DOC解析器（旧版）
+    ├── docx.py          # Word DOCX解析器
+    ├── excel.py         # Excel解析器
+    ├── pptx.py          # PowerPoint解析器
+    ├── csv.py           # CSV解析器
+    ├── numbers.py       # Apple Numbers解析器
+    ├── keynote.py       # Apple Keynote解析器
+    ├── pages.py         # Apple Pages解析器
+    ├── image.py         # 图片解析器
+    ├── svg.py           # SVG解析器
+    ├── markdown.py      # Markdown解析器
+    ├── odt.py           # OpenDocument文本解析器
+    ├── rtf.py           # RTF文档解析器
+    └── txt.py           # 文本解析器
 ```
 
-## 性能优化
+## ⚡ 性能优化
 
 - 异步处理文件上传和解析
 - **并发图片处理**：文档中多张图片同时进行 OCR 和 AI 视觉识别
@@ -577,14 +626,14 @@ app/
 - 支持大文件处理
 - 智能编码检测
 
-## 安全特性
+## 🔒 安全特性
 
 - API Key 鉴权机制
 - 文件类型白名单验证
 - 临时文件安全清理
 - 非 root 用户运行
 
-## 监控和日志
+## 📊 监控和日志
 
 - 结构化 JSON 日志
 - 健康检查端点
@@ -594,12 +643,13 @@ app/
 ## 📚 更多资源
 
 - **[支持的文件格式](SUPPORTED_FORMATS.md)** - 详细的109种支持格式列表和功能说明
-- **[转换示例文档](EXAMPLES.md)** - 详细的实际转换案例和功能演示
-- **[前端集成指南](FRONTEND_API.md)** - 前端开发者接入文档
+- **[转换示例文档](File2md_Example.md)** - 详细的实际转换案例和功能演示
+- **[前端集成指南](File2md_API_Guide)** - 前端开发者接入文档
+- **[安全配置指南](SECURITY.md)** - 🔒 安全配置指南，了解我们如何保护系统安全
 
-## 扩展开发
+## 🔧 扩展开发
 
-### 添加新的文件解析器
+### 📝 添加新的文件解析器
 
 1. 继承 `BaseParser` 类
 2. 实现 `parse()` 方法
@@ -623,11 +673,11 @@ class CustomParser(BaseParser):
         return f"```custom\n{content}\n```"
 ```
 
-## 许可证
+## 📄 许可证
 
 本项目为 MedicNex 私有项目。
 
-## 贡献
+## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request！
 
@@ -677,4 +727,13 @@ class CustomParser(BaseParser):
 
 ---
 
+<div align="center">
+
+**🚀 MedicNex File2Markdown**
+
 > 开发者：Kris  
+> &copy; 2025 岐问杏林版权所有
+
+*高效智能的文件转换微服务，让 AI 更好地理解您的文档*
+
+</div>

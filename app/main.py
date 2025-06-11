@@ -37,7 +37,7 @@ class UnicodeJSONResponse(JSONResponse):
 # 创建FastAPI应用
 app = FastAPI(
     title=config.APP_NAME,
-    description="将各种文档格式转换为Markdown的微服务",
+    description="将各种文档格式转换为 LLM 理解友好的格式",
     version=config.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",

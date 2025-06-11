@@ -38,7 +38,7 @@ class Config:
     """应用配置类"""
     
     # 应用基础配置
-    APP_NAME: str = "MedicNex File2Markdown Service"
+    APP_NAME: str = "MedicNex File Convert Service"
     APP_VERSION: str = "1.0.0"
     HOST: str = "0.0.0.0"
     PORT: int = int(os.getenv("PORT", "8080"))
