@@ -16,6 +16,7 @@ from .odt import OdtParser
 from .keynote import KeynoteParser
 from .pages import PagesParser
 from .numbers import NumbersParser
+from .audio import AudioParser
 
 class ParserRegistry:
     """解析器注册表"""
@@ -42,7 +43,8 @@ class ParserRegistry:
             OdtParser,
             KeynoteParser,
             PagesParser,
-            NumbersParser
+            NumbersParser,
+            AudioParser
         ]
         
         for parser_class in parsers:

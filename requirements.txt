@@ -1,11 +1,16 @@
-# 更新的依赖包版本 - 修复已知安全漏洞
+# 更新的依赖包版本 - 修复已知安全漏洞和依赖冲突
 # 原文件: requirements.txt
 
-# 核心 Web 框架 - 修复 CVE-2024-24762 ReDoS 漏洞
-fastapi>=0.109.1
+# 核心 Web 框架 - 升级到兼容版本
+fastapi>=0.115.12
 uvicorn[standard]>=0.30.0
-pydantic>=2.10.0
+pydantic>=2.11.5
+pydantic-settings>=2.9.1
 python-multipart>=0.0.10
+starlette>=0.46.2
+
+# 异步支持 - 升级解决依赖冲突
+anyio>=4.9.0
 
 # 日志
 loguru>=0.7.2
@@ -39,6 +44,11 @@ aiofiles>=23.2.0
 chardet>=5.2.0
 requests>=2.32.0  # 安全更新
 python-dotenv>=1.0.0
+
+# 音频处理
+pydub>=0.25.1
+numpy>=1.24.3
+librosa>=0.11.0  # 可选，用于高级音频分析
 
 # 其他格式处理
 striprtf>=0.0.26

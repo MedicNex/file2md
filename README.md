@@ -1,11 +1,11 @@
 # MedicNex File2Markdown
 
-MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**109种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式。
+MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式。
 
 ## 功能特性
 
 - 🔐 **API Key 鉴权**：支持多个 API Key 管理
-- 📄 **全面格式支持**：支持 **109种文件格式**，包含 16种解析器类型
+- 📄 **全面格式支持**：支持 **123种文件格式**，包含 16种解析器类型
 - 💻 **代码文件支持**：支持 **82 种编程语言**文件转换，涵盖主流、函数式、脚本、配置等语言
 - 🖼️ **智能图片识别**：集成 Vision API 和 Tesseract OCR，支持 SVG 转 PNG 识别
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
@@ -47,6 +47,8 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**109种�
 | CSV数据 | `.csv` | CsvParser | `sheet` | 转换为HTML表格格式和数据分析 |
 | 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | OCR和视觉识别 |
 | SVG文件 | `.svg` | SvgParser | `svg` | 同时识别代码结构和视觉特征，**转换为PNG进行OCR和AI视觉分析**（需要ImageMagick或Cairo库） |
+| 音频文件 | `.wav`, `.mp3`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` | AudioParser | `audio` | **智能分块处理和ASR转换**，基于能量分析自动分割，并发语音识别 |
+| 视频文件 | `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` | AudioParser | `video` | **音频提取和字幕生成**，自动提取音频轨道进行ASR，生成SRT格式字幕 |
 
 ### 代码文件（82 种语言）
 
