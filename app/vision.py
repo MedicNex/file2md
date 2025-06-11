@@ -1,6 +1,7 @@
 import openai
 import base64
 import os
+import tempfile
 from loguru import logger
 from typing import Optional
 import pytesseract
@@ -141,8 +142,7 @@ async def image_to_markdown(image_path: str) -> str:
         
     Raises:
         FileNotFoundError: 图片文件不存在
-        OCRError: OCR处理失败
-        VisionAPIError: 视觉API调用失败
+        Exception: 图片处理失败（仅当OCR和视觉分析都失败时）
     """
     try:
         # 验证文件存在
@@ -154,10 +154,17 @@ async def image_to_markdown(image_path: str) -> str:
             image_data = await image_file.read()
             base64_image = base64.b64encode(image_data).decode('utf-8')
         
-        markdown_content = ""
-        
-        # 先获取OCR结果
-        ocr_text = await get_ocr_text(image_path)
+        # 尝试获取OCR结果，但允许失败
+        ocr_text = ""
+        try:
+            ocr_text = await get_ocr_text(image_path)
+            logger.info(f"OCR成功: {image_path}")
+        except OCRError as e:
+            logger.warning(f"OCR处理失败，但继续进行视觉分析: {e}")
+            ocr_text = "未能通过OCR提取到文字内容"
+        except Exception as e:
+            logger.warning(f"OCR遇到意外错误，继续进行视觉分析: {e}")
+            ocr_text = "OCR处理遇到技术问题"
         
         # 如果配置了Vision API，使用Vision API获取描述
         vision_description = ""
@@ -172,20 +179,30 @@ async def image_to_markdown(image_path: str) -> str:
                          "Please only return the description content, do not include OCR text extraction.")
                 
                 vision_description = await call_vision_api_with_retry(base64_image, prompt)
+                logger.info(f"视觉分析成功: {image_path}")
                 
             except VisionAPIError as e:
                 logger.warning(f"Vision API调用失败: {e}")
                 vision_description = f"视觉模型调用失败: {str(e)}"
+            except Exception as e:
+                logger.warning(f"视觉分析遇到意外错误: {e}")
+                vision_description = f"视觉分析遇到技术问题: {str(e)}"
         else:
             vision_description = "视觉模型未配置，无法提供详细描述。"
         
         # 组合OCR和视觉描述结果
         markdown_content = format_image_result(ocr_text, vision_description)
         
+        # 如果OCR和视觉分析都没有有效结果，才报错
+        if (not ocr_text or ocr_text in ["未能通过OCR提取到文字内容", "OCR处理遇到技术问题"]) and \
+           (not vision_description or "失败" in vision_description or "问题" in vision_description):
+            logger.error(f"图片处理完全失败，OCR和视觉分析都无法获得有效结果: {image_path}")
+            return "*图片处理失败：无法通过OCR或视觉分析获取内容*"
+        
         return markdown_content or "*无法识别图片内容*"
         
-    except (FileNotFoundError, OCRError, VisionAPIError):
-        # 重新抛出已知的异常类型
+    except FileNotFoundError:
+        # 重新抛出文件不存在错误
         raise
     except Exception as e:
         logger.error(f"图片处理失败: {e}")
@@ -205,9 +222,84 @@ async def get_ocr_text(image_path: str) -> str:
         OCRError: OCR处理失败
     """
     try:
+        # 使用PIL打开图片，增加格式兼容性处理
+        try:
+            image = Image.open(image_path)
+            
+            # 如果图片有多个帧（如动态GIF），只处理第一帧
+            if hasattr(image, 'n_frames') and image.n_frames > 1:
+                image.seek(0)
+            
+            # 确保图片是RGB模式（Tesseract更好的兼容性）
+            if image.mode not in ('RGB', 'L'):  # RGB彩色或L灰度
+                if image.mode == 'RGBA':
+                    # RGBA转RGB，使用白色背景
+                    background = Image.new('RGB', image.size, (255, 255, 255))
+                    background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+                    image = background
+                elif image.mode == 'P':
+                    # 调色板模式转RGB
+                    image = image.convert('RGB')
+                else:
+                    # 其他模式转RGB
+                    image = image.convert('RGB')
+            
+            # 对于JPEG格式，额外的兼容性处理
+            if image_path.lower().endswith('.jpeg') or image_path.lower().endswith('.jpg'):
+                # 确保JPEG图片被正确加载
+                image.load()
+                
+        except (IOError, OSError) as e:
+            # 如果PIL无法打开图片，尝试使用不同的方法
+            logger.warning(f"PIL无法直接打开图片 {image_path}: {e}")
+            try:
+                # 尝试重新读取图片并转换格式
+                import tempfile
+                import shutil
+                
+                # 创建临时文件
+                with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
+                    temp_path = temp_file.name
+                
+                # 尝试用PIL强制转换格式
+                with Image.open(image_path) as original_img:
+                    original_img.load()
+                    if original_img.mode != 'RGB':
+                        original_img = original_img.convert('RGB')
+                    original_img.save(temp_path, 'PNG')
+                
+                # 重新打开转换后的图片
+                image = Image.open(temp_path)
+                logger.info(f"成功转换图片格式: {image_path} -> PNG")
+                
+                # 清理临时文件
+                try:
+                    os.unlink(temp_path)
+                except:
+                    pass
+                    
+            except Exception as convert_error:
+                logger.error(f"图片格式转换失败 {image_path}: {convert_error}")
+                raise OCRError(f"不支持的图片格式或图片损坏: {str(convert_error)}")
+        
         # 使用Tesseract进行OCR
-        image = Image.open(image_path)
-        ocr_text = pytesseract.image_to_string(image, lang='chi_sim+eng')
+        try:
+            ocr_text = pytesseract.image_to_string(image, lang='chi_sim+eng')
+        except Exception as ocr_error:
+            logger.error(f"Tesseract OCR处理失败 {image_path}: {ocr_error}")
+            # 尝试只使用英文OCR
+            try:
+                ocr_text = pytesseract.image_to_string(image, lang='eng')
+                logger.info(f"回退到英文OCR成功: {image_path}")
+            except Exception as fallback_error:
+                logger.error(f"英文OCR也失败 {image_path}: {fallback_error}")
+                # 检查是否是格式不支持的问题，如果是，允许继续处理
+                error_msg = str(fallback_error).lower()
+                if any(keyword in error_msg for keyword in ['unsupported', 'format', 'type', 'decode']):
+                    logger.warning(f"图片格式不支持OCR，但可能仍可进行视觉分析: {image_path}")
+                    raise OCRError(f"图片格式不支持OCR处理，但图片可能仍可用于视觉分析")
+                else:
+                    raise OCRError(f"OCR引擎处理失败: {str(fallback_error)}")
         
         if ocr_text.strip():
             logger.info(f"OCR成功提取文字: {image_path}")
@@ -216,6 +308,9 @@ async def get_ocr_text(image_path: str) -> str:
             logger.warning(f"OCR未能提取到文字: {image_path}")
             return "未检测到文字内容"
             
+    except OCRError:
+        # 重新抛出OCR错误
+        raise
     except Exception as e:
         logger.error(f"OCR处理失败: {e}")
         raise OCRError(f"OCR处理错误: {str(e)}")
@@ -239,8 +334,19 @@ def format_image_result(ocr_text: str, vision_description: str) -> str:
     ocr_text = ocr_text.replace('\\n', '\n')
     vision_description = vision_description.replace('\\n', '\n')
     
-    # 使用统一的代码块格式
-    result = f"```image\n# OCR:\n{ocr_text}\n\n# Visual_Features:\n{vision_description}\n```"
+    # 智能判断是否包含OCR内容
+    has_valid_ocr = (ocr_text and 
+                     ocr_text not in ["未检测到文字内容", "未能通过OCR提取到文字内容", "OCR处理遇到技术问题"] and
+                     "失败" not in ocr_text and "问题" not in ocr_text)
+    
+    # 根据是否有有效OCR内容来格式化输出
+    if has_valid_ocr:
+        # 包含OCR和视觉描述
+        result = f"```image\n# OCR:\n{ocr_text}\n\n# Visual_Features:\n{vision_description}\n```"
+    else:
+        # 仅包含视觉描述（适用于无文字图片）
+        result = f"```image\n# Visual_Features:\n{vision_description}\n```"
+    
     return result
 
 async def fallback_ocr(image_path: str) -> str:
