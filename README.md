@@ -25,6 +25,8 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 | 纯文本文件 | `````text` | 文本内容 |
 | 文档文件 | `````document` | Word/PDF 内容 |
 | 表格文件 | `````sheet` | Excel/CSV 数据 |
+| 音频文件 | `````audio` | 语音转录 + 时间轴 |
+| 视频文件 | `````video` | SRT字幕 + 音频转录 |
 | 代码文件 | `````python`、`````javascript` 等 | 对应语言代码块 |
 
 ## 支持的文件格式
@@ -47,8 +49,8 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 | CSV数据 | `.csv` | CsvParser | `sheet` | 转换为HTML表格格式和数据分析 |
 | 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | OCR和视觉识别 |
 | SVG文件 | `.svg` | SvgParser | `svg` | 同时识别代码结构和视觉特征，**转换为PNG进行OCR和AI视觉分析**（需要ImageMagick或Cairo库） |
-| 音频文件 | `.wav`, `.mp3`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` | AudioParser | `audio` | **智能分块处理和ASR转换**，基于能量分析自动分割，并发语音识别 |
-| 视频文件 | `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` | AudioParser | `video` | **音频提取和字幕生成**，自动提取音频轨道进行ASR，生成SRT格式字幕 |
+| 音频文件 | `.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` | AudioParser | `audio` | **智能语音分析和ASR转换**，基于RMS能量分析自动分割，并发语音识别，自适应阈值检测 |
+| 视频文件 | `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` | AudioParser | `video` | **视频音频提取和字幕生成**，自动提取音频轨道进行ASR转换，生成SRT格式字幕文件 |
 
 ### 代码文件（82 种语言）
 
@@ -114,6 +116,9 @@ sudo apt-get install -y tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng
 # SVG视觉识别支持（推荐ImageMagick）
 sudo apt-get install -y imagemagick libmagickwand-dev pkg-config
 
+# 音频处理支持
+sudo apt-get install -y ffmpeg libavcodec-extra
+
 # Python开发工具
 sudo apt-get install -y python3-dev python3-pip build-essential
 ```
@@ -128,6 +133,9 @@ sudo yum install -y tesseract tesseract-langpack-chi-sim tesseract-langpack-eng
 # SVG视觉识别支持
 sudo yum install -y ImageMagick ImageMagick-devel pkgconfig
 
+# 音频处理支持
+sudo yum install -y ffmpeg ffmpeg-devel
+
 # Python开发工具
 sudo yum install -y python3-devel python3-pip gcc gcc-c++ make
 ```
@@ -140,6 +148,9 @@ brew install tesseract tesseract-lang
 brew install freetype imagemagick  # ImageMagick支持
 # 或者
 brew install cairo pkg-config  # Cairo支持
+
+# 音频处理支持
+brew install ffmpeg  # 音频格式转换和处理
 ```
 
 3. 设置环境变量：
@@ -152,6 +163,107 @@ export VISION_API_KEY="your-vision-api-key"  # 可选
 ```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
+
+## 🎵 音频和视频处理功能
+
+### 音频文件处理特性
+
+**支持格式**：`.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` (8种格式)
+
+**核心功能**：
+- 🎯 **智能音频预处理**：自动转换为16kHz单声道，应用80Hz高通滤波去除低频噪音
+- 📊 **RMS能量分析**：计算音频信号的有效值，精确识别语音活动区域
+- 🔄 **自适应阈值检测**：基于10百分位数+3dB的动态阈值，适应不同录音环境
+- ✂️ **智能分割**：最小静音时长300ms，自动合并短段，避免过度分割
+- ⚡ **并发ASR转换**：多段音频同时进行语音识别，大幅提升处理速度
+- 📈 **质量评估**：基于平均能量计算置信度分数，评估转录质量
+
+### 视频文件处理特性
+
+**支持格式**：`.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` (7种格式)
+
+**核心功能**：
+- 🎬 **自动音频提取**：智能检测并提取视频文件中的音频轨道
+- 📝 **SRT字幕生成**：生成标准时间戳格式的字幕文件 (HH:MM:SS,mmm)
+- 🔄 **统一处理流程**：复用音频分析算法，保证一致的处理质量
+- 📊 **时间轴同步**：精确的时间戳对应，确保字幕与视频同步
+
+### 音频处理示例
+
+**输入文件**：上传一个包含多段对话的音频文件 `meeting.wav`
+
+```bash
+curl -X POST "https://file.medicnex.com/v1/convert" \
+  -H "Authorization: Bearer your-api-key" \
+  -F "file=@meeting.wav"
+```
+
+**输出格式** (`audio`块)：
+```json
+{
+  "filename": "meeting.wav",
+  "size": 2048000,
+  "content_type": "audio/wav",
+  "content": "```audio\n# 音频信息\n文件名: meeting.wav\n时长: 00:02:45\n采样率: 16000 Hz\n声道: 单声道\n格式: WAV\n\n# 语音转录\n## 段落 1 (00:00:00 - 00:00:15)\n大家好，欢迎参加今天的产品讨论会议。\n**置信度**: 89%\n\n## 段落 2 (00:00:16 - 00:00:32)\n首先我们来看一下本季度的销售数据分析。\n**置信度**: 92%\n\n## 段落 3 (00:00:33 - 00:00:48)\n从图表可以看出，我们的产品在移动端表现非常优秀。\n**置信度**: 87%\n\n# 处理统计\n- 总段落数: 11\n- 平均段落时长: 15.2秒\n- 整体置信度: 89%\n- 处理时间: 23.4秒\n- 使用的ASR模型: whisper-1\n```",
+  "duration_ms": 23400
+}
+```
+
+### 视频处理示例
+
+**输入文件**：上传一个教学视频 `tutorial.mp4`
+
+```bash
+curl -X POST "https://file.medicnex.com/v1/convert" \
+  -H "Authorization: Bearer your-api-key" \
+  -F "file=@tutorial.mp4"
+```
+
+**输出格式** (`video`块)：
+```json
+{
+  "filename": "tutorial.mp4", 
+  "size": 15728640,
+  "content_type": "video/mp4",
+  "content": "```video\n# 视频信息\n文件名: tutorial.mp4\n视频时长: 00:05:23\n音频轨道: 已检测\n字幕语言: 中文\n\n# 字幕内容\n1\n00:00:00,000 --> 00:00:12,500\n欢迎来到Python编程入门教程，今天我们将学习基础语法。\n\n2\n00:00:12,500 --> 00:00:28,750\n首先我们来看变量的定义和使用方法。\n\n3\n00:00:28,750 --> 00:00:45,100\n在Python中，你可以使用等号来给变量赋值。\n\n4\n00:00:45,100 --> 00:01:02,300\n例如，name等于引号Hello World引号。\n\n# 处理统计\n- 总字幕条目: 26\n- 平均字幕时长: 12.4秒\n- 整体质量: 良好\n- 处理时间: 45.7秒\n- 提取音频格式: WAV 16kHz\n```",
+  "duration_ms": 45700
+}
+```
+
+### 技术配置
+
+**环境变量配置**：
+```bash
+# ASR服务配置
+ASR_MODEL=whisper-1                    # ASR模型名称
+ASR_API_BASE=https://api.openai.com/v1 # ASR API基础URL
+ASR_API_KEY=your-openai-api-key        # ASR API密钥
+
+# 音频处理参数
+MAX_FILE_SIZE=100                      # 最大文件大小(MB)
+AUDIO_CONCURRENT_LIMIT=5               # 并发ASR请求数
+```
+
+**系统依赖**：
+```bash
+# 音频处理库（必需）
+pip install pydub numpy librosa
+
+# 音频格式支持（可选，用于更多格式）
+# Ubuntu/Debian
+sudo apt-get install ffmpeg
+
+# macOS  
+brew install ffmpeg
+```
+
+### 性能优化
+
+- **并发处理**：多段音频同时进行ASR转换，处理速度提升3-5倍
+- **智能分割**：避免在词语中间切断，提高识别准确率
+- **自适应阈值**：根据音频特征动态调整检测参数
+- **内存优化**：流式处理大文件，避免内存溢出
+- **错误恢复**：ASR失败时自动回退到时间分割模式
 
 ## API 使用
 
@@ -406,6 +518,9 @@ curl -X GET "https://file.medicnex.com/v1/health"
 | `VISION_API_KEY` | 视觉API密钥 | - | 否 |
 | `VISION_API_BASE` | 视觉API基础URL | `https://api.openai.com/v1` | 否 |
 | `VISION_MODEL` | 视觉识别模型名称 | `gpt-4o-mini` | 否 |
+| `ASR_API_KEY` | ASR语音识别API密钥 | - | 音频功能必需 |
+| `ASR_API_BASE` | ASR API基础URL | `https://api.openai.com/v1` | 否 |
+| `ASR_MODEL` | ASR模型名称 | `whisper-1` | 否 |
 | `OPENAI_API_KEY` | OpenAI API密钥（兼容旧配置） | - | 否 |
 | `PORT` | 服务端口 | `8080` | 否 |
 | `LOG_LEVEL` | 日志级别 | `INFO` | 否 |
@@ -446,6 +561,7 @@ app/
     ├── excel.py         # Excel解析器
     ├── csv.py           # CSV解析器
     ├── image.py         # 图片解析器
+    ├── audio.py         # 音频/视频解析器（智能分块+ASR）
     └── code.py          # 代码文件解析器
 ```
 
@@ -518,6 +634,20 @@ class CustomParser(BaseParser):
 ---
 
 ## 📈 最新更新
+
+### v2.4.0
+- 🎵 **音频和视频处理功能**：全新的音频/视频文件处理支持
+  - **音频格式支持**：`.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` (8种格式)
+  - **视频格式支持**：`.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` (7种格式) 
+  - **智能音频预处理**：16kHz单声道转换，80Hz高通滤波去除噪音
+  - **RMS能量分析**：基于信号有效值的精确语音检测
+  - **自适应阈值**：10百分位数+3dB动态阈值，适应不同环境
+  - **智能分割算法**：300ms最小静音检测，自动合并短段
+  - **并发ASR转换**：多段音频同时语音识别，3-5倍速度提升
+  - **SRT字幕生成**：视频文件自动生成标准时间戳字幕
+  - **质量评估**：基于能量的置信度计算和质量指标
+- 📊 **统计更新**：支持格式从109种增加到**123种**，新增AudioParser解析器
+- 🔧 **依赖增强**：新增pydub、numpy、librosa音频处理库支持
 
 ### v2.3.0
 - 📱 **Apple iWork 支持**：新增对 Apple iWork 套件的支持
