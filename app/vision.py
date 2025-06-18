@@ -11,6 +11,38 @@ import asyncio
 import aiofiles
 
 from app.config import config
+
+# 配置 Tesseract 可执行文件路径
+def configure_tesseract():
+    """配置 Tesseract OCR 路径"""
+    try:
+        # 常见的 tesseract 安装路径
+        possible_paths = [
+            '/usr/bin/tesseract',      # Ubuntu/Debian 默认路径
+            '/usr/local/bin/tesseract', # 手动编译安装路径
+            '/opt/homebrew/bin/tesseract', # macOS Homebrew 路径
+            'tesseract'                # 系统 PATH 中
+        ]
+        
+        for path in possible_paths:
+            if path == 'tesseract':
+                # 尝试使用默认 PATH
+                continue
+            if os.path.exists(path):
+                pytesseract.pytesseract.tesseract_cmd = path
+                logger.info(f"配置 Tesseract 路径: {path}")
+                return path
+        
+        # 如果没有找到明确路径，尝试使用默认设置
+        logger.info("使用默认 Tesseract 路径配置")
+        return None
+        
+    except Exception as e:
+        logger.warning(f"配置 Tesseract 路径时出错: {e}")
+        return None
+
+# 初始化时配置 Tesseract
+configure_tesseract()
 from app.exceptions import (
     VisionAPIError, VisionAPIConnectionError, VisionAPIRateLimitError, OCRError
 )
@@ -284,22 +316,47 @@ async def get_ocr_text(image_path: str) -> str:
         
         # 使用Tesseract进行OCR
         try:
+            # 先检查 tesseract 是否可用
+            tesseract_cmd = getattr(pytesseract.pytesseract, 'tesseract_cmd', 'tesseract')
+            logger.debug(f"使用 Tesseract 命令: {tesseract_cmd}")
+            
             ocr_text = pytesseract.image_to_string(image, lang='chi_sim+eng')
         except Exception as ocr_error:
             logger.error(f"Tesseract OCR处理失败 {image_path}: {ocr_error}")
-            # 尝试只使用英文OCR
-            try:
-                ocr_text = pytesseract.image_to_string(image, lang='eng')
-                logger.info(f"回退到英文OCR成功: {image_path}")
-            except Exception as fallback_error:
-                logger.error(f"英文OCR也失败 {image_path}: {fallback_error}")
-                # 检查是否是格式不支持的问题，如果是，允许继续处理
-                error_msg = str(fallback_error).lower()
-                if any(keyword in error_msg for keyword in ['unsupported', 'format', 'type', 'decode']):
-                    logger.warning(f"图片格式不支持OCR，但可能仍可进行视觉分析: {image_path}")
-                    raise OCRError(f"图片格式不支持OCR处理，但图片可能仍可用于视觉分析")
+            
+            # 诊断 tesseract 是否可用
+            tesseract_cmd = getattr(pytesseract.pytesseract, 'tesseract_cmd', 'tesseract')
+            logger.error(f"当前 Tesseract 命令路径: {tesseract_cmd}")
+            
+            # 检查是否是路径问题
+            if "not installed" in str(ocr_error).lower() or "not in your path" in str(ocr_error).lower():
+                logger.error("Tesseract 路径问题，尝试重新配置路径")
+                # 重新配置路径
+                new_path = configure_tesseract()
+                if new_path:
+                    logger.info(f"重新配置 Tesseract 路径为: {new_path}")
+                    try:
+                        ocr_text = pytesseract.image_to_string(image, lang='chi_sim+eng')
+                        logger.info(f"重新配置路径后 OCR 成功: {image_path}")
+                    except Exception as retry_error:
+                        logger.error(f"重新配置路径后仍然失败: {retry_error}")
+                        raise OCRError(f"Tesseract 路径配置失败: {str(retry_error)}")
                 else:
-                    raise OCRError(f"OCR引擎处理失败: {str(fallback_error)}")
+                    raise OCRError(f"无法找到 Tesseract 可执行文件: {str(ocr_error)}")
+            else:
+                # 尝试只使用英文OCR
+                try:
+                    ocr_text = pytesseract.image_to_string(image, lang='eng')
+                    logger.info(f"回退到英文OCR成功: {image_path}")
+                except Exception as fallback_error:
+                    logger.error(f"英文OCR也失败 {image_path}: {fallback_error}")
+                    # 检查是否是格式不支持的问题，如果是，允许继续处理
+                    error_msg = str(fallback_error).lower()
+                    if any(keyword in error_msg for keyword in ['unsupported', 'format', 'type', 'decode']):
+                        logger.warning(f"图片格式不支持OCR，但可能仍可进行视觉分析: {image_path}")
+                        raise OCRError(f"图片格式不支持OCR处理，但图片可能仍可用于视觉分析")
+                    else:
+                        raise OCRError(f"OCR引擎处理失败: {str(fallback_error)}")
         
         if ocr_text.strip():
             logger.info(f"OCR成功提取文字: {image_path}")
