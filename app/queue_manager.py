@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 
 from app.parsers.registry import parser_registry
+from app.cache import cache_manager
 
 
 class TaskStatus(Enum):
@@ -147,6 +148,22 @@ class ConversionQueueManager:
                 
                 logger.info(f"开始处理任务: {task.filename} (ID: {task_id})")
                 
+                # 读取文件内容用于缓存检查
+                with open(task.temp_file_path, 'rb') as f:
+                    file_content = f.read()
+                
+                # 检查缓存
+                cached_result = await cache_manager.get_cached_result(file_content)
+                if cached_result:
+                    # 使用缓存结果
+                    task.status = TaskStatus.COMPLETED
+                    task.completed_at = datetime.now()
+                    task.result = cached_result['content']
+                    task.duration_ms = int((task.completed_at - task.started_at).total_seconds() * 1000)
+                    
+                    logger.info(f"任务从缓存完成: {task.filename} (ID: {task_id}), 耗时: {task.duration_ms}ms (缓存命中)")
+                    return
+                
                 # 获取文件扩展名
                 file_extension = Path(task.filename).suffix.lower()
                 
@@ -161,6 +178,16 @@ class ConversionQueueManager:
                 
                 # 计算处理时间
                 duration_ms = int((end_time - start_time).total_seconds() * 1000)
+                
+                # 缓存结果
+                await cache_manager.cache_result(
+                    file_content=file_content,
+                    filename=task.filename,
+                    markdown_content=markdown_content,
+                    file_size=task.file_size,
+                    duration_ms=duration_ms,
+                    content_type=task.content_type
+                )
                 
                 # 更新任务结果
                 task.status = TaskStatus.COMPLETED

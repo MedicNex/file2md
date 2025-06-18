@@ -72,6 +72,16 @@ class Config:
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "100")) * 1024 * 1024  # MB to bytes
     TEMP_DIR: str = os.getenv("TEMP_DIR", "/tmp")
     
+    # Redis缓存配置
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_CACHE_ENABLED: bool = os.getenv("REDIS_CACHE_ENABLED", "true").lower() == "true"
+    REDIS_CACHE_TTL: int = int(os.getenv("REDIS_CACHE_TTL", "86400"))  # 默认1天
+    REDIS_CONNECTION_TIMEOUT: float = float(os.getenv("REDIS_CONNECTION_TIMEOUT", "5.0"))
+    REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "20"))
+    
     # 文本文件处理配置
     MAX_TEXT_LINES: int = int(os.getenv("MAX_TEXT_LINES", "50000"))  # 最大行数
     MAX_TEXT_CHARS: int = int(os.getenv("MAX_TEXT_CHARS", "10000000"))  # 最大字符数 (约10MB文本)
@@ -117,6 +127,23 @@ class Config:
         if cls.TEXT_CHUNK_SIZE < 1024:  # 最小1KB块
             errors.append(f"文本块大小无效: {cls.TEXT_CHUNK_SIZE}")
         
+        # Redis配置验证
+        if cls.REDIS_CACHE_ENABLED:
+            if cls.REDIS_PORT < 1 or cls.REDIS_PORT > 65535:
+                errors.append(f"Redis端口号无效: {cls.REDIS_PORT}")
+            
+            if cls.REDIS_DB < 0:
+                errors.append(f"Redis数据库编号无效: {cls.REDIS_DB}")
+            
+            if cls.REDIS_CACHE_TTL < 60:  # 最少1分钟
+                errors.append(f"Redis缓存TTL无效: {cls.REDIS_CACHE_TTL}")
+            
+            if cls.REDIS_CONNECTION_TIMEOUT <= 0:
+                errors.append(f"Redis连接超时无效: {cls.REDIS_CONNECTION_TIMEOUT}")
+            
+            if cls.REDIS_MAX_CONNECTIONS < 1:
+                errors.append(f"Redis最大连接数无效: {cls.REDIS_MAX_CONNECTIONS}")
+        
         if errors:
             error_msg = "配置验证失败:\n" + "\n".join(f"- {error}" for error in errors)
             logger.error(error_msg)
@@ -140,6 +167,10 @@ class Config:
         logger.info(f"最大文本字符数: {cls.MAX_TEXT_CHARS}")
         logger.info(f"视觉API: {'已启用' if cls.is_vision_enabled() else '未启用'}")
         logger.info(f"API密钥验证: {'必需' if cls.REQUIRE_API_KEY else '可选'}")
+        logger.info(f"Redis缓存: {'已启用' if cls.REDIS_CACHE_ENABLED else '未启用'}")
+        if cls.REDIS_CACHE_ENABLED:
+            logger.info(f"Redis地址: {cls.REDIS_HOST}:{cls.REDIS_PORT}")
+            logger.info(f"缓存TTL: {cls.REDIS_CACHE_TTL // 3600}小时")
         logger.info("==================")
 
 

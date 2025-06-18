@@ -26,11 +26,16 @@ class DocxParser(BaseParser):
             with open(temp_img_path, 'wb') as img_file:
                 img_file.write(image_data)
             
-            # 并发执行OCR和视觉识别
-            ocr_task = get_ocr_text(temp_img_path)
-            vision_task = self._get_vision_description(temp_img_path)
-            
-            ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            # 并发执行OCR和视觉识别，添加异常保护
+            try:
+                ocr_task = get_ocr_text(temp_img_path)
+                vision_task = self._get_vision_description(temp_img_path)
+                
+                ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            except Exception as ocr_vision_error:
+                logger.warning(f"OCR/视觉识别失败，跳过处理 图片{image_counter}: {ocr_vision_error}")
+                ocr_text = "OCR处理失败"
+                vision_description = "视觉识别失败"
             
             # 生成HTML标签格式
             alt_text = f"# OCR: {ocr_text} # Visual_Features: {vision_description}"
@@ -40,8 +45,8 @@ class DocxParser(BaseParser):
             return f"### 图片 {image_counter}\n\n{html_img_tag}"
             
         except Exception as e:
-            logger.warning(f"DOCX图片提取失败 图片{image_counter}: {e}")
-            return f"### 图片 {image_counter}\n\n*图片提取失败*"
+            logger.warning(f"DOCX图片提取失败，跳过该图片 图片{image_counter}: {e}")
+            return f"### 图片 {image_counter}\n\n*图片提取失败，已跳过*"
     
     async def _get_vision_description(self, temp_img_path: str) -> str:
         """获取视觉模型描述"""
@@ -103,9 +108,20 @@ class DocxParser(BaseParser):
             for table in doc.tables:
                 content_parts.append(self._parse_table(table))
             
-            # 提取并处理图片
-            image_parts = await self._extract_images(doc, file_path)
-            content_parts.extend(image_parts)
+            # 获取图片数量，添加保护机制
+            rels = doc.part.rels
+            image_count = sum(1 for rel in rels.values() if "image" in rel.target_ref)
+            
+            # 图片数量保护机制
+            if image_count > 5:
+                logger.warning(f"DOCX文档包含 {image_count} 张图片，超过5张限制，跳过所有图片处理")
+                if image_count > 0:
+                    content_parts.append(f"### 文档包含 {image_count} 张图片")
+                    content_parts.append("*因图片数量超过5张限制，已跳过所有图片处理*")
+            else:
+                # 提取并处理图片
+                image_parts = await self._extract_images(doc, file_path)
+                content_parts.extend(image_parts)
             
             raw_content = '\n\n'.join(content_parts)
             
@@ -118,7 +134,9 @@ class DocxParser(BaseParser):
             # 格式化为统一的代码块格式
             markdown_content = f"```document\n{raw_content}\n```"
             
-            logger.info(f"成功解析DOCX文件: {file_path}")
+            skip_images = image_count > 5
+            logger.info(f"成功解析DOCX文件: {file_path} (总图片数: {image_count}, 跳过图片: {skip_images})")
+            
             return markdown_content
             
         except Exception as e:
@@ -158,27 +176,42 @@ class DocxParser(BaseParser):
             for rel_id, rel in rels.items():
                 if "image" in rel.target_ref:
                     image_counter += 1
-                    # 获取图片数据
-                    image_data = rel.target_part.blob
-                    # 生成图片文件名
-                    img_name = f"{base_name}_image_{image_counter}.png"
-                    
-                    image_data_list.append({
-                        'data': image_data,
-                        'name': img_name,
-                        'counter': image_counter
-                    })
+                    try:
+                        # 获取图片数据
+                        image_data = rel.target_part.blob
+                        # 生成图片文件名
+                        img_name = f"{base_name}_image_{image_counter}.png"
+                        
+                        image_data_list.append({
+                            'data': image_data,
+                            'name': img_name,
+                            'counter': image_counter
+                        })
+                    except Exception as extract_error:
+                        logger.warning(f"DOCX图片提取失败，跳过该图片 图片{image_counter}: {extract_error}")
+                        image_data_list.append({
+                            'data': None,
+                            'name': f"{base_name}_image_{image_counter}.png",
+                            'counter': image_counter
+                        })
             
             # 并发处理所有图片
             if image_data_list:
-                image_tasks = [
-                    self._process_image_concurrent(
-                        img_info['data'], 
-                        img_info['name'], 
-                        img_info['counter']
-                    ) 
-                    for img_info in image_data_list
-                ]
+                image_tasks = []
+                for img_info in image_data_list:
+                    if img_info['data'] is not None:
+                        task = self._process_image_concurrent(
+                            img_info['data'], 
+                            img_info['name'], 
+                            img_info['counter']
+                        )
+                    else:
+                        # 图片提取失败的情况
+                        async def create_error_result(counter):
+                            return f"### 图片 {counter}\n\n*图片提取失败，已跳过*"
+                        task = create_error_result(img_info['counter'])
+                    
+                    image_tasks.append(task)
                 
                 try:
                     image_parts = await asyncio.gather(*image_tasks, return_exceptions=True)
@@ -187,8 +220,8 @@ class DocxParser(BaseParser):
                     final_image_parts = []
                     for i, result in enumerate(image_parts):
                         if isinstance(result, Exception):
-                            logger.error(f"DOCX图片并发处理异常 图片{i+1}: {result}")
-                            final_image_parts.append(f"### 图片 {i+1}\n\n*图片处理异常*")
+                            logger.error(f"DOCX图片并发处理异常，跳过该图片 图片{i+1}: {result}")
+                            final_image_parts.append(f"### 图片 {i+1}\n\n*图片处理异常，已跳过*")
                         else:
                             final_image_parts.append(result)
                     
@@ -198,12 +231,12 @@ class DocxParser(BaseParser):
                     return final_image_parts
                     
                 except Exception as e:
-                    logger.error(f"DOCX图片并发处理失败: {e}")
+                    logger.error(f"DOCX图片并发处理失败，跳过所有图片: {e}")
                     # 回退处理
-                    return [f"### 图片 {i+1}\n\n*图片处理失败*" for i in range(len(image_data_list))]
+                    return [f"### 图片 {i+1}\n\n*图片处理失败，已跳过*" for i in range(len(image_data_list))]
             
             return []
             
         except Exception as e:
-            logger.warning(f"DOCX图片提取过程失败: {e}")
+            logger.warning(f"DOCX图片提取过程失败，跳过所有图片: {e}")
             return [] 

@@ -11,6 +11,7 @@ import asyncio
 from app.config import config
 from app.routers import convert
 from app.queue_manager import ConversionQueueManager
+from app.cache import init_cache, close_cache
 
 # 配置日志
 logger.remove()
@@ -64,6 +65,9 @@ async def startup_event():
     """应用启动事件"""
     logger.info(f"正在启动 {config.APP_NAME}...")
     
+    # 初始化缓存管理器
+    await init_cache()
+    
     # 启动队列管理器
     await queue_manager.start_worker()
     logger.info(f"队列管理器已启动，支持最多{config.MAX_CONCURRENT}个并发文档转换")
@@ -76,6 +80,9 @@ async def shutdown_event():
     # 优雅关闭队列管理器
     await queue_manager.shutdown()
     
+    # 关闭缓存管理器
+    await close_cache()
+    
     # 清理过期任务
     cleaned_count = queue_manager.cleanup_old_tasks(max_age_hours=config.QUEUE_CLEANUP_HOURS)
     if cleaned_count > 0:
@@ -85,6 +92,7 @@ async def shutdown_event():
 async def health_check(response: Response):
     """健康检查端点 - 允许所有来源访问"""
     from app.vision import vision_client
+    from app.cache import cache_manager
     
     # 设置 CORS 头，允许所有来源访问健康检查端点
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -103,6 +111,10 @@ async def health_check(response: Response):
             "queue": {
                 "status": "UP",
                 "info": queue_manager.get_queue_info()
+            },
+            "cache": {
+                "status": "UP" if cache_manager.enabled else "DISABLED",
+                "enabled": cache_manager.enabled
             }
         }
     }

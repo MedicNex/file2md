@@ -12,10 +12,12 @@ from app.config import config
 from app.auth import get_api_key
 from app.models import (
     ConvertResponse, ErrorResponse, TaskSubmitResponse, 
-    BatchSubmitResponse, TaskStatusResponse, QueueInfoResponse
+    BatchSubmitResponse, TaskStatusResponse, QueueInfoResponse,
+    CacheStatsResponse
 )
 from app.parsers.registry import parser_registry
 from app.queue_manager import TaskStatus
+from app.cache import cache_manager
 
 # 自定义JSON响应类，确保中文字符正确显示
 class UnicodeJSONResponse(JSONResponse):
@@ -79,39 +81,11 @@ async def convert_file(
                 }
             )
         
-        # 检查文件大小（使用流式读取避免内存问题）
-        file_size = 0
-        content = b""
-        chunk_size = 8192  # 8KB 块大小
+        # 先快速读取文件内容用于缓存检查
+        content = await file.read()
+        file_size = len(content)
         
-        try:
-            while True:
-                chunk = await file.read(chunk_size)
-                if not chunk:
-                    break
-                file_size += len(chunk)
-                
-                # 检查是否超过大小限制，避免继续读取
-                if file_size > config.MAX_FILE_SIZE:
-                    raise HTTPException(
-                        status_code=413,
-                        detail={
-                            "code": "FILE_TOO_LARGE",
-                            "message": f"文件过大: {file_size} bytes，最大允许: {config.MAX_FILE_SIZE} bytes ({config.MAX_FILE_SIZE // 1024 // 1024} MB)"
-                        }
-                    )
-                content += chunk
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "FILE_READ_ERROR",
-                    "message": f"文件读取失败: {str(e)}"
-                }
-            )
-        
+        # 检查文件大小
         if file_size == 0:
             raise HTTPException(
                 status_code=422,
@@ -120,6 +94,31 @@ async def convert_file(
                     "message": "文件为空"
                 }
             )
+        
+        if file_size > config.MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail={
+                    "code": "FILE_TOO_LARGE",
+                    "message": f"文件过大: {file_size} bytes，最大允许: {config.MAX_FILE_SIZE} bytes ({config.MAX_FILE_SIZE // 1024 // 1024} MB)"
+                }
+            )
+        
+        # 优先检查缓存，避免不必要的文件处理
+        cache_check_start = time.time()
+        cached_result = await cache_manager.get_cached_result(content)
+        if cached_result:
+            # 计算缓存检查的实际耗时
+            cache_duration_ms = int((time.time() - cache_check_start) * 1000)
+            total_duration_ms = int((time.time() - start_time) * 1000)
+            
+            # 返回缓存的结果，但更新文件名和时间信息
+            cached_result["filename"] = file.filename
+            cached_result["cache_duration_ms"] = cache_duration_ms
+            cached_result["total_duration_ms"] = total_duration_ms
+            
+            logger.info(f"从缓存返回结果: {file.filename} (缓存查询: {cache_duration_ms}ms, 总耗时: {total_duration_ms}ms)")
+            return UnicodeJSONResponse(content=cached_result)
         
         # 获取文件扩展名
         file_extension = Path(file.filename).suffix.lower()
@@ -156,13 +155,24 @@ async def convert_file(
         
         log_conversion_result(file.filename, markdown_content, len(content))
         
+        # 缓存解析结果
+        await cache_manager.cache_result(
+            file_content=content,
+            filename=file.filename,
+            markdown_content=markdown_content,
+            file_size=file_size,
+            duration_ms=duration_ms,
+            content_type=file.content_type
+        )
+        
         # 使用自定义响应类确保中文正确显示
         response_data = {
             "filename": file.filename,
             "size": len(content),
             "content_type": file.content_type or "application/octet-stream",
             "content": markdown_content,
-            "duration_ms": duration_ms
+            "duration_ms": duration_ms,
+            "from_cache": False
         }
         
         return UnicodeJSONResponse(content=response_data)
@@ -343,4 +353,28 @@ async def get_supported_types(api_key: str = Depends(get_api_key)):
         "supported_extensions": parser_registry.get_supported_extensions(),
         "total_count": len(parser_registry.get_supported_extensions())
     }
+    return UnicodeJSONResponse(content=response_data)
+
+@router.get("/cache/stats", response_model=CacheStatsResponse)
+async def get_cache_stats(api_key: str = Depends(get_api_key)):
+    """
+    获取缓存统计信息
+    """
+    stats = await cache_manager.get_cache_stats()
+    return UnicodeJSONResponse(content=stats)
+
+@router.post("/cache/clear")
+async def clear_cache(api_key: str = Depends(get_api_key)):
+    """
+    清除所有缓存数据
+    """
+    cleared_count = await cache_manager.clear_cache()
+    
+    response_data = {
+        "message": f"成功清除 {cleared_count} 条缓存记录",
+        "cleared_count": cleared_count
+    }
+    
+    logger.info(f"缓存清理完成: {cleared_count}条记录被清除")
+    
     return UnicodeJSONResponse(content=response_data) 

@@ -17,14 +17,19 @@ class DocParser(BaseParser):
     async def _process_image_concurrent(self, temp_path: str, img_name: str, img_idx: int):
         """并发处理单个图片的OCR和视觉识别"""
         if not temp_path or not os.path.exists(temp_path):
-            return img_name, f'<img src="{img_name}" alt="图片提取失败" />'
+            return img_name, f'<img src="{img_name}" alt="图片提取失败，已跳过" />'
         
         try:
-            # 并发执行OCR和视觉识别
-            ocr_task = get_ocr_text(temp_path)
-            vision_task = self._get_vision_description(temp_path)
-            
-            ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            # 并发执行OCR和视觉识别，添加异常保护
+            try:
+                ocr_task = get_ocr_text(temp_path)
+                vision_task = self._get_vision_description(temp_path)
+                
+                ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            except Exception as ocr_vision_error:
+                logger.warning(f"OCR/视觉识别失败，跳过处理 图片{img_idx}: {ocr_vision_error}")
+                ocr_text = "OCR处理失败"
+                vision_description = "视觉识别失败"
             
             # 生成HTML标签格式
             alt_text = f"# OCR: {ocr_text} # Visual_Features: {vision_description}"
@@ -34,8 +39,8 @@ class DocParser(BaseParser):
             return img_name, html_img_tag
             
         except Exception as e:
-            logger.warning(f"DOC图片OCR/视觉识别失败: {e}")
-            html_img_tag = f'<img src="{img_name}" alt="图片处理失败" />'
+            logger.warning(f"DOC图片OCR/视觉识别失败，跳过该图片: {e}")
+            html_img_tag = f'<img src="{img_name}" alt="图片处理失败，已跳过" />'
             return img_name, html_img_tag
     
     async def _get_vision_description(self, temp_img_path: str) -> str:
@@ -111,7 +116,7 @@ class DocParser(BaseParser):
                     return image_info["placeholder"]
                     
                 except Exception as e:
-                    logger.warning(f"DOC图片处理失败: {e}")
+                    logger.warning(f"DOC图片处理失败，跳过该图片: {e}")
                     error_info = {
                         "src": f"{base_name}_image_{image_counter}.png",
                         "temp_path": None,
@@ -137,8 +142,18 @@ class DocParser(BaseParser):
             # 将HTML转换为Markdown
             raw_content = markdownify(html_content, heading_style="ATX")
             
-            # 并发处理所有图片
-            if image_info_list:
+            # 图片数量保护机制
+            if len(image_info_list) > 5:
+                logger.warning(f"DOC文档包含 {len(image_info_list)} 张图片，超过5张限制，跳过所有图片处理")
+                # 将所有占位符替换为跳过提示
+                for img_info in image_info_list:
+                    placeholder = img_info["placeholder"]
+                    img_name = img_info["src"]
+                    skip_tag = f'<img src="{img_name}" alt="因图片数量超过5张限制，已跳过图片处理" />'
+                    raw_content = raw_content.replace(placeholder, skip_tag)
+            
+            # 并发处理所有图片（如果图片数量未超过限制）
+            elif image_info_list:
                 # 创建并发任务列表
                 image_tasks = []
                 for img_info in image_info_list:
@@ -151,10 +166,11 @@ class DocParser(BaseParser):
                         image_tasks.append((img_info["placeholder"], task))
                     else:
                         # 图片提取失败的情况
-                        image_tasks.append((
-                            img_info["placeholder"], 
-                            asyncio.create_task(asyncio.coroutine(lambda: (img_info["src"], f'<img src="{img_info["src"]}" alt="图片提取失败" />'))())
-                        ))
+                        async def create_error_result(src):
+                            return src, f'<img src="{src}" alt="图片提取失败，已跳过" />'
+                        
+                        error_task = create_error_result(img_info["src"])
+                        image_tasks.append((img_info["placeholder"], error_task))
                 
                 # 执行并发处理
                 try:
@@ -165,20 +181,20 @@ class DocParser(BaseParser):
                         if i < len(results):
                             result = results[i]
                             if isinstance(result, Exception):
-                                logger.error(f"图片并发处理异常: {result}")
-                                html_img_tag = f'<img src="error_{i}.png" alt="图片处理异常" />'
+                                logger.error(f"图片并发处理异常，跳过该图片: {result}")
+                                html_img_tag = f'<img src="error_{i}.png" alt="图片处理异常，已跳过" />'
                             else:
                                 _, html_img_tag = result
                             
                             raw_content = raw_content.replace(placeholder, html_img_tag)
                 
                 except Exception as e:
-                    logger.error(f"图片并发处理失败: {e}")
+                    logger.error(f"图片并发处理失败，跳过所有图片: {e}")
                     # 回退到简单替换
                     for img_info in image_info_list:
                         placeholder = img_info["placeholder"]
                         img_name = img_info["src"]
-                        html_img_tag = f'<img src="{img_name}" alt="图片处理失败" />'
+                        html_img_tag = f'<img src="{img_name}" alt="图片处理失败，已跳过" />'
                         raw_content = raw_content.replace(placeholder, html_img_tag)
             
             # 处理换行符
@@ -190,10 +206,11 @@ class DocParser(BaseParser):
             # 格式化为统一的代码块格式
             markdown_content = f"```document\n{raw_content.strip()}\n```"
             
+            skip_images = len(image_info_list) > 5
+            logger.info(f"成功解析DOC文件: {file_path} (总图片数: {len(image_info_list)}, 跳过图片: {skip_images})")
             if image_counter > 0:
                 logger.info(f"DOC文档中共处理了 {image_counter} 张图片")
             
-            logger.info(f"成功解析DOC文件: {file_path}")
             return markdown_content
             
         except Exception as e:

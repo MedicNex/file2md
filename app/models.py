@@ -9,6 +9,10 @@ class ConvertResponse(BaseModel):
     content_type: str
     content: str
     duration_ms: int
+    from_cache: Optional[bool] = False
+    cache_hit_time: Optional[int] = None
+    cache_duration_ms: Optional[int] = None
+    total_duration_ms: Optional[int] = None
 
 class ErrorResponse(BaseModel):
     """错误响应模型"""
@@ -54,3 +58,14 @@ class QueueInfoResponse(BaseModel):
     processing_count: int
     completed_count: int
     failed_count: int 
+
+class CacheStatsResponse(BaseModel):
+    """缓存统计响应模型"""
+    enabled: bool
+    cache_count: Optional[int] = None
+    redis_version: Optional[str] = None
+    used_memory_human: Optional[str] = None
+    connected_clients: Optional[int] = None
+    total_commands_processed: Optional[int] = None
+    cache_ttl_hours: Optional[int] = None
+    error: Optional[str] = None 

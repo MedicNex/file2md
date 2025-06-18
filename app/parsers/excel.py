@@ -26,11 +26,16 @@ class ExcelParser(BaseParser):
             with open(temp_img_path, 'wb') as img_file:
                 img_file.write(image_data)
             
-            # 并发执行OCR和视觉识别
-            ocr_task = get_ocr_text(temp_img_path)
-            vision_task = self._get_vision_description(temp_img_path)
-            
-            ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            # 并发执行OCR和视觉识别，添加异常保护
+            try:
+                ocr_task = get_ocr_text(temp_img_path)
+                vision_task = self._get_vision_description(temp_img_path)
+                
+                ocr_text, vision_description = await asyncio.gather(ocr_task, vision_task)
+            except Exception as ocr_vision_error:
+                logger.warning(f"OCR/视觉识别失败，跳过处理 {sheet_name} 图片{sheet_image_counter}: {ocr_vision_error}")
+                ocr_text = "OCR处理失败"
+                vision_description = "视觉识别失败"
             
             # 生成HTML标签格式
             alt_text = f"# OCR: {ocr_text} # Visual_Features: {vision_description}"
@@ -40,8 +45,8 @@ class ExcelParser(BaseParser):
             return f"### 工作表 {sheet_name} - 图片 {sheet_image_counter}\n\n{html_img_tag}"
             
         except Exception as e:
-            logger.warning(f"Excel图片处理失败 {sheet_name} 图片{sheet_image_counter}: {e}")
-            return f"### 工作表 {sheet_name} - 图片 {sheet_image_counter}\n\n*图片处理失败*"
+            logger.warning(f"Excel图片处理失败，跳过该图片 {sheet_name} 图片{sheet_image_counter}: {e}")
+            return f"### 工作表 {sheet_name} - 图片 {sheet_image_counter}\n\n*图片处理失败，已跳过*"
     
     async def _get_vision_description(self, temp_img_path: str) -> str:
         """获取视觉模型描述"""
@@ -131,11 +136,21 @@ class ExcelParser(BaseParser):
             # 提取并处理图片（仅支持.xlsx格式）
             if file_path.lower().endswith('.xlsx'):
                 try:
-                    image_parts = await self._extract_images_from_xlsx(file_path)
-                    if image_parts:
-                        content_parts.extend(image_parts)
+                    # 先统计图片总数
+                    total_image_count = await self._count_images_in_xlsx(file_path)
+                    
+                    # 图片数量保护机制
+                    if total_image_count > 5:
+                        logger.warning(f"Excel文档包含 {total_image_count} 张图片，超过5张限制，跳过所有图片处理")
+                        if total_image_count > 0:
+                            content_parts.append(f"### 文档包含 {total_image_count} 张图片")
+                            content_parts.append("*因图片数量超过5张限制，已跳过所有图片处理*")
+                    else:
+                        image_parts = await self._extract_images_from_xlsx(file_path)
+                        if image_parts:
+                            content_parts.extend(image_parts)
                 except Exception as img_error:
-                    logger.warning(f"Excel图片提取失败: {img_error}")
+                    logger.warning(f"Excel图片提取失败，跳过所有图片: {img_error}")
             
             raw_content = '\n\n'.join(content_parts)
             
@@ -154,6 +169,26 @@ class ExcelParser(BaseParser):
         except Exception as e:
             logger.error(f"解析Excel文件失败 {file_path}: {e}")
             raise Exception(f"Excel文件解析错误: {str(e)}")
+    
+    async def _count_images_in_xlsx(self, file_path: str) -> int:
+        """统计XLSX文件中的图片数量"""
+        try:
+            workbook = openpyxl.load_workbook(file_path)
+            total_count = 0
+            
+            for sheet_name in workbook.sheetnames:
+                worksheet = workbook[sheet_name]
+                
+                # 检查工作表中的图片
+                if hasattr(worksheet, '_images') and worksheet._images:
+                    total_count += len(worksheet._images)
+            
+            workbook.close()
+            return total_count
+            
+        except Exception as e:
+            logger.warning(f"统计Excel图片数量失败: {e}")
+            return 0
     
     async def _extract_images_from_xlsx(self, file_path: str) -> list[str]:
         """从XLSX文件中提取图片并进行OCR+视觉识别"""
@@ -174,30 +209,46 @@ class ExcelParser(BaseParser):
                     for image in worksheet._images:
                         sheet_image_counter += 1
                         
-                        # 生成图片文件名
-                        img_name = f"{base_name}_{sheet_name}_image_{sheet_image_counter}.png"
-                        
-                        # 获取图片数据
-                        image_data = image._data()
-                        
-                        all_image_info.append({
-                            'data': image_data,
-                            'name': img_name,
-                            'sheet': sheet_name,
-                            'counter': sheet_image_counter
-                        })
+                        try:
+                            # 生成图片文件名
+                            img_name = f"{base_name}_{sheet_name}_image_{sheet_image_counter}.png"
+                            
+                            # 获取图片数据
+                            image_data = image._data()
+                            
+                            all_image_info.append({
+                                'data': image_data,
+                                'name': img_name,
+                                'sheet': sheet_name,
+                                'counter': sheet_image_counter
+                            })
+                        except Exception as extract_error:
+                            logger.warning(f"Excel图片提取失败，跳过该图片 {sheet_name} 图片{sheet_image_counter}: {extract_error}")
+                            all_image_info.append({
+                                'data': None,
+                                'name': f"{base_name}_{sheet_name}_image_{sheet_image_counter}.png",
+                                'sheet': sheet_name,
+                                'counter': sheet_image_counter
+                            })
             
             # 并发处理所有图片
             if all_image_info:
-                image_tasks = [
-                    self._process_image_concurrent(
-                        img_info['data'],
-                        img_info['name'],
-                        img_info['sheet'],
-                        img_info['counter']
-                    )
-                    for img_info in all_image_info
-                ]
+                image_tasks = []
+                for img_info in all_image_info:
+                    if img_info['data'] is not None:
+                        task = self._process_image_concurrent(
+                            img_info['data'],
+                            img_info['name'],
+                            img_info['sheet'],
+                            img_info['counter']
+                        )
+                    else:
+                        # 图片提取失败的情况
+                        async def create_error_result(sheet, counter):
+                            return f"### 工作表 {sheet} - 图片 {counter}\n\n*图片提取失败，已跳过*"
+                        task = create_error_result(img_info['sheet'], img_info['counter'])
+                    
+                    image_tasks.append(task)
                 
                 try:
                     image_parts = await asyncio.gather(*image_tasks, return_exceptions=True)
@@ -207,8 +258,8 @@ class ExcelParser(BaseParser):
                     for i, result in enumerate(image_parts):
                         if isinstance(result, Exception):
                             img_info = all_image_info[i]
-                            logger.error(f"Excel图片并发处理异常 {img_info['sheet']} 图片{img_info['counter']}: {result}")
-                            final_image_parts.append(f"### 工作表 {img_info['sheet']} - 图片 {img_info['counter']}\n\n*图片处理异常*")
+                            logger.error(f"Excel图片并发处理异常，跳过该图片 {img_info['sheet']} 图片{img_info['counter']}: {result}")
+                            final_image_parts.append(f"### 工作表 {img_info['sheet']} - 图片 {img_info['counter']}\n\n*图片处理异常，已跳过*")
                         else:
                             final_image_parts.append(result)
                     
@@ -220,14 +271,14 @@ class ExcelParser(BaseParser):
                     return final_image_parts
                     
                 except Exception as e:
-                    logger.error(f"Excel图片并发处理失败: {e}")
+                    logger.error(f"Excel图片并发处理失败，跳过所有图片: {e}")
                     workbook.close()
                     # 回退处理
-                    return [f"### 工作表 图片处理失败\n\n*图片并发处理失败*" for _ in range(len(all_image_info))]
+                    return [f"### 工作表 图片处理失败\n\n*图片并发处理失败，已跳过*" for _ in range(len(all_image_info))]
             
             workbook.close()
             return []
             
         except Exception as e:
-            logger.warning(f"Excel图片提取过程失败: {e}")
+            logger.warning(f"Excel图片提取过程失败，跳过所有图片: {e}")
             return [] 
