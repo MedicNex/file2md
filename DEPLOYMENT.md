@@ -6,7 +6,7 @@ MedicNex File2Markdown 是一个高性能的文档转换微服务，支持：
 
 - **90+ 种文件格式**：文档、图片、代码文件等
 - **统一代码块输出**：所有文件类型均输出为Markdown代码块格式
-- **智能图片识别**：OCR + 视觉模型双重识别
+- **智能图片识别**：PaddleOCR + 视觉模型双重识别
 - **代码文件支持**：83+ 种编程语言自动识别
 
 ## 快速部署
@@ -24,13 +24,12 @@ cd medicnex-file2md
 pip3 install -r requirements.txt
 ```
 
-3. **安装系统依赖（OCR功能）**
-```bash
-# Ubuntu/Debian
-sudo apt-get install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng
+3. **PaddleOCR 无需额外系统依赖**
+   ```bash
+   # PaddleOCR 为纯 Python 实现，首次使用时会自动下载模型
+   # 无需安装系统级别的 OCR 依赖
 
-# macOS
-brew install tesseract tesseract-lang
+# macOS - 无需额外安装 OCR 依赖
 
 # CentOS/RHEL
 sudo yum install tesseract tesseract-langpack-chi_sim tesseract-langpack-eng
@@ -93,7 +92,7 @@ docker-compose logs -f
 - **存储**: 最小1GB可用空间
 
 ### 系统依赖
-- **tesseract-ocr**: 用于OCR功能
+- **PaddleOCR**: 用于OCR功能（纯Python实现，无需系统依赖）
 - **ImageMagick**: 用于PDF图片处理（可选）
 - **libmagic**: 用于文件类型检测（可选）
 
@@ -284,13 +283,13 @@ python3 test_service.py
    pip install -r requirements.txt
    ```
 
-3. **OCR功能不可用**
+3. **PaddleOCR功能异常**
    ```bash
-   # 测试tesseract安装
-   tesseract --version
+   # 检查 PaddleOCR 安装
+   python -c "import paddleocr; print('PaddleOCR 已安装')"
    
-   # 重新安装
-   sudo apt-get install --reinstall tesseract-ocr tesseract-ocr-chi-sim
+   # 如果未安装，重新安装
+   pip install paddleocr>=2.7.3
    ```
 
 4. **图片识别失败**

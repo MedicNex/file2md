@@ -7,10 +7,10 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 - 🔐 **API Key 鉴权**：支持多个 API Key 管理
 - 📄 **全面格式支持**：支持 **123种文件格式**，包含 16种解析器类型
 - 💻 **代码文件支持**：支持 **82 种编程语言**文件转换，涵盖主流、函数式、脚本、配置等语言
-- 🖼️ **智能图片识别**：集成 Vision API 和 Tesseract OCR，支持 SVG 转 PNG 识别
+- 🖼️ **智能图片识别**：集成 Vision API 和 PaddleOCR（CPU版），支持 SVG 转 PNG 识别
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
 - 🚀 **队列处理模式**：支持批量文档转换，限制最多5个并发任务
-- 🎯 **并发图片处理**：文档中多张图片同时进行 OCR 和 AI 视觉识别，处理速度提升 2-10 倍
+- 🎯 **并发图片处理**：文档中多张图片同时进行 PaddleOCR 和 AI 视觉识别，处理速度提升 2-10 倍
 - 🐳 **容器化部署**：提供 Docker 和 Docker Compose 支持
 - 📊 **统一输出格式**：所有文件类型统一输出为代码块格式
 
@@ -86,8 +86,8 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 | PowerPoint演示文稿 | `.ppt`, `.pptx` | PptxParser | `slideshow` | 提取幻灯片文本内容（不使用视觉模型） |
 | Excel表格 | `.xls`, `.xlsx` | ExcelParser | `sheet` | 转换为HTML表格格式和统计信息，**并发处理图片** |
 | CSV数据 | `.csv` | CsvParser | `sheet` | 转换为HTML表格格式和数据分析 |
-| 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | OCR和视觉识别 |
-| SVG文件 | `.svg` | SvgParser | `svg` | 同时识别代码结构和视觉特征，**转换为PNG进行OCR和AI视觉分析**（需要ImageMagick或Cairo库） |
+| 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | PaddleOCR和视觉识别 |
+| SVG文件 | `.svg` | SvgParser | `svg` | 同时识别代码结构和视觉特征，**转换为PNG进行PaddleOCR和AI视觉分析**（需要ImageMagick或Cairo库） |
 | 音频文件 | `.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` | AudioParser | `audio` | **智能语音分析和ASR转换**，基于RMS能量分析自动分割，并发语音识别，自适应阈值检测 |
 | 视频文件 | `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` | AudioParser | `video` | **视频音频提取和字幕生成**，自动提取音频轨道进行ASR转换，生成SRT格式字幕文件 |
 
@@ -148,9 +148,8 @@ pip install -r requirements.txt
 
 **Ubuntu/Debian：**
 ```bash
-# 基础OCR支持
-sudo apt-get update
-sudo apt-get install -y tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng
+# PaddleOCR会在首次使用时自动下载所需模型
+# 无需额外安装 OCR 系统依赖，PaddleOCR 为纯 Python 实现
 
 # SVG视觉识别支持（推荐ImageMagick）
 sudo apt-get install -y imagemagick libmagickwand-dev pkg-config
@@ -469,7 +468,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 
 2. **🖼️ 图片提取与OCR**：
    - 自动提取DOCX文档中的嵌入图片
-   - 使用Tesseract OCR识别图片中的文字："HelloWorld!"
+   - 使用PaddleOCR识别图片中的文字："HelloWorld!"
    - 生成唯一的图片文件名：`document_image_1.png`
 
 3. **🤖 AI视觉识别**：
@@ -620,7 +619,7 @@ app/
 - **并发图片处理**：文档中多张图片同时进行 OCR 和 AI 视觉识别
   - 支持文件类型：PDF、DOC、DOCX、Excel
   - 性能提升：2-10倍处理速度（取决于图片数量和网络状况）
-  - 技术实现：使用 `asyncio.gather()` 并发执行 OCR 和视觉模型调用
+  - 技术实现：使用 `asyncio.gather()` 并发执行 PaddleOCR 和视觉模型调用
 - 临时文件自动清理
 - 内存优化的流式处理
 - 支持大文件处理
@@ -720,7 +719,7 @@ class CustomParser(BaseParser):
 ### v2.1.0 
 - ✨ **新增**：并发图片处理功能
   - PDF、DOC、DOCX、Excel 文档中的多张图片现在可以并发处理
-  - OCR 和 AI 视觉识别同时进行，大幅提升处理速度
+  - PaddleOCR 和 AI 视觉识别同时进行，大幅提升处理速度
   - 处理速度提升 2-10 倍（取决于图片数量）
 - 🔧 **优化**：改进了异常处理和错误恢复机制
 - 🐛 **修复**：解决了大型文档图片处理的内存问题

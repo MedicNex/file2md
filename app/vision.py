@@ -4,7 +4,8 @@ import os
 import tempfile
 from loguru import logger
 from typing import Optional
-import pytesseract
+# 移除 pytesseract 导入，改用 PaddleOCR
+# import pytesseract
 from PIL import Image
 import httpx
 import asyncio
@@ -12,37 +13,58 @@ import aiofiles
 
 from app.config import config
 
-# 配置 Tesseract 可执行文件路径
-def configure_tesseract():
-    """配置 Tesseract OCR 路径"""
+# 初始化 PaddleOCR
+_ocr_engine = None
+
+def init_paddle_ocr():
+    """初始化 PaddleOCR 引擎"""
+    global _ocr_engine
     try:
-        # 常见的 tesseract 安装路径
-        possible_paths = [
-            '/usr/bin/tesseract',      # Ubuntu/Debian 默认路径
-            '/usr/local/bin/tesseract', # 手动编译安装路径
-            '/opt/homebrew/bin/tesseract', # macOS Homebrew 路径
-            'tesseract'                # 系统 PATH 中
-        ]
+        from paddleocr import PaddleOCR
         
-        for path in possible_paths:
-            if path == 'tesseract':
-                # 尝试使用默认 PATH
-                continue
-            if os.path.exists(path):
-                pytesseract.pytesseract.tesseract_cmd = path
-                logger.info(f"配置 Tesseract 路径: {path}")
-                return path
+        # 兼容性初始化，支持新旧版本API
+        try:
+            # 尝试新版本参数
+            _ocr_engine = PaddleOCR(
+                use_textline_orientation=True,  # 使用文本行方向检测 (新参数名)
+                lang='ch',  # 中文识别
+                use_gpu=False  # 使用 CPU
+            )
+            logger.info("PaddleOCR (CPU) 初始化成功 - 使用新版API")
+        except TypeError as te:
+            # 回退到旧版本参数
+            logger.info("使用旧版本PaddleOCR API参数")
+            _ocr_engine = PaddleOCR(
+                use_angle_cls=True,  # 使用角度分类器 (旧参数名)
+                lang='ch',  # 中文识别
+                use_gpu=False  # 使用 CPU
+            )
+            logger.info("PaddleOCR (CPU) 初始化成功 - 使用旧版API")
         
-        # 如果没有找到明确路径，尝试使用默认设置
-        logger.info("使用默认 Tesseract 路径配置")
+        return _ocr_engine
+        
+    except ImportError:
+        logger.error("PaddleOCR 未安装，请运行: pip install paddleocr")
         return None
-        
     except Exception as e:
-        logger.warning(f"配置 Tesseract 路径时出错: {e}")
+        logger.error(f"PaddleOCR 初始化失败: {e}")
         return None
 
-# 初始化时配置 Tesseract
-configure_tesseract()
+def get_ocr_engine():
+    """获取 OCR 引擎实例"""
+    global _ocr_engine
+    if _ocr_engine is None:
+        _ocr_engine = init_paddle_ocr()
+    return _ocr_engine
+
+# 兼容性函数 - 废弃 Tesseract 配置
+def configure_tesseract():
+    """废弃的 Tesseract 配置函数，保持兼容性"""
+    logger.warning("configure_tesseract() 已废弃，现在使用 PaddleOCR")
+    return None
+
+# 初始化时配置 PaddleOCR
+init_paddle_ocr()
 from app.exceptions import (
     VisionAPIError, VisionAPIConnectionError, VisionAPIRateLimitError, OCRError
 )
@@ -242,7 +264,7 @@ async def image_to_markdown(image_path: str) -> str:
 
 async def get_ocr_text(image_path: str) -> str:
     """
-    使用Tesseract OCR提取图片中的文字
+    使用PaddleOCR提取图片中的文字
     
     Args:
         image_path: 图片文件路径
@@ -254,116 +276,90 @@ async def get_ocr_text(image_path: str) -> str:
         OCRError: OCR处理失败
     """
     try:
-        # 使用PIL打开图片，增加格式兼容性处理
+        # 获取 PaddleOCR 引擎
+        ocr_engine = get_ocr_engine()
+        if ocr_engine is None:
+            raise OCRError("PaddleOCR 引擎未初始化")
+        
+        # 验证图片文件存在
+        if not os.path.exists(image_path):
+            raise OCRError(f"图片文件不存在: {image_path}")
+        
+        # 图片预处理 - 为了兼容性，检查图片格式
+        processed_image_path = image_path
+        temp_converted_path = None
+        
         try:
-            image = Image.open(image_path)
-            
-            # 如果图片有多个帧（如动态GIF），只处理第一帧
-            if hasattr(image, 'n_frames') and image.n_frames > 1:
-                image.seek(0)
-            
-            # 确保图片是RGB模式（Tesseract更好的兼容性）
-            if image.mode not in ('RGB', 'L'):  # RGB彩色或L灰度
-                if image.mode == 'RGBA':
-                    # RGBA转RGB，使用白色背景
-                    background = Image.new('RGB', image.size, (255, 255, 255))
-                    background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
-                    image = background
-                elif image.mode == 'P':
-                    # 调色板模式转RGB
-                    image = image.convert('RGB')
-                else:
-                    # 其他模式转RGB
-                    image = image.convert('RGB')
-            
-            # 对于JPEG格式，额外的兼容性处理
-            if image_path.lower().endswith('.jpeg') or image_path.lower().endswith('.jpg'):
-                # 确保JPEG图片被正确加载
-                image.load()
+            with Image.open(image_path) as image:
+                # 如果图片有多个帧（如动态GIF），只处理第一帧
+                if hasattr(image, 'n_frames') and image.n_frames > 1:
+                    image.seek(0)
                 
+                # 确保图片格式兼容 PaddleOCR
+                if image.mode not in ('RGB', 'L'):
+                    if image.mode == 'RGBA':
+                        # RGBA转RGB，使用白色背景
+                        background = Image.new('RGB', image.size, (255, 255, 255))
+                        background.paste(image, mask=image.split()[-1])
+                        # 保存转换后的图片
+                        temp_converted_path = image_path + "_converted.png"
+                        background.save(temp_converted_path, 'PNG')
+                        processed_image_path = temp_converted_path
+                    elif image.mode in ('P', 'CMYK', '1'):
+                        # 其他格式转RGB
+                        rgb_image = image.convert('RGB')
+                        temp_converted_path = image_path + "_converted.png"
+                        rgb_image.save(temp_converted_path, 'PNG')
+                        processed_image_path = temp_converted_path
+                        
         except (IOError, OSError) as e:
-            # 如果PIL无法打开图片，尝试使用不同的方法
-            logger.warning(f"PIL无法直接打开图片 {image_path}: {e}")
-            try:
-                # 尝试重新读取图片并转换格式
-                import tempfile
-                import shutil
+            logger.warning(f"图片格式检查失败，直接使用原图: {e}")
+        
+        # 使用 PaddleOCR 进行文字识别
+        try:
+            logger.debug(f"使用 PaddleOCR 处理图片: {processed_image_path}")
+            
+            # PaddleOCR 识别
+            result = ocr_engine.ocr(processed_image_path, cls=True)
+            
+            # 解析 PaddleOCR 结果
+            ocr_text_list = []
+            if result and result[0]:  # result是一个列表，包含每页的结果
+                for line in result[0]:  # 遍历每一行文字
+                    if line and len(line) >= 2:
+                        text = line[1][0]  # 获取识别的文字
+                        confidence = line[1][1]  # 获取置信度
+                        # 只保留置信度较高的文字
+                        if confidence > 0.5:  # 置信度阈值
+                            ocr_text_list.append(text)
+            
+            # 合并识别结果
+            if ocr_text_list:
+                ocr_text = '\n'.join(ocr_text_list)
+                logger.info(f"PaddleOCR 成功提取文字: {len(ocr_text_list)} 行文字")
+                return ocr_text.strip()
+            else:
+                logger.warning(f"PaddleOCR 未能提取到文字: {image_path}")
+                return "未检测到文字内容"
                 
-                # 创建临时文件
-                with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
-                    temp_path = temp_file.name
-                
-                # 尝试用PIL强制转换格式
-                with Image.open(image_path) as original_img:
-                    original_img.load()
-                    if original_img.mode != 'RGB':
-                        original_img = original_img.convert('RGB')
-                    original_img.save(temp_path, 'PNG')
-                
-                # 重新打开转换后的图片
-                image = Image.open(temp_path)
-                logger.info(f"成功转换图片格式: {image_path} -> PNG")
-                
-                # 清理临时文件
+        except Exception as ocr_error:
+            logger.error(f"PaddleOCR 处理失败 {image_path}: {ocr_error}")
+            
+            # 检查是否是模型加载问题
+            if "No module named" in str(ocr_error) or "ImportError" in str(ocr_error):
+                raise OCRError(f"PaddleOCR 依赖缺失: {str(ocr_error)}")
+            elif "download" in str(ocr_error).lower():
+                raise OCRError(f"PaddleOCR 模型下载失败，请检查网络连接: {str(ocr_error)}")
+            else:
+                raise OCRError(f"PaddleOCR 识别失败: {str(ocr_error)}")
+        
+        finally:
+            # 清理临时转换的图片文件
+            if temp_converted_path and os.path.exists(temp_converted_path):
                 try:
-                    os.unlink(temp_path)
+                    os.unlink(temp_converted_path)
                 except:
                     pass
-                    
-            except Exception as convert_error:
-                logger.error(f"图片格式转换失败 {image_path}: {convert_error}")
-                raise OCRError(f"不支持的图片格式或图片损坏: {str(convert_error)}")
-        
-        # 使用Tesseract进行OCR
-        try:
-            # 先检查 tesseract 是否可用
-            tesseract_cmd = getattr(pytesseract.pytesseract, 'tesseract_cmd', 'tesseract')
-            logger.debug(f"使用 Tesseract 命令: {tesseract_cmd}")
-            
-            ocr_text = pytesseract.image_to_string(image, lang='chi_sim+eng')
-        except Exception as ocr_error:
-            logger.error(f"Tesseract OCR处理失败 {image_path}: {ocr_error}")
-            
-            # 诊断 tesseract 是否可用
-            tesseract_cmd = getattr(pytesseract.pytesseract, 'tesseract_cmd', 'tesseract')
-            logger.error(f"当前 Tesseract 命令路径: {tesseract_cmd}")
-            
-            # 检查是否是路径问题
-            if "not installed" in str(ocr_error).lower() or "not in your path" in str(ocr_error).lower():
-                logger.error("Tesseract 路径问题，尝试重新配置路径")
-                # 重新配置路径
-                new_path = configure_tesseract()
-                if new_path:
-                    logger.info(f"重新配置 Tesseract 路径为: {new_path}")
-                    try:
-                        ocr_text = pytesseract.image_to_string(image, lang='chi_sim+eng')
-                        logger.info(f"重新配置路径后 OCR 成功: {image_path}")
-                    except Exception as retry_error:
-                        logger.error(f"重新配置路径后仍然失败: {retry_error}")
-                        raise OCRError(f"Tesseract 路径配置失败: {str(retry_error)}")
-                else:
-                    raise OCRError(f"无法找到 Tesseract 可执行文件: {str(ocr_error)}")
-            else:
-                # 尝试只使用英文OCR
-                try:
-                    ocr_text = pytesseract.image_to_string(image, lang='eng')
-                    logger.info(f"回退到英文OCR成功: {image_path}")
-                except Exception as fallback_error:
-                    logger.error(f"英文OCR也失败 {image_path}: {fallback_error}")
-                    # 检查是否是格式不支持的问题，如果是，允许继续处理
-                    error_msg = str(fallback_error).lower()
-                    if any(keyword in error_msg for keyword in ['unsupported', 'format', 'type', 'decode']):
-                        logger.warning(f"图片格式不支持OCR，但可能仍可进行视觉分析: {image_path}")
-                        raise OCRError(f"图片格式不支持OCR处理，但图片可能仍可用于视觉分析")
-                    else:
-                        raise OCRError(f"OCR引擎处理失败: {str(fallback_error)}")
-        
-        if ocr_text.strip():
-            logger.info(f"OCR成功提取文字: {image_path}")
-            return ocr_text.strip()
-        else:
-            logger.warning(f"OCR未能提取到文字: {image_path}")
-            return "未检测到文字内容"
             
     except OCRError:
         # 重新抛出OCR错误
@@ -408,7 +404,7 @@ def format_image_result(ocr_text: str, vision_description: str) -> str:
 
 async def fallback_ocr(image_path: str) -> str:
     """
-    使用Tesseract OCR作为回退方案 (保持向后兼容)
+    使用PaddleOCR作为OCR处理方案 (保持向后兼容)
     
     Args:
         image_path: 图片文件路径

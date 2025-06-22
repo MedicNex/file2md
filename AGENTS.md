@@ -13,7 +13,7 @@
 | 鉴权          | 自定义 API Key Header + HMAC/Redis 存储                                                                                                                               | 可水平扩展                   |
 | 文档解析        | • `python-docx`（DOCX）<br>• `mammoth`（DOC→HTML→MD）<br>• `pdfplumber`（PDF）<br>• `python-pptx`（PPT/PPTX，不含视觉）<br>• `pandas` + `tabulate`（XLS/XLSX/CSV→HTML表格）<br>• 内置解析（TXT/MD）<br>• `chardet`（代码文件） | 统一输出代码块格式           |
 | Markdown 生成 | **markdownify / mistune**                                                                                                                                        | 富文本 → MD                |
-| 图片识别        | **OpenAI Vision API**（或其他视觉大模型） + **Tesseract OCR**（可选）                                                                                                          | 返回标签、描述与文字              |
+| 图片识别        | **OpenAI Vision API**（或其他视觉大模型） + **PaddleOCR**（CPU版）                                                                                                          | 返回标签、描述与文字              |
 | 日志          | **loguru**                                                                                                                                                       | JSON 结构化日志              |
 | 部署          | Docker + Gunicorn/Uvicorn Worker                                                                                                                                 | 12‑factor 兼容            |
 
@@ -181,7 +181,7 @@ Content-Type: text/x-python
 | **PPT / PPTX** | `python-pptx` 遍历 Slide→Shape；仅提取文本内容（不处理图片）                  | `slideshow` | python-pptx              |
 | **XLS / XLSX** | `pandas.read_excel()`→`tabulate(table, tablefmt="html")`  | `sheet` | pandas, tabulate         |
 | **CSV**        | `pandas.read_csv()` 同上，输出HTML表格格式                                      | `sheet` | pandas, tabulate         |
-| **Image**      | Base64 → Vision API（标签，描述）+ `pytesseract.image_to_string()` | `image` | openai, pytesseract      |
+| **Image**      | Base64 → Vision API（标签，描述）+ `PaddleOCR.ocr()` | `image` | openai, paddleocr      |
 | **Code Files** | 自动识别83+种编程语言，`chardet` 检测编码                              | 对应语言 | chardet                  |
 
 ### 支持的代码文件类型

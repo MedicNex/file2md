@@ -27,7 +27,10 @@ mistune>=3.0.2
 
 # 图像处理 - 修复 CVE-2021-25287/25288 缓冲区越界漏洞
 pillow>=10.4.0
-pytesseract>=0.3.10
+# PaddleOCR (CPU版本) 用于文字识别
+paddleocr>=2.7.3
+# 移除 Tesseract 依赖，改用 PaddleOCR
+# pytesseract>=0.3.10
 
 # AI/API
 openai>=1.84.0
