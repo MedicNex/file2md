@@ -1,6 +1,6 @@
-# MedicNex File2Markdown
-
 <div align="center">
+
+# MedicNex File2Markdown
 
 [中文](README.md) | [English](README_en.md)
 
