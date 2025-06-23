@@ -2,7 +2,9 @@
 
 <div align="center">
 
-[![MedicNexAI](https://www.medicnex.com/static/images/medicnex-badge.svg)](https://www.medicnex.com)
+[中文](README.md) | [English](README_en.md)
+
+[![MedicNex AI](https://www.medicnex.com/static/images/medicnex-badge.svg)](https://www.medicnex.com)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)
 ![Docker](https://img.shields.io/badge/docker-supported-blue.svg)
@@ -853,18 +855,20 @@ limitations under the License.
 
 ## 📈 最新更新
 
-### v2.5.0（最新）
+### v2.6.0（最新）
 - 🐳 **Docker完整支持**：全新的容器化部署方案
   - **Dockerfile**: 基于Ubuntu 24.04的优化镜像，包含PaddleOCR所有依赖
   - **docker-compose.yml**: 完整的服务编排，包含API、Redis、Nginx
   - **docker-deploy.sh**: 一键自动化部署脚本，自动生成安全密钥
-  - **DOCKER_DEPLOY_README.md**: 详细的Docker部署指南和故障排除
   - **数据持久化**: PaddleOCR模型、Redis数据、日志的持久化存储
   - **健康检查**: 内置的服务健康监控和自动恢复
   - **资源限制**: 合理的内存和CPU限制配置
   - **安全配置**: 非root用户运行，自动生成强密钥
 - 📋 **文档优化**: 重新组织部署指南，提供三种部署方式选择
 - 🔧 **架构说明**: 更新项目结构说明，清晰展示Docker相关文件
+
+### v2.5.0
+- OCR 引擎从 Tesseract 换成 **PaddleOCR**，提高识别准确率
 
 ### v2.4.0
 - 🎵 **音频和视频处理功能**：全新的音频/视频文件处理支持
@@ -901,7 +905,7 @@ limitations under the License.
 ### v2.1.0 
 - ✨ **新增**：并发图片处理功能
   - PDF、DOC、DOCX、Excel 文档中的多张图片现在可以并发处理
-  - PaddleOCR 和 AI 视觉识别同时进行，大幅提升处理速度
+  - OCR 和 AI 视觉识别同时进行，大幅提升处理速度
   - 处理速度提升 2-10 倍（取决于图片数量）
 - 🔧 **优化**：改进了异常处理和错误恢复机制
 - 🐛 **修复**：解决了大型文档图片处理的内存问题
@@ -913,7 +917,7 @@ limitations under the License.
 **🚀 MedicNex File2Markdown**
 
 > 开发者：Kris  
-> &copy; 2025 岐问杏林版权所有
+> &copy; 2025 MedicNex. All rights reserved.
 
 *高效智能的文件转换微服务，让 AI 更好地理解您的文档*
 
