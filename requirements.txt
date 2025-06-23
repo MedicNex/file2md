@@ -29,8 +29,6 @@ mistune>=3.0.2
 pillow>=10.4.0
 # PaddleOCR (CPU版本) 用于文字识别
 paddleocr>=2.7.3
-# 移除 Tesseract 依赖，改用 PaddleOCR
-# pytesseract>=0.3.10
 
 # AI/API
 openai>=1.84.0

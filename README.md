@@ -1,5 +1,16 @@
 # MedicNex File2Markdown
 
+<div align="center">
+
+[![MedicNexAI](https://www.medicnex.com/static/images/medicnex-badge.svg)](https://www.medicnex.com)
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)
+![Docker](https://img.shields.io/badge/docker-supported-blue.svg)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+![PaddleOCR](https://img.shields.io/badge/PaddleOCR-2.7+-orange.svg)
+
+</div>
+
 MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、音频、视频、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式，对于 LLM 理解友好。
 
 ## 功能特性
@@ -7,7 +18,7 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 - 🔐 **API Key 鉴权**：支持多个 API Key 管理
 - 📄 **全面格式支持**：支持 **123种文件格式**，包含 16种解析器类型
 - 💻 **代码文件支持**：支持 **82 种编程语言**文件转换，涵盖主流、函数式、脚本、配置等语言
-- 🖼️ **智能图片识别**：集成 Vision API 和 PaddleOCR（CPU版），支持 SVG 转 PNG 识别
+- 🖼️ **智能图片识别**：集成 Vision API 和 PaddleOCR，支持 SVG 转 PNG 识别
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
 - 🚀 **队列处理模式**：支持批量文档转换，限制最多5个并发任务
 - 🎯 **并发图片处理**：文档中多张图片同时进行 PaddleOCR 和 AI 视觉识别，处理速度提升 2-10 倍
@@ -45,7 +56,6 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 - [❌ 错误处理](#-错误处理)
 - [🏗️ 架构设计](#️-架构设计)
 - [⚡ 性能优化](#-性能优化)
-- [🔒 安全特性](#-安全特性)
 - [📊 监控和日志](#-监控和日志)
 - [📚 更多资源](#-更多资源)
 - [🔧 扩展开发](#-扩展开发)
@@ -110,32 +120,98 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 
 ## 🚀 快速开始
 
+我们提供三种部署方式，您可以选择最适合的方案：
+
 ### 🐳 使用 Docker Compose（推荐）
 
-1. 克隆项目：
+最简单的部署方式，支持一键自动化部署：
+
+1. **克隆项目**：
 ```bash
 git clone https://github.com/MedicNex/medicnex-file2md.git
 cd medicnex-file2md
 ```
 
-2. 配置环境变量：
+2. **一键部署**：
+```bash
+# 自动化部署（推荐）
+./docker-deploy.sh
+```
+
+该脚本会自动：
+- 检查Docker环境
+- 生成安全的API密钥和Redis密码
+- 构建Docker镜像
+- 启动所有服务（API + Redis + 可选Nginx）
+- 执行健康检查
+
+3. **访问服务**：
+- 🌐 API地址：http://localhost:8999
+- 📖 API文档：http://localhost:8999/docs
+- ❤️ 健康检查：http://localhost:8999/v1/health
+- 🔑 API密钥：部署脚本会显示生成的密钥
+
+4. **管理服务**：
+```bash
+# 查看服务状态
+./docker-deploy.sh status
+
+# 查看实时日志
+./docker-deploy.sh logs
+
+# 重启服务
+./docker-deploy.sh restart
+
+# 停止服务
+./docker-deploy.sh stop
+```
+
+**详细文档**：📋 [Docker部署指南](DOCKER_DEPLOY_README.md)
+
+### 💻 手动 Docker Compose 部署
+
+如果您需要自定义配置：
+
+1. **配置环境变量**：
 ```bash
 # 复制环境变量模板
 cp .env.example .env
 
-# 编辑 .env 文件，设置你的 API Keys
+# 编辑 .env 文件，设置你的配置
 API_KEY=your-api-key-1,your-api-key-2
 VISION_API_KEY=your-vision-api-key  # 可选，用于图片识别
+REDIS_PASSWORD=your-redis-password
 ```
 
-3. 启动服务：
+2. **启动服务**：
 ```bash
+# 基础部署
 docker-compose up -d
+
+# 包含Nginx反向代理
+docker-compose --profile with-nginx up -d
 ```
 
-4. 访问服务：
-- API 文档：https://file.medicnex.com/docs
-- 健康检查：https://file.medicnex.com/v1/health
+### 🛠️ 一键部署脚本（传统方式）
+
+适用于直接在Linux服务器上部署：
+
+1. **配置环境变量**：
+```bash
+cp .env.example .env
+# 编辑 .env 文件
+```
+
+2. **执行部署**：
+```bash
+# Ubuntu 24.04 服务器部署
+sudo ./deploy.sh
+```
+
+3. **查看日志**：
+```bash
+./monitor_logs.sh
+```
 
 ### 💻 本地开发环境
 
@@ -231,7 +307,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 **输入文件**：上传一个包含多段对话的音频文件 `meeting.wav`
 
 ```bash
-curl -X POST "https://file.medicnex.com/v1/convert" \
+curl -X POST "https://your-domian/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@meeting.wav"
 ```
@@ -252,7 +328,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 **输入文件**：上传一个教学视频 `tutorial.mp4`
 
 ```bash
-curl -X POST "https://file.medicnex.com/v1/convert" \
+curl -X POST "https://your-domian/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@tutorial.mp4"
 ```
@@ -308,7 +384,7 @@ brew install ffmpeg
 ### 📤 单文件转换（同步模式）
 
 ```bash
-curl -X POST "https://file.medicnex.com/v1/convert" \
+curl -X POST "https://your-domian/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@example.py"
 ```
@@ -329,7 +405,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 使用队列模式批量提交多个文件，系统将控制并发数量最多为5个：
 
 ```bash
-curl -X POST "https://file.medicnex.com/v1/convert-batch" \
+curl -X POST "https://your-domian/v1/convert-batch" \
   -H "Authorization: Bearer your-api-key" \
   -F "files=@document1.docx" \
   -F "files=@image1.png" \
@@ -368,7 +444,7 @@ curl -X POST "https://file.medicnex.com/v1/convert-batch" \
 ### 📋 查询任务状态
 
 ```bash
-curl -X GET "https://file.medicnex.com/v1/task/{task_id}" \
+curl -X GET "https://your-domian/v1/task/{task_id}" \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -392,7 +468,7 @@ curl -X GET "https://file.medicnex.com/v1/task/{task_id}" \
 ### 📊 查询队列状态
 
 ```bash
-curl -X GET "https://file.medicnex.com/v1/queue/info" \
+curl -X GET "https://your-domian/v1/queue/info" \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -441,7 +517,7 @@ curl -X GET "https://file.medicnex.com/v1/queue/info" \
 
 ### 转换结果
 ```bash
-curl -X POST "https://file.medicnex.com/v1/convert" \
+curl -X POST "https://your-domian/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@test_doc_with_image_and_codeblock.docx"
 ```
@@ -491,7 +567,7 @@ curl -X POST "https://file.medicnex.com/v1/convert" \
 ### 📋 获取支持的文件类型
 
 ```bash
-curl -X GET "https://file.medicnex.com/v1/supported-types" \
+curl -X GET "https://your-domian/v1/supported-types" \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -543,7 +619,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ### 健康检查
 
 ```bash
-curl -X GET "https://file.medicnex.com/v1/health"
+curl -X GET "https://your-domian/v1/health"
 ```
 
 ## ⚙️ 配置说明
@@ -579,39 +655,78 @@ curl -X GET "https://file.medicnex.com/v1/health"
 
 ## 🏗️ 架构设计
 
+### 📁 项目结构
+
 ```
-app/
-├── main.py              # FastAPI 应用入口
-├── config.py            # 配置管理
-├── auth.py              # API Key 鉴权
-├── models.py            # Pydantic 数据模型
-├── vision.py            # 视觉识别服务
-├── queue_manager.py     # 队列管理器
-├── utils.py             # 工具函数
-├── exceptions.py        # 异常处理
-├── routers/
-│   └── convert.py       # 转换API路由
-└── parsers/
-    ├── base.py          # 解析器基类
-    ├── registry.py      # 解析器注册表
-    ├── audio.py         # 音频/视频解析器（智能分块+ASR）
-    ├── code.py          # 代码文件解析器（82种语言）
-    ├── pdf.py           # PDF解析器
-    ├── doc.py           # Word DOC解析器（旧版）
-    ├── docx.py          # Word DOCX解析器
-    ├── excel.py         # Excel解析器
-    ├── pptx.py          # PowerPoint解析器
-    ├── csv.py           # CSV解析器
-    ├── numbers.py       # Apple Numbers解析器
-    ├── keynote.py       # Apple Keynote解析器
-    ├── pages.py         # Apple Pages解析器
-    ├── image.py         # 图片解析器
-    ├── svg.py           # SVG解析器
-    ├── markdown.py      # Markdown解析器
-    ├── odt.py           # OpenDocument文本解析器
-    ├── rtf.py           # RTF文档解析器
-    └── txt.py           # 文本解析器
+medicnex-file2md/
+├── 🐳 Docker 部署文件
+│   ├── Dockerfile                    # Docker镜像构建文件
+│   ├── docker-compose.yml           # Docker Compose服务编排
+│   ├── docker-deploy.sh             # 一键Docker部署脚本
+│   └── .dockerignore                # Docker构建忽略文件
+├── 🛠️ 传统部署文件
+│   ├── deploy.sh                    # Ubuntu服务器一键部署脚本
+│   ├── monitor_logs.sh              # 日志监控脚本
+│   └── nginx.conf                   # Nginx配置文件
+├── ⚙️ 配置文件
+│   ├── .env.example                 # 环境变量模板
+│   ├── requirements.txt             # Python依赖包
+│   ├── LICENSE                      # Apache License 2.0许可证
+│   └── DEPLOYMENT.md                # 部署说明文档
+├── 📚 文档
+│   ├── README.md                    # 项目主文档（本文件）
+│   ├── CONTRIBUTING.md              # 贡献指南
+│   ├── SUPPORTED_FORMATS.md         # 支持格式详细列表
+│   ├── File2md_API_Guide.md         # API使用指南
+│   ├── File2md_Examples.md          # 转换示例文档
+│   └── REDIS_CACHE_GUIDE.md         # Redis缓存配置指南
+└── 📱 应用核心
+    └── app/
+        ├── main.py                  # FastAPI 应用入口
+        ├── config.py                # 配置管理
+        ├── auth.py                  # API Key 鉴权
+        ├── models.py                # Pydantic 数据模型
+        ├── vision.py                # 视觉识别服务
+        ├── queue_manager.py         # 队列管理器
+        ├── cache.py                 # Redis缓存管理
+        ├── utils.py                 # 工具函数
+        ├── exceptions.py            # 异常处理
+        ├── routers/
+        │   └── convert.py           # 转换API路由
+        └── parsers/                 # 🔧 解析器模块（16种解析器）
+            ├── base.py              # 解析器基类
+            ├── registry.py          # 解析器注册表
+            ├── audio.py             # 音频/视频解析器（智能分块+ASR）
+            ├── code.py              # 代码文件解析器（82种语言）
+            ├── pdf.py               # PDF解析器
+            ├── doc.py               # Word DOC解析器（旧版）
+            ├── docx.py              # Word DOCX解析器
+            ├── excel.py             # Excel解析器
+            ├── pptx.py              # PowerPoint解析器
+            ├── csv.py               # CSV解析器
+            ├── numbers.py           # Apple Numbers解析器
+            ├── keynote.py           # Apple Keynote解析器
+            ├── pages.py             # Apple Pages解析器
+            ├── image.py             # 图片解析器
+            ├── svg.py               # SVG解析器
+            ├── markdown.py          # Markdown解析器
+            ├── odt.py               # OpenDocument文本解析器
+            ├── rtf.py               # RTF文档解析器
+            └── txt.py               # 文本解析器
 ```
+
+### 🐳 容器化架构
+
+**Docker服务组件**：
+- **file2md-api**: 主API服务，集成PaddleOCR和所有解析器
+- **redis**: 缓存服务，提升转换性能和队列管理
+- **nginx**: 反向代理服务（可选，生产环境推荐）
+
+**数据持久化**：
+- `paddleocr_models`: PaddleOCR模型文件持久化
+- `redis_data`: Redis数据持久化
+- `temp_files`: 临时文件存储
+- `app_logs`: 应用日志持久化
 
 ## ⚡ 性能优化
 
@@ -641,10 +756,13 @@ app/
 
 ## 📚 更多资源
 
-- **[支持的文件格式](SUPPORTED_FORMATS.md)** - 详细的109种支持格式列表和功能说明
+### 🚀 Redis 部署指南
+- **[Redis缓存配置](REDIS_CACHE_GUIDE.md)** - 📊 Redis缓存优化配置指南
+
+### 📖 功能文档
+- **[支持的文件格式](SUPPORTED_FORMATS.md)** - 详细的123种支持格式列表和功能说明
 - **[转换示例文档](File2md_Examples.md)** - 详细的实际转换案例和功能演示
 - **[前端集成指南](File2md_API_Guide.md)** - 前端开发者接入文档
-- **[安全配置指南](SECURITY.md)** - 🔒 安全配置指南，了解我们如何保护系统安全
 
 ## 🔧 扩展开发
 
@@ -674,15 +792,79 @@ class CustomParser(BaseParser):
 
 ## 📄 许可证
 
-本项目为 MedicNex 私有项目。
+本项目基于 [Apache License 2.0](LICENSE) 开源许可证发布。
+
+```
+Copyright 2025 MedicNex
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
 
 ## 🤝 贡献
 
-欢迎提交 Issue 和 Pull Request！
+我们热烈欢迎社区贡献！以下是参与贡献的方式：
+
+### 🐛 报告问题
+- 在 [Issues](../../issues) 页面报告 Bug
+- 提供详细的错误信息和复现步骤
+- 包含您的环境信息（操作系统、Python版本等）
+
+### 💡 功能建议
+- 在 [Issues](../../issues) 页面提出新功能建议
+- 描述功能的使用场景和预期效果
+- 讨论实现方案的可行性
+
+### 🔧 代码贡献
+1. **Fork** 本仓库
+2. 创建特性分支：`git checkout -b feature/amazing-feature`
+3. 提交更改：`git commit -m 'Add some amazing feature'`
+4. 推送到分支：`git push origin feature/amazing-feature`
+5. 提交 **Pull Request**
+
+### 📋 贡献指南
+- 遵循现有的代码风格和规范
+- 为新功能添加相应的测试
+- 更新相关文档
+- 确保所有测试通过
+- 在 PR 中清楚描述更改内容
+
+### 🎯 贡献领域
+- 🔧 **新解析器**：添加对新文件格式的支持
+- 🚀 **性能优化**：提升处理速度和内存效率
+- 📚 **文档改进**：完善使用指南和API文档
+- 🐳 **部署优化**：改进Docker和部署脚本
+- 🧪 **测试完善**：增加测试覆盖率
+
+更多详细信息请参阅 [贡献指南](CONTRIBUTING.md)。
+
+感谢您对 MedicNex File2Markdown 项目的关注和贡献！🙏
 
 ---
 
 ## 📈 最新更新
+
+### v2.5.0（最新）
+- 🐳 **Docker完整支持**：全新的容器化部署方案
+  - **Dockerfile**: 基于Ubuntu 24.04的优化镜像，包含PaddleOCR所有依赖
+  - **docker-compose.yml**: 完整的服务编排，包含API、Redis、Nginx
+  - **docker-deploy.sh**: 一键自动化部署脚本，自动生成安全密钥
+  - **DOCKER_DEPLOY_README.md**: 详细的Docker部署指南和故障排除
+  - **数据持久化**: PaddleOCR模型、Redis数据、日志的持久化存储
+  - **健康检查**: 内置的服务健康监控和自动恢复
+  - **资源限制**: 合理的内存和CPU限制配置
+  - **安全配置**: 非root用户运行，自动生成强密钥
+- 📋 **文档优化**: 重新组织部署指南，提供三种部署方式选择
+- 🔧 **架构说明**: 更新项目结构说明，清晰展示Docker相关文件
 
 ### v2.4.0
 - 🎵 **音频和视频处理功能**：全新的音频/视频文件处理支持

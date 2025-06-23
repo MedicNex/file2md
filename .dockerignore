@@ -1,0 +1,90 @@
+# Docker构建时忽略的文件和目录
+
+# Git相关
+.git
+.gitignore
+.gitattributes
+
+# Python相关
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+.tox/
+.cache/
+venv/
+env/
+.venv/
+.env/
+
+# 环境配置文件（包含敏感信息）
+.env
+.env.local
+.env.production
+.env.development
+
+# IDE相关
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.log
+
+# 临时文件和缓存
+temp/
+tmp/
+logs/
+*.tmp
+*.bak
+*.backup
+
+# 文档文件
+*.md
+!README.md
+docs/
+
+# 测试文件
+tests/
+test_*.py
+*_test.py
+
+# 部署相关文件
+deploy.sh
+docker-compose.override.yml
+monitor_logs.sh
+
+# SSL证书和密钥
+*.pem
+*.key
+*.crt
+ssl/
+
+# 数据库文件
+*.db
+*.sqlite3
+
+# PaddleOCR缓存（运行时会重新下载）
+.paddleocr/
+
+# Node.js相关（如果存在）
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 其他
+*.pid
+*.seed
+*.pid.lock 

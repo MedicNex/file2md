@@ -7,7 +7,7 @@ MedicNex File2Markdown 是一个文档转换 API 服务，支持将多种格式�
 ## 🌐 基础信息
 
 - **API版本**: v1
-- **基础URL**: `https://file.medicnex.com/v1`
+- **基础URL**: `https://your-domian/v1`
 - **协议**: HTTPS
 - **认证方式**: Bearer Token
 - **请求格式**: multipart/form-data (文件上传)
@@ -592,7 +592,7 @@ class MedicNexAPI {
 }
 
 // 使用示例
-const api = new MedicNexAPI('https://file.medicnex.com/v1', 'your-api-key');
+const api = new MedicNexAPI('https://your-domian/v1', 'your-api-key');
 ```
 
 ### 文件上传组件示例 (React)
@@ -608,7 +608,7 @@ const FileConverter = () => {
   const [error, setError] = useState(null);
   const [mode, setMode] = useState('single'); // 'single' or 'batch'
 
-  const api = new MedicNexAPI('https://file.medicnex.com/v1', 'your-api-key');
+  const api = new MedicNexAPI('https://your-domian/v1', 'your-api-key');
 
   const handleFileSelect = async (event) => {
     const selectedFiles = Array.from(event.target.files);
@@ -1340,9 +1340,9 @@ monitor.startMonitoring();
 
 ## 🔗 相关链接
 
-- **API文档**: `https://file.medicnex.com/docs`
-- **在线测试**: `https://file.medicnex.com/redoc`
-- **健康检查**: `https://file.medicnex.com/v1/health`
+- **API文档**: `https://your-domian/docs`
+- **在线测试**: `https://your-domian/redoc`
+- **健康检查**: `https://your-domian/v1/health`
 
 ## 📞 技术支持
 
