@@ -2,7 +2,7 @@
 
 # MedicNex File2Markdown
 
-[中文](README.md) | [English](README_en.md)
+[English](README.md) | [中文](README_zh.md)
 
 [![MedicNex AI](https://www.medicnex.com/static/images/medicnex-badge.svg)](https://www.medicnex.com)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
@@ -13,300 +13,269 @@
 
 </div>
 
-MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、音频、视频、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式，对于 LLM 理解友好。
+MedicNex File2Markdown is a FastAPI-based microservice that converts **123 file formats** (Word, PDF, PowerPoint, Excel, CSV, images, audio, video, Apple iWork suite, 82 programming languages, etc.) into unified Markdown code block format, which is LLM-friendly.
 
-## 功能特性
+## Features
 
-- 🔐 **API Key 鉴权**：支持多个 API Key 管理
-- 📄 **全面格式支持**：支持 **123种文件格式**，包含 16种解析器类型
-- 💻 **代码文件支持**：支持 **82 种编程语言**文件转换，涵盖主流、函数式、脚本、配置等语言
-- 🖼️ **智能图片识别**：集成 Vision API 和 PaddleOCR，支持 SVG 转 PNG 识别
-- ⚡ **高性能异步**：基于 FastAPI 异步框架
-- 🚀 **队列处理模式**：支持批量文档转换，限制最多并发任务个数（可通过`.env`配置）
-- 🎯 **并发图片处理**：文档中多张图片同时进行 PaddleOCR 和 AI 视觉识别，处理速度提升 2-10 倍
-- 🐳 **容器化部署**：提供 Docker 和 Docker Compose 支持
-- 📊 **统一输出格式**：所有文件类型统一输出为代码块格式
+- 🔐 **API Key Authentication**: Support for multiple API key management
+- 📄 **Comprehensive Format Support**: Supports **123 file formats** with 16 parser types
+- 💻 **Code File Support**: Supports **82 programming languages** file conversion, covering mainstream, functional, scripting, and configuration languages
+- 🖼️ **Smart Image Recognition**: Integrated Vision API and PaddleOCR, supports SVG to PNG recognition
+- ⚡ **High-Performance Async**: Based on FastAPI async framework
+- 🚀 **Queue Processing Mode**: Supports batch document conversion, limit the maximum number of concurrent tasks (configurable via `.env`)
+- 🎯 **Concurrent Image Processing**: Multiple images in documents are processed simultaneously with PaddleOCR and AI vision recognition, improving processing speed by 2-10x
+- 🐳 **Containerized Deployment**: Provides Docker and Docker Compose support
+- 📊 **Unified Output Format**: All file types output in unified code block format
 
-## 📑 目录
+## 📑 Table of Contents
 
-- [📋 统一输出格式](#-统一输出格式)
-- [📂 支持的文件格式](#-支持的文件格式)
-  - [📄 文档和数据文件](#-文档和数据文件)
-  - [💻 代码文件（82 种编程语言）](#-代码文件82-种编程语言)
-- [🚀 快速开始](#-快速开始)
-  - [🐳 使用 Docker Compose（推荐）](#-使用-docker-compose推荐)
-  - [💻 本地开发环境](#-本地开发环境)
-- [🎵 音频和视频处理功能](#-音频和视频处理功能)
-  - [音频文件处理特性](#音频文件处理特性)
-  - [视频文件处理特性](#视频文件处理特性)
-  - [音频处理示例](#音频处理示例)
-  - [视频处理示例](#视频处理示例)
-  - [技术配置](#技术配置)
-  - [性能优化](#性能优化)
-- [🔗 API 使用指南](#-api-使用指南)
-  - [📤 单文件转换（同步模式）](#-单文件转换同步模式)
-  - [📦 批量文件转换（异步队列模式）](#-批量文件转换异步队列模式)
-  - [📋 查询任务状态](#-查询任务状态)
-  - [📊 查询队列状态](#-查询队列状态)
-  - [📋 获取支持的文件类型](#-获取支持的文件类型)
-- [完整功能示例](#完整功能示例)
-- [🧪 队列功能测试](#-队列功能测试)
-- [🔗 API 端点总览](#-api-端点总览)
-- [⚙️ 配置说明](#️-配置说明)
-  - [🔧 环境变量](#-环境变量)
-  - [🔑 API Key 管理](#-api-key-管理)
-- [❌ 错误处理](#-错误处理)
-- [🏗️ 架构设计](#️-架构设计)
-- [⚡ 性能优化](#-性能优化)
-- [📊 监控和日志](#-监控和日志)
-- [📚 更多资源](#-更多资源)
-- [🔧 扩展开发](#-扩展开发)
-- [📄 许可证](#-许可证)
-- [🤝 贡献](#-贡献)
-- [📈 最新更新](#-最新更新)
+- [📋 Unified Output Format](#-unified-output-format)
+- [📂 Supported File Formats](#-supported-file-formats)
+  - [📄 Document and Data Files](#-document-and-data-files)
+  - [💻 Code Files (82 Programming Languages)](#-code-files-82-programming-languages)
+- [🚀 Quick Start](#-quick-start)
+  - [🐳 Using Docker Compose (Recommended)](#-using-docker-compose-recommended)
+  - [💻 Local Development Environment](#-local-development-environment)
+- [🎵 Audio and Video Processing Features](#-audio-and-video-processing-features)
+- [🔗 API Usage Guide](#-api-usage-guide)
+  - [📤 Single File Conversion (Sync Mode)](#-single-file-conversion-sync-mode)
+  - [📦 Batch File Conversion (Async Queue Mode)](#-batch-file-conversion-async-queue-mode)
+  - [📋 Query Task Status](#-query-task-status)
+  - [📊 Query Queue Status](#-query-queue-status)
+- [Complete Feature Example](#complete-feature-example)
+- [🧪 Queue Function Testing](#-queue-function-testing)
+- [🔗 API Endpoints Overview](#-api-endpoints-overview)
+- [⚙️ Configuration](#️-configuration)
+  - [🔧 Environment Variables](#-environment-variables)
+  - [🔑 API Key Management](#-api-key-management)
+- [❌ Error Handling](#-error-handling)
+- [🏗️ Architecture Design](#️-architecture-design)
+- [⚡ Performance Optimization](#-performance-optimization)
+- [📊 Monitoring and Logging](#-monitoring-and-logging)
+- [📚 More Resources](#-more-resources)
+- [🔧 Extension Development](#-extension-development)
+- [📄 License](#-license)
+- [🤝 Contributing](#-contributing)
+- [📈 Latest Updates](#-latest-updates)
 
-## 📋 统一输出格式
+## 📋 Unified Output Format
 
-所有文件转换结果都采用统一的代码块格式输出，便于 LLM 理解和处理：
+All file conversion results use a unified code block format for easy LLM understanding and processing:
 
-| 📁 文件类型 | 🏷️ 输出格式 | 📄 内容示例 |
+| 📁 File Type | 🏷️ Output Format | 📄 Content Example |
 |------------|-------------|-------------|
-| 🎞️ 幻灯片文件 | ```slideshow | PowerPoint/Keynote 演示内容 |
-| 🖼️ 图像文件 | ```image | OCR 文字识别 + AI 视觉描述 |
-| 📝 纯文本文件 | ```text | 原始文本内容 |
-| 📄 文档文件 | ```document | Word/PDF/Pages 结构化内容 |
-| 📊 表格文件 | ```sheet | CSV/Excel/Numbers 数据表格 |
-| 🎵 音频文件 | ```audio | 语音转录 + 时间轴信息 |
-| 🎬 视频文件 | ```video | SRT 字幕 + 音频转录 |
-| 💻 代码文件 | ```python/javascript/... 等 | 语法高亮的代码块 |
+| 🎞️ Slideshow Files | ```slideshow | PowerPoint/Keynote presentation content |
+| 🖼️ Image Files | ```image | OCR text recognition + AI visual description |
+| 📝 Plain Text Files | ```text | Original text content |
+| 📄 Document Files | ```document | Word/PDF/Pages structured content |
+| 📊 Spreadsheet Files | ```sheet | CSV/Excel/Numbers data tables |
+| 🎵 Audio Files | ```audio | Speech transcription + timeline information |
+| 🎬 Video Files | ```video | SRT subtitles + audio transcription |
+| 💻 Code Files | ```python/javascript/... etc | Syntax highlighted code blocks |
 
-## 📂 支持的文件格式
+## 📂 Supported File Formats
 
-### 📄 文档和数据文件
+### 📄 Document and Data Files
 
-| 格式 | 扩展名 | 解析器 | 输出格式 | 说明 |
+| Format | Extensions | Parser | Output Format | Description |
 |------|--------|--------|----------|------|
-| 纯文本 | `.txt`, `.md`, `.markdown`, `.text` | PlainParser | `text` | 直接读取文本内容 |
-| Word文档 | `.docx` | DocxParser | `document` | 提取文本、表格和格式，**并发处理图片** |
-| Word文档 | `.doc` | DocParser | `document` | 通过 mammoth 转换，**并发处理图片** |
-| RTF文档 | `.rtf` | RtfParser | `document` | 支持RTF格式，优先使用Pandoc，备用striprtf |
-| ODT文档 | `.odt` | OdtParser | `document` | OpenDocument文本，支持表格和列表 |
-| PDF文档 | `.pdf` | PdfParser | `document` | 提取文本和图片，**并发处理图片** |
-| Keynote演示文稿 | `.key` | KeynoteParser | `slideshow` | Apple Keynote演示文稿，提取元数据和结构信息 |
-| Pages文档 | `.pages` | PagesParser | `document` | Apple Pages文字处理文档，提取元数据和结构信息 |
-| Numbers表格 | `.numbers` | NumbersParser | `sheet` | Apple Numbers电子表格，支持表格数据提取 |
-| PowerPoint演示文稿 | `.ppt`, `.pptx` | PptxParser | `slideshow` | 提取幻灯片文本内容（不使用视觉模型） |
-| Excel表格 | `.xls`, `.xlsx` | ExcelParser | `sheet` | 转换为HTML表格格式和统计信息，**并发处理图片** |
-| CSV数据 | `.csv` | CsvParser | `sheet` | 转换为HTML表格格式和数据分析 |
-| 图片文件 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | PaddleOCR和视觉识别 |
-| SVG文件 | `.svg` | SvgParser | `svg` | 同时识别代码结构和视觉特征，**转换为PNG进行PaddleOCR和AI视觉分析**（需要ImageMagick或Cairo库） |
-| 音频文件 | `.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` | AudioParser | `audio` | **智能语音分析和ASR转换**，基于RMS能量分析自动分割，并发语音识别，自适应阈值检测 |
-| 视频文件 | `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` | AudioParser | `video` | **视频音频提取和字幕生成**，自动提取音频轨道进行ASR转换，生成SRT格式字幕文件 |
+| Plain Text | `.txt`, `.md`, `.markdown`, `.text` | PlainParser | `text` | Direct text content reading |
+| Word Documents | `.docx` | DocxParser | `document` | Extract text, tables, and formatting, **concurrent image processing** |
+| Word Documents | `.doc` | DocParser | `document` | Convert via mammoth, **concurrent image processing** |
+| RTF Documents | `.rtf` | RtfParser | `document` | Support RTF format, prefer Pandoc, fallback to striprtf |
+| ODT Documents | `.odt` | OdtParser | `document` | OpenDocument text, support tables and lists |
+| PDF Documents | `.pdf` | PdfParser | `document` | Extract text and images, **concurrent image processing** |
+| Keynote Presentations | `.key` | KeynoteParser | `slideshow` | Apple Keynote presentations, extract metadata and structure |
+| Pages Documents | `.pages` | PagesParser | `document` | Apple Pages word processing documents, extract metadata and structure |
+| Numbers Spreadsheets | `.numbers` | NumbersParser | `sheet` | Apple Numbers spreadsheets, support table data extraction |
+| PowerPoint Presentations | `.ppt`, `.pptx` | PptxParser | `slideshow` | Extract slide text content (no vision model) |
+| Excel Spreadsheets | `.xls`, `.xlsx` | ExcelParser | `sheet` | Convert to HTML table format and statistics, **concurrent image processing** |
+| CSV Data | `.csv` | CsvParser | `sheet` | Convert to HTML table format and data analysis |
+| Image Files | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp`, `.ico`, `.tga` | ImageParser | `image` | PaddleOCR and vision recognition |
+| SVG Files | `.svg` | SvgParser | `svg` | Recognize both code structure and visual features, **convert to PNG for PaddleOCR and AI vision analysis** |
+| Audio Files | `.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` | AudioParser | `audio` | **Smart speech analysis and ASR conversion** with intelligent segmentation |
+| Video Files | `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` | AudioParser | `video` | **Video audio extraction and subtitle generation** with SRT format output |
 
-### 💻 代码文件（82 种语言）
+### 💻 Code Files (82 Languages)
 
-| 语言类别 | 支持的扩展名 | 输出格式 |
+| Language Category | Supported Extensions | Output Format |
 |----------|-------------|----------|
-| **主流编程语言** | `.py`, `.js`, `.ts`, `.java`, `.cpp`, `.c`, `.cs`, `.go`, `.rs`, `.php`, `.rb` | 对应语言代码块 |
-| **前端技术** | `.html`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.jsx`, `.tsx`, `.svelte` | 对应语言代码块 |
-| **脚本语言** | `.r`, `.lua`, `.perl`, `.pl`, `.sh`, `.bash`, `.zsh`, `.fish`, `.ps1` | 对应语言代码块 |
-| **配置文件** | `.json`, `.yaml`, `.yml`, `.toml`, `.xml`, `.ini`, `.cfg`, `.conf` | 对应语言代码块 |
-| **数据库和其他** | `.sql`, `.dockerfile`, `.makefile`, `.cmake`, `.gradle`, `.proto`, `.graphql` | 对应语言代码块 |
-| **函数式语言** | `.hs`, `.lhs`, `.clj`, `.cljs`, `.elm`, `.erl`, `.ex`, `.exs`, `.fs`, `.fsx` | 对应语言代码块 |
-| **系统和工具** | `.vim`, `.vimrc`, `.env`, `.gitignore`, `.gitattributes`, `.editorconfig` | 对应语言代码块 |
-| **Web框架** | `.astro`, `.postcss`, `.styl` | 对应语言代码块 |
-| **科学计算** | `.m`, `.mat`, `.tex`, `.jl` | 对应语言代码块 |
-| **移动开发** | `.swift`, `.kt`, `.dart` | 对应语言代码块 |
+| **Mainstream Languages** | `.py`, `.js`, `.ts`, `.java`, `.cpp`, `.c`, `.cs`, `.go`, `.rs`, `.php`, `.rb` | Corresponding language code blocks |
+| **Frontend Technologies** | `.html`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.jsx`, `.tsx`, `.svelte` | Corresponding language code blocks |
+| **Script Languages** | `.r`, `.lua`, `.perl`, `.pl`, `.sh`, `.bash`, `.zsh`, `.fish`, `.ps1` | Corresponding language code blocks |
+| **Configuration Files** | `.json`, `.yaml`, `.yml`, `.toml`, `.xml`, `.ini`, `.cfg`, `.conf` | Corresponding language code blocks |
+| **Database and Others** | `.sql`, `.dockerfile`, `.makefile`, `.cmake`, `.gradle`, `.proto`, `.graphql` | Corresponding language code blocks |
+| **Functional Languages** | `.hs`, `.lhs`, `.clj`, `.cljs`, `.elm`, `.erl`, `.ex`, `.exs`, `.fs`, `.fsx` | Corresponding language code blocks |
+| **System and Tools** | `.vim`, `.vimrc`, `.env`, `.gitignore`, `.gitattributes`, `.editorconfig` | Corresponding language code blocks |
 
-**完整支持列表**：Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, Haskell, Clojure, Elm, Erlang, Elixir, F#, Swift, Kotlin, Dart, Julia, MATLAB, LaTeX, Vim, 等82种语言。
+**Complete List**: Python, JavaScript, TypeScript, Java, C/C++, C#, Go, Rust, PHP, Ruby, R, HTML, CSS, SCSS, Sass, Less, Vue, React(JSX), Svelte, JSON, YAML, XML, SQL, Shell scripts, PowerShell, Dockerfile, Makefile, Haskell, Clojure, Elm, Erlang, Elixir, F#, Swift, Kotlin, Dart, Julia, MATLAB, LaTeX, Vim, and 82 other languages.
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-我们提供三种部署方式，您可以选择最适合的方案：
+We provide three deployment options to choose from:
 
-### 🐳 使用 Docker Compose（推荐）
+### 🐳 Using Docker Compose (Recommended)
 
-最简单的部署方式，支持一键自动化部署：
+The simplest deployment method with one-click automated deployment:
 
-1. **克隆项目**：
+1. **Clone the project**:
 ```bash
 git clone https://github.com/MedicNex/medicnex-file2md.git
 cd medicnex-file2md
 ```
 
-2. **一键部署**：
+2. **One-click deployment**:
 ```bash
-# 自动化部署（推荐）
+# Automated deployment (recommended)
 ./docker-deploy.sh
 ```
 
-该脚本会自动：
-- 检查Docker环境
-- 生成安全的API密钥和Redis密码
-- 构建Docker镜像
-- 启动所有服务（API + Redis + 可选Nginx）
-- 执行健康检查
+This script will automatically:
+- Check Docker environment
+- Generate secure API keys and Redis password
+- Build Docker images
+- Start all services (API + Redis + optional Nginx)
+- Perform health checks
 
-3. **访问服务**：
-- 🌐 API地址：http://localhost:8999
-- 📖 API文档：http://localhost:8999/docs
-- ❤️ 健康检查：http://localhost:8999/v1/health
-- 🔑 API密钥：部署脚本会显示生成的密钥
+3. **Access services**:
+- 🌐 API URL: http://localhost:8999
+- 📖 API Documentation: http://localhost:8999/docs
+- ❤️ Health Check: http://localhost:8999/v1/health
+- 🔑 API Key: The deployment script will display the generated key
 
-4. **管理服务**：
+4. **Manage services**:
 ```bash
-# 查看服务状态
+# Check service status
 ./docker-deploy.sh status
 
-# 查看实时日志
+# View real-time logs
 ./docker-deploy.sh logs
 
-# 重启服务
+# Restart services
 ./docker-deploy.sh restart
 
-# 停止服务
+# Stop services
 ./docker-deploy.sh stop
 ```
 
-**详细文档**：📋 [Docker部署指南](DOCKER_DEPLOY_README.md)
+### 💻 Manual Docker Compose Deployment
 
-### 💻 手动 Docker Compose 部署
+If you need custom configuration:
 
-如果您需要自定义配置：
-
-1. **配置环境变量**：
+1. **Configure environment variables**:
 ```bash
-# 复制环境变量模板
+# Copy environment variable template
 cp .env.example .env
 
-# 编辑 .env 文件，设置你的配置
+# Edit .env file, set your configurations
 API_KEY=your-api-key-1,your-api-key-2
-VISION_API_KEY=your-vision-api-key  # 可选，用于图片识别
+VISION_API_KEY=your-vision-api-key  # Optional, for image recognition
 REDIS_PASSWORD=your-redis-password
 ```
 
-2. **启动服务**：
+2. **Start services**:
 ```bash
-# 基础部署
+# Basic deployment
 docker-compose up -d
 
-# 包含Nginx反向代理
+# Include Nginx reverse proxy
 docker-compose --profile with-nginx up -d
 ```
 
-### 🛠️ 一键部署脚本（传统方式）
+### 🛠️ One-Click Deployment Script (Traditional Method)
 
-适用于直接在Linux服务器上部署：
+Suitable for direct deployment on Linux servers:
 
-1. **配置环境变量**：
+1. **Configure environment variables**:
 ```bash
 cp .env.example .env
-# 编辑 .env 文件
+# Edit .env file
 ```
 
-2. **执行部署**：
+2. **Execute deployment**:
 ```bash
-# Ubuntu 24.04 服务器部署
+# Ubuntu 24.04 server deployment
 sudo ./deploy.sh
 ```
 
-3. **查看日志**：
+3. **View logs**:
 ```bash
 ./monitor_logs.sh
 ```
 
-### 💻 本地开发环境
+### 💻 Local Development Environment
 
-1. 安装依赖：
+1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. 安装系统依赖：
+2. Install system dependencies:
 
-**Ubuntu/Debian：**
+**Ubuntu/Debian:**
 ```bash
-# PaddleOCR会在首次使用时自动下载所需模型
-# 无需额外安装 OCR 系统依赖，PaddleOCR 为纯 Python 实现
+# PaddleOCR will automatically download required models on first use
+# No additional OCR system dependencies needed, PaddleOCR is pure Python
 
-# SVG视觉识别支持（推荐ImageMagick）
+# SVG vision recognition support (ImageMagick recommended)
 sudo apt-get install -y imagemagick libmagickwand-dev pkg-config
 
-# 音频处理支持
+# Audio processing support
 sudo apt-get install -y ffmpeg libavcodec-extra
 
-# Python开发工具
+# Python development tools
 sudo apt-get install -y python3-dev python3-pip build-essential
 ```
 
-**CentOS/RHEL：**
+**macOS:**
 ```bash
-# 基础OCR支持
-sudo yum update -y
-sudo yum install -y epel-release
-sudo yum install -y tesseract tesseract-langpack-chi-sim tesseract-langpack-eng
+# SVG vision recognition support (choose one)
+brew install freetype imagemagick  # ImageMagick support
+# or
+brew install cairo pkg-config  # Cairo support
 
-# SVG视觉识别支持
-sudo yum install -y ImageMagick ImageMagick-devel pkgconfig
-
-# 音频处理支持
-sudo yum install -y ffmpeg ffmpeg-devel
-
-# Python开发工具
-sudo yum install -y python3-devel python3-pip gcc gcc-c++ make
+# Audio processing support
+brew install ffmpeg  # Audio format conversion and processing
 ```
 
-**macOS：**
-```bash
-brew install tesseract tesseract-lang
-
-# 可选：SVG视觉识别支持（二选一）
-brew install freetype imagemagick  # ImageMagick支持
-# 或者
-brew install cairo pkg-config  # Cairo支持
-
-# 音频处理支持
-brew install ffmpeg  # 音频格式转换和处理
-```
-
-3. 设置环境变量：
+3. Set environment variables:
 ```bash
 export API_KEY="dev-test-key-123"
-export VISION_API_KEY="your-vision-api-key"  # 可选
+export VISION_API_KEY="your-vision-api-key"  # optional
 ```
 
-4. 启动服务：
+4. Start the service:
 ```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-## 🎵 音频和视频处理功能
+## 🎵 Audio and Video Processing Features
 
-### 音频文件处理特性
+### Audio File Processing
 
-**支持格式**：`.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` (8种格式)
+**Supported Formats**: `.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` (8 formats)
 
-**核心功能**：
-- 🎯 **智能音频预处理**：自动转换为16kHz单声道，应用80Hz高通滤波去除低频噪音
-- 📊 **RMS能量分析**：计算音频信号的有效值，精确识别语音活动区域
-- 🔄 **自适应阈值检测**：基于10百分位数+3dB的动态阈值，适应不同录音环境
-- ✂️ **智能分割**：最小静音时长300ms，自动合并短段，避免过度分割
-- ⚡ **并发ASR转换**：多段音频同时进行语音识别，大幅提升处理速度
-- 📈 **质量评估**：基于平均能量计算置信度分数，评估转录质量
+**Core Features**:
+- 🎯 **Smart Audio Preprocessing**: Automatic conversion to 16kHz mono, apply 80Hz high-pass filter to remove low-frequency noise
+- 📊 **RMS Energy Analysis**: Calculate RMS of audio signal for precise voice activity detection
+- 🔄 **Adaptive Threshold Detection**: Dynamic threshold based on 10th percentile + 3dB, adapts to different recording environments
+- ✂️ **Smart Segmentation**: 300ms minimum silence duration, automatic merging of short segments
+- ⚡ **Concurrent ASR Conversion**: Multiple audio segments processed simultaneously for ASR, significantly improving processing speed
+- 📈 **Quality Assessment**: Confidence scores based on average energy calculation
 
-### 视频文件处理特性
+### Video File Processing
 
-**支持格式**：`.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` (7种格式)
+**Supported Formats**: `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` (7 formats)
 
-**核心功能**：
-- 🎬 **自动音频提取**：智能检测并提取视频文件中的音频轨道
-- 📝 **SRT字幕生成**：生成标准时间戳格式的字幕文件 (HH:MM:SS,mmm)
-- 🔄 **统一处理流程**：复用音频分析算法，保证一致的处理质量
-- 📊 **时间轴同步**：精确的时间戳对应，确保字幕与视频同步
+**Core Features**:
+- 🎬 **Automatic Audio Extraction**: Smart detection and extraction of audio tracks from video files
+- 📝 **SRT Subtitle Generation**: Generate standard timestamp format subtitles (HH:MM:SS,mmm)
+- 🔄 **Unified Processing Pipeline**: Reuse audio analysis algorithms for consistent processing quality
+- 📊 **Timeline Synchronization**: Precise timestamp correspondence ensuring subtitle-video sync
 
-### 音频处理示例
+### Audio Processing Example
 
-**输入文件**：上传一个包含多段对话的音频文件 `meeting.wav`
+**Input File**: Upload an audio file containing multiple conversation segments `meeting.wav`
 
 ```bash
 curl -X POST "https://your-domain/v1/convert" \
@@ -314,20 +283,20 @@ curl -X POST "https://your-domain/v1/convert" \
   -F "file=@meeting.wav"
 ```
 
-**输出格式** (`audio`块)：
+**Output Format** (`audio` block):
 ```json
 {
   "filename": "meeting.wav",
   "size": 2048000,
   "content_type": "audio/wav",
-  "content": "```audio\n# 音频信息\n文件名: meeting.wav\n时长: 00:02:45\n采样率: 16000 Hz\n声道: 单声道\n格式: WAV\n\n# 语音转录\n## 段落 1 (00:00:00 - 00:00:15)\n大家好，欢迎参加今天的产品讨论会议。\n**置信度**: 89%\n\n## 段落 2 (00:00:16 - 00:00:32)\n首先我们来看一下本季度的销售数据分析。\n**置信度**: 92%\n\n## 段落 3 (00:00:33 - 00:00:48)\n从图表可以看出，我们的产品在移动端表现非常优秀。\n**置信度**: 87%\n\n# 处理统计\n- 总段落数: 11\n- 平均段落时长: 15.2秒\n- 整体置信度: 89%\n- 处理时间: 23.4秒\n- 使用的ASR模型: whisper-1\n```",
+  "content": "```audio\n# Audio Information\nFilename: meeting.wav\nDuration: 00:02:45\nSample Rate: 16000 Hz\nChannels: Mono\nFormat: WAV\n\n# Speech Transcription\n## Segment 1 (00:00:00 - 00:00:15)\nHello everyone, welcome to today's product discussion meeting.\n**Confidence**: 89%\n\n## Segment 2 (00:00:16 - 00:00:32)\nFirst, let's look at this quarter's sales data analysis.\n**Confidence**: 92%\n\n## Segment 3 (00:00:33 - 00:00:48)\nFrom the chart, we can see our product performs excellently on mobile.\n**Confidence**: 87%\n\n# Processing Statistics\n- Total segments: 11\n- Average segment duration: 15.2 seconds\n- Overall confidence: 89%\n- Processing time: 23.4 seconds\n- ASR model used: whisper-1\n```",
   "duration_ms": 23400
 }
 ```
 
-### 视频处理示例
+### Video Processing Example
 
-**输入文件**：上传一个教学视频 `tutorial.mp4`
+**Input File**: Upload a tutorial video `tutorial.mp4`
 
 ```bash
 curl -X POST "https://your-domain/v1/convert" \
@@ -335,37 +304,37 @@ curl -X POST "https://your-domain/v1/convert" \
   -F "file=@tutorial.mp4"
 ```
 
-**输出格式** (`video`块)：
+**Output Format** (`video` block):
 ```json
 {
   "filename": "tutorial.mp4", 
   "size": 15728640,
   "content_type": "video/mp4",
-  "content": "```video\n# 视频信息\n文件名: tutorial.mp4\n视频时长: 00:05:23\n音频轨道: 已检测\n字幕语言: 中文\n\n# 字幕内容\n1\n00:00:00,000 --> 00:00:12,500\n欢迎来到Python编程入门教程，今天我们将学习基础语法。\n\n2\n00:00:12,500 --> 00:00:28,750\n首先我们来看变量的定义和使用方法。\n\n3\n00:00:28,750 --> 00:00:45,100\n在Python中，你可以使用等号来给变量赋值。\n\n4\n00:00:45,100 --> 00:01:02,300\n例如，name等于引号Hello World引号。\n\n# 处理统计\n- 总字幕条目: 26\n- 平均字幕时长: 12.4秒\n- 整体质量: 良好\n- 处理时间: 45.7秒\n- 提取音频格式: WAV 16kHz\n```",
+  "content": "```video\n# Video Information\nFilename: tutorial.mp4\nVideo Duration: 00:05:23\nAudio Track: Detected\nSubtitle Language: English\n\n# Subtitle Content\n1\n00:00:00,000 --> 00:00:12,500\nWelcome to Python programming tutorial, today we'll learn basic syntax.\n\n2\n00:00:12,500 --> 00:00:28,750\nFirst let's look at variable definition and usage methods.\n\n3\n00:00:28,750 --> 00:00:45,100\nIn Python, you can use the equals sign to assign values to variables.\n\n4\n00:00:45,100 --> 00:01:02,300\nFor example, name equals quote Hello World quote.\n\n# Processing Statistics\n- Total subtitle entries: 26\n- Average subtitle duration: 12.4 seconds\n- Overall quality: Good\n- Processing time: 45.7 seconds\n- Extracted audio format: WAV 16kHz\n```",
   "duration_ms": 45700
 }
 ```
 
-### 技术配置
+### Technical Configuration
 
-**环境变量配置**：
+**Environment Variable Configuration**:
 ```bash
-# ASR服务配置
-ASR_MODEL=whisper-1                    # ASR模型名称
-ASR_API_BASE=https://api.openai.com/v1 # ASR API基础URL
-ASR_API_KEY=your-openai-api-key        # ASR API密钥
+# ASR service configuration
+ASR_MODEL=whisper-1                    # ASR model name
+ASR_API_BASE=https://api.openai.com/v1 # ASR API base URL
+ASR_API_KEY=your-openai-api-key        # ASR API key
 
-# 音频处理参数
-MAX_FILE_SIZE=100                      # 最大文件大小(MB)
-AUDIO_CONCURRENT_LIMIT=5               # 并发ASR请求数
+# Audio processing parameters
+MAX_FILE_SIZE=100                      # Maximum file size (MB)
+AUDIO_CONCURRENT_LIMIT=5               # Concurrent ASR requests
 ```
 
-**系统依赖**：
+**System Dependencies**:
 ```bash
-# 音频处理库（必需）
+# Audio processing libraries (required)
 pip install pydub numpy librosa
 
-# 音频格式支持（可选，用于更多格式）
+# Audio format support (optional, for more formats)
 # Ubuntu/Debian
 sudo apt-get install ffmpeg
 
@@ -373,17 +342,17 @@ sudo apt-get install ffmpeg
 brew install ffmpeg
 ```
 
-### 性能优化
+### Performance Optimization
 
-- **并发处理**：多段音频同时进行ASR转换，处理速度提升3-5倍
-- **智能分割**：避免在词语中间切断，提高识别准确率
-- **自适应阈值**：根据音频特征动态调整检测参数
-- **内存优化**：流式处理大文件，避免内存溢出
-- **错误恢复**：ASR失败时自动回退到时间分割模式
+- **Concurrent Processing**: Multiple audio segments processed simultaneously for ASR, 3-5x speed improvement
+- **Smart Segmentation**: Avoid cutting in the middle of words, improving recognition accuracy
+- **Adaptive Threshold**: Dynamically adjust detection parameters based on audio characteristics
+- **Memory Optimization**: Stream processing for large files, avoiding memory overflow
+- **Error Recovery**: Automatic fallback to time-based segmentation when ASR fails
 
-## 🔗 API 使用指南
+## 🔗 API Usage Guide
 
-### 📤 单文件转换（同步模式）
+### 📤 Single File Conversion (Sync Mode)
 
 ```bash
 curl -X POST "https://your-domain/v1/convert" \
@@ -391,7 +360,7 @@ curl -X POST "https://your-domain/v1/convert" \
   -F "file=@example.py"
 ```
 
-响应示例（Python文件）：
+Response example (Python file):
 ```json
 {
   "filename": "example.py",
@@ -402,9 +371,9 @@ curl -X POST "https://your-domain/v1/convert" \
 }
 ```
 
-### 📦 批量文件转换（异步队列模式）
+### 📦 Batch File Conversion (Async Queue Mode)
 
-使用队列模式批量提交多个文件，可通过`.env`中的`MAX_CONCURRENT`控制并发数量：
+Use queue mode to batch submit multiple files. The number of concurrent connections can be controlled by `MAX_CONCURRENT` in `.env`:
 
 ```bash
 curl -X POST "https://your-domain/v1/convert-batch" \
@@ -414,26 +383,14 @@ curl -X POST "https://your-domain/v1/convert-batch" \
   -F "files=@script.py"
 ```
 
-响应示例：
+Response example:
 ```json
 {
   "submitted_tasks": [
     {
       "task_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-      "message": "任务已提交到转换队列",
+      "message": "Task submitted to conversion queue",
       "filename": "document1.docx",
-      "status": "pending"
-    },
-    {
-      "task_id": "b2c3d4e5-f6g7-8901-bcde-f12345678901",
-      "message": "任务已提交到转换队列",
-      "filename": "image1.png",
-      "status": "pending"
-    },
-    {
-      "task_id": "c3d4e5f6-g7h8-9012-cdef-123456789012",
-      "message": "任务已提交到转换队列",
-      "filename": "script.py",
       "status": "pending"
     }
   ],
@@ -443,38 +400,21 @@ curl -X POST "https://your-domain/v1/convert-batch" \
 }
 ```
 
-### 📋 查询任务状态
+### 📋 Query Task Status
 
 ```bash
 curl -X GET "https://your-domain/v1/task/{task_id}" \
   -H "Authorization: Bearer your-api-key"
 ```
 
-响应示例（完成状态）：
-```json
-{
-  "task_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "filename": "document1.docx",
-  "file_size": 15970,
-  "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "status": "completed",
-  "created_at": "2024-01-20T10:30:00",
-  "started_at": "2024-01-20T10:30:05",
-  "completed_at": "2024-01-20T10:30:20",
-  "duration_ms": 15000,
-  "result": "```document\n文档内容...\n```",
-  "error": null
-}
-```
-
-### 📊 查询队列状态
+### 📊 Query Queue Status
 
 ```bash
 curl -X GET "https://your-domain/v1/queue/info" \
   -H "Authorization: Bearer your-api-key"
 ```
 
-响应示例：
+Response example:
 ```json
 {
   "max_concurrent": 5,
@@ -488,292 +428,217 @@ curl -X GET "https://your-domain/v1/queue/info" \
 }
 ```
 
-响应示例（图片文件）：
+Response example (Image file):
 ```json
 {
   "filename": "chart.png", 
   "size": 204800,
   "content_type": "image/png",
-  "content": "```image\n# OCR:\n图表标题：销售数据分析\n\n# Visual_Features:\n这是一个显示月度销售趋势的柱状图...\n```",
+  "content": "```image\n# OCR:\nChart Title: Sales Data Analysis\n\n# Visual_Features:\nThis is a bar chart showing monthly sales trends...\n```",
   "duration_ms": 2500
 }
 ```
 
-响应示例（SVG文件）：
+Response example (SVG file):
 ```json
 {
   "filename": "icon.svg",
   "size": 1024,
   "content_type": "image/svg+xml",
-  "content": "```svg\n# Code\n<code class=\"language-svg\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\">\n  <path d=\"M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z\"/>\n</svg>\n</code>\n\n# Visual_Features: 这是一个五角星图标，使用简洁的线条设计，星形完整对称，适合用作评分或收藏功能的图标元素。\n```",
+  "content": "```svg\n# Code\n<code class=\"language-svg\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\">\n  <path d=\"M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z\"/>\n</svg>\n</code>\n\n# Visual_Features: This is a five-pointed star icon with clean line design, perfectly symmetrical star shape, suitable for rating or favorite functionality.\n```",
   "duration_ms": 3200
 }
 ```
 
-## 完整功能示例
+## Complete Feature Example
 
-以下是一个包含代码块和图片的DOCX文档转换的完整示例，展示了系统的所有核心功能：
+Here's a complete example of converting a DOCX document containing code blocks and images, showcasing all core system features:
 
-### 输入文件
-上传一个包含Python代码和图片的Word文档 `test_doc_with_image_and_codeblock.docx`
+### Input File
+Upload a Word document containing Python code and images: `test_doc_with_image_and_codeblock.docx`
 
-### 转换结果
+### Conversion Result
 ```bash
 curl -X POST "https://your-domain/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@test_doc_with_image_and_codeblock.docx"
 ```
 
-**响应内容**：
+**Response Content**:
 ```json
 {
   "filename": "test_doc_with_image_and_codeblock.docx",
   "size": 15970,
   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### 图片 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorld! # Visual_Features: ### 1. 整体精准描述\n\n这张图片展示了一个简单的用户界面元素，背景为浅蓝色。图中包含一个白色边框的矩形区域，矩形内包含两行不同颜色的文本。整体布局简洁，内容和结构清晰易辨。\n\n### 2. 主要元素和结构\n\n- **背景：** 整个图片的背景为统一的浅蓝色，没有其他图案或装饰。\n- **矩形框：** 位于图片中央，是一个白色矩形框，具有黑色边框，背景颜色为纯白色，显得十分醒目。\n- **文本内容：**\n  - 第一行文本内容为\"Hello World!\"，字体为黑色，字体大小适中，位于矩形框顶部稍靠左的位置。\n  - 第二行文本内容为\" fascinated! \"，字体为红色，较第一行字体稍小，紧接在第一行的下方，同样是稍微偏左对齐。\n- **布局：** 两行文本在矩形框内垂直排列，具有一定的间距，并且都是左对齐，保持一定的对齐美感。\n\n### 3. 表格、图表及其他内容\n\n该图片中并未包含任何表格、图表等其他复杂元素，仅包含两段文字。内容上没有多余修饰，主要聚焦于两行文本信息的展示。\" />\n```",
+  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### Image 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorld! # Visual_Features: ### 1. Overall Precise Description\n\nThis image displays a simple user interface element with a light blue background. The image contains a white-bordered rectangular area with two lines of different colored text. The overall layout is clean with clear and easily distinguishable content and structure.\n\n### 2. Main Elements and Structure\n\n- **Background:** The entire image background is uniform light blue without other patterns or decorations.\n- **Rectangle Frame:** Located in the center of the image, it's a white rectangle with black border and pure white background, appearing very prominent.\n- **Text Content:**\n  - First line text reads \"Hello World!\", black font, moderate size, positioned at the top-left area of the rectangle.\n  - Second line text reads \" fascinated! \", red font, slightly smaller than the first line, directly below the first line, also left-aligned.\n- **Layout:** Two lines of text are vertically arranged within the rectangle with proper spacing, both left-aligned, maintaining aesthetic alignment.\n\n### 3. Tables, Charts and Other Content\n\nThis image contains no tables, charts or other complex elements, only two text segments. No excessive decoration, mainly focused on displaying the two lines of text information.\" />\n```",
   "duration_ms": 14208
 }
 ```
 
-### 功能说明
+### Feature Description
 
-从上面的示例可以看出系统的核心功能：
+From the above example, you can see the system's core features:
 
-1. **🔧 代码块转换**：
-   - 原始Markdown代码块：````python
-   - 转换为HTML标签：`<code class="language-python">`
-   - 保持代码格式和语法高亮信息
+1. **🔧 Code Block Conversion**:
+   - Original Markdown code block: ````python
+   - Converted to HTML tags: `<code class="language-python">`
+   - Maintains code formatting and syntax highlighting information
 
-2. **🖼️ 图片提取与OCR**：
-   - 自动提取DOCX文档中的嵌入图片
-   - 使用PaddleOCR识别图片中的文字："HelloWorld!"
-   - 生成唯一的图片文件名：`document_image_1.png`
+2. **🖼️ Image Extraction & OCR**:
+   - Automatically extracts embedded images from DOCX documents
+   - Uses PaddleOCR to recognize text in images: "HelloWorld!"
+   - Generates unique image filenames: `document_image_1.png`
 
-3. **🤖 AI视觉识别**：
-   - 使用 VLM 进行图片分析
-   - 提供详细的图片描述，包括：
-     - 整体布局和设计（浅蓝色背景，白色矩形框）
-     - 文本内容分析（"Hello World!"黑色字体，红色"fascinated!"）
-     - 结构和排版信息
+3. **🤖 AI Vision Recognition**:
+   - Uses VLM for image analysis
+   - Provides detailed image descriptions including:
+     - Overall layout and design (light blue background, white rectangle)
+     - Text content analysis ("Hello World!" in black, red "fascinated!")
+     - Structure and layout information
 
-4. **📝 HTML标签输出**：
-   - 图片转换为：`<img src="图片名" alt="# OCR: ... # Visual_Features: ..." />`
-   - alt属性包含完整的OCR结果和AI描述
-   - 便于前端展示和无障碍访问
+4. **📝 HTML Tag Output**:
+   - Images converted to: `<img src="image_name" alt="# OCR: ... # Visual_Features: ..." />`
+   - Alt attribute contains complete OCR results and AI description
+   - Convenient for frontend display and accessibility
 
-5. **⚡ 性能统计**：
-   - 处理时间：14.2秒（包含AI视觉分析）
-   - 文件大小：15,970字节
-   - 输出内容：详细的结构化Markdown
+5. **⚡ Performance Statistics**:
+   - Processing time: 14.2 seconds (including AI vision analysis)
+   - File size: 15,970 bytes
+   - Output content: Detailed structured Markdown
 
-### 📋 获取支持的文件类型
+### 📋 Get Supported File Types
 
 ```bash
 curl -X GET "https://your-domain/v1/supported-types" \
   -H "Authorization: Bearer your-api-key"
 ```
 
-## 🧪 队列功能测试
+## 🧪 Queue Function Testing
 
-我们提供了一个完整的测试脚本来验证队列功能：
+We provide a complete test script to verify queue functionality:
 
 ```bash
-# 安装测试依赖
+# Install test dependencies
 pip install aiohttp
 
-# 设置环境变量（如果未设置）
+# Set environment variables (if not set)
 export API_KEY="dev-test-key-123"
 
-# 启动服务
+# Start service
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-测试脚本将验证以下功能：
-- ✅ 单文件同步转换
-- ✅ 批量文件异步提交
-- ✅ 任务状态查询  
-- ✅ 队列状态监控
-- ✅ 并发限制
-- ✅ 任务完成检测
+The test script will verify the following features:
+- ✅ Single file synchronous conversion
+- ✅ Batch file asynchronous submission
+- ✅ Task status query  
+- ✅ Queue status monitoring
+- ✅ Concurrency limits
+- ✅ Task completion detection
 
-### 队列功能特点
+### Queue Function Features
 
-🚀 **新增队列模式的主要优势：**
+🚀 **Main advantages of the new queue mode:**
 
-1. **并发控制**：通过 `.env` 中的变量 "MAX_CONCURRENT" 限制多个文档同时处理，避免系统过载
-2. **异步处理**：客户端立即获得任务ID，无需等待处理完成
-3. **状态跟踪**：实时查询每个任务的处理状态和进度
-4. **队列管理**：自动排队处理，支持大批量文档转换
-5. **资源优化**：合理利用系统资源，提升整体吞吐量
+1. **Concurrency Control**: Limit multiple documents processing simultaneously through "MAX_CONCURRENT" variable in `.env`, avoiding system overload
+2. **Asynchronous Processing**: Clients immediately get task IDs without waiting for processing completion
+3. **Status Tracking**: Real-time query of each task's processing status and progress
+4. **Queue Management**: Automatic queuing for processing, supports large batch document conversion
+5. **Resource Optimization**: Rational use of system resources, improving overall throughput
 
-## 🔗 API 端点总览
+## 🔗 API Endpoints Overview
 
-| 端点 | 方法 | 描述 |
+| Endpoint | Method | Description |
 |------|------|------|
-| `/v1/convert` | POST | 单文件同步转换 |
-| `/v1/convert-batch` | POST | 批量文件异步提交 |
-| `/v1/task/{task_id}` | GET | 查询任务状态 |
-| `/v1/queue/info` | GET | 查询队列状态 |
-| `/v1/queue/cleanup` | POST | 清理过期任务 |
-| `/v1/supported-types` | GET | 获取支持的文件类型 |
-| `/v1/health` | GET | 健康检查（含队列状态）|
+| `/v1/convert` | POST | Single file synchronous conversion |
+| `/v1/convert-batch` | POST | Batch file asynchronous submission |
+| `/v1/task/{task_id}` | GET | Query task status |
+| `/v1/queue/info` | GET | Query queue status |
+| `/v1/queue/cleanup` | POST | Clean up expired tasks |
+| `/v1/supported-types` | GET | Get supported file types |
+| `/v1/health` | GET | Health check (with queue status)|
 
-### 健康检查
+### Health Check
 
 ```bash
 curl -X GET "https://your-domain/v1/health"
 ```
 
-## ⚙️ 配置说明
+## ⚙️ Configuration
 
-### 🔧 环境变量
+### 🔧 Environment Variables
 
-| 变量名 | 说明 | 默认值 | 必需 |
+| Variable | Description | Default | Required |
 |--------|------|--------|------|
-| `API_KEY` | API密钥列表（逗号分隔） | `dev-test-key-123` | 是 |
-| `VISION_API_KEY` | 视觉API密钥 | - | 否 |
-| `VISION_API_BASE` | 视觉API基础URL | `https://api.openai.com/v1` | 否 |
-| `VISION_MODEL` | 视觉识别模型名称 | `gpt-4o-mini` | 否 |
-| `ASR_API_KEY` | ASR语音识别API密钥 | - | 音频功能必需 |
-| `ASR_API_BASE` | ASR API基础URL | `https://api.openai.com/v1` | 否 |
-| `ASR_MODEL` | ASR模型名称 | `whisper-1` | 否 |
-| `OPENAI_API_KEY` | OpenAI API密钥（兼容旧配置） | - | 否 |
-| `PORT` | 服务端口 | `8080` | 否 |
-| `LOG_LEVEL` | 日志级别 | `INFO` | 否 |
+| `API_KEY` | API key list (comma-separated) | `dev-test-key-123` | Yes |
+| `VISION_API_KEY` | Vision API key | - | No |
+| `VISION_API_BASE` | Vision API base URL | `https://api.openai.com/v1` | No |
+| `VISION_MODEL` | Vision recognition model name | `gpt-4o-mini` | No |
+| `ASR_API_KEY` | ASR speech recognition API key | - | Required for audio features |
+| `ASR_API_BASE` | ASR API base URL | `https://api.openai.com/v1` | No |
+| `ASR_MODEL` | ASR model name | `whisper-1` | No |
+| `PORT` | Service port | `8080` | No |
+| `LOG_LEVEL` | Log level | `INFO` | No |
 
-### 🔑 API Key 管理
+### 🔑 API Key Management
 
-- 支持多个 API Key，用逗号分隔
-- 在 `Authorization` 头中使用 `Bearer <API_KEY>` 格式
+- Supports multiple API keys, separated by commas
+- Use `Bearer <API_KEY>` format in the `Authorization` header
 
-## ❌ 错误处理
+## ❌ Error Handling
 
-| HTTP状态码 | 错误代码 | 说明 |
+| HTTP Status Code | Error Code | Description |
 |------------|----------|------|
-| 401 | `INVALID_API_KEY` | API Key 无效或缺失 |
-| 415 | `UNSUPPORTED_TYPE` | 不支持的文件类型 |
-| 422 | `PARSE_ERROR` | 文件解析失败 |
-| 422 | `INVALID_FILE` | 文件无效 |
+| 401 | `INVALID_API_KEY` | Invalid or missing API Key |
+| 415 | `UNSUPPORTED_TYPE` | Unsupported file type |
+| 422 | `PARSE_ERROR` | File parsing failed |
+| 422 | `INVALID_FILE` | Invalid file |
 
-## 🏗️ 架构设计
+## ⚡ Performance Optimization
 
-### 📁 项目结构
+- Asynchronous processing for file uploads and parsing
+- **Concurrent Image Processing**: Multiple images in documents are processed simultaneously with OCR and AI vision recognition
+  - Supported file types: PDF, DOC, DOCX, Excel
+  - Performance improvement: 2-10x processing speed (depending on image count and network conditions)
+  - Technical implementation: Use `asyncio.gather()` for concurrent PaddleOCR and vision model calls
+- Automatic temporary file cleanup
+- Memory-optimized streaming processing
+- Support for large file processing
+- Smart encoding detection
 
-```
-medicnex-file2md/
-├── 🐳 Docker 部署文件
-│   ├── Dockerfile                    # Docker镜像构建文件
-│   ├── docker-compose.yml           # Docker Compose服务编排
-│   ├── docker-deploy.sh             # 一键Docker部署脚本
-│   └── .dockerignore                # Docker构建忽略文件
-├── 🛠️ 传统部署文件
-│   ├── deploy.sh                    # Ubuntu服务器一键部署脚本
-│   └── monitor_logs.sh              # 日志监控脚本
-├── ⚙️ 配置文件
-│   ├── .env.example                 # 环境变量模板
-│   ├── requirements.txt             # Python依赖包
-│   ├── LICENSE                      # Apache License 2.0许可证
-│   └── DEPLOYMENT.md                # 部署说明文档
-├── 📚 文档
-│   ├── README.md                    # 项目主文档（本文件）
-│   ├── CONTRIBUTING.md              # 贡献指南
-│   ├── SUPPORTED_FORMATS.md         # 支持格式详细列表
-│   ├── File2md_API_Guide.md         # API使用指南
-│   ├── File2md_Examples.md          # 转换示例文档
-│   └── REDIS_CACHE_GUIDE.md         # Redis缓存配置指南
-└── 📱 应用核心
-    └── app/
-        ├── main.py                  # FastAPI 应用入口
-        ├── config.py                # 配置管理
-        ├── auth.py                  # API Key 鉴权
-        ├── models.py                # Pydantic 数据模型
-        ├── vision.py                # 视觉识别服务
-        ├── queue_manager.py         # 队列管理器
-        ├── cache.py                 # Redis缓存管理
-        ├── utils.py                 # 工具函数
-        ├── exceptions.py            # 异常处理
-        ├── routers/
-        │   └── convert.py           # 转换API路由
-        └── parsers/                 # 🔧 解析器模块（16种解析器）
-            ├── base.py              # 解析器基类
-            ├── registry.py          # 解析器注册表
-            ├── audio.py             # 音频/视频解析器（智能分块+ASR）
-            ├── code.py              # 代码文件解析器（82种语言）
-            ├── pdf.py               # PDF解析器
-            ├── doc.py               # Word DOC解析器（旧版）
-            ├── docx.py              # Word DOCX解析器
-            ├── excel.py             # Excel解析器
-            ├── pptx.py              # PowerPoint解析器
-            ├── csv.py               # CSV解析器
-            ├── numbers.py           # Apple Numbers解析器
-            ├── keynote.py           # Apple Keynote解析器
-            ├── pages.py             # Apple Pages解析器
-            ├── image.py             # 图片解析器
-            ├── svg.py               # SVG解析器
-            ├── markdown.py          # Markdown解析器
-            ├── odt.py               # OpenDocument文本解析器
-            ├── rtf.py               # RTF文档解析器
-            └── txt.py               # 文本解析器
-```
+## 🔒 Security Features
 
-### 🐳 容器化架构
+- API Key authentication mechanism
+- File type whitelist validation
+- Secure temporary file cleanup
+- Run as non-root user
 
-**Docker服务组件**：
-- **file2md-api**: 主API服务，集成PaddleOCR和所有解析器
-- **redis**: 缓存服务，提升转换性能和队列管理
-- **nginx**: 反向代理服务（可选，生产环境推荐）
+## 📊 Monitoring and Logging
 
-**数据持久化**：
-- `paddleocr_models`: PaddleOCR模型文件持久化
-- `redis_data`: Redis数据持久化
-- `temp_files`: 临时文件存储
-- `app_logs`: 应用日志持久化
+- Structured JSON logging
+- Health check endpoints
+- Processing time statistics
+- Error tracking and reporting
 
-## ⚡ 性能优化
+## 📚 More Resources
 
-- 异步处理文件上传和解析
-- **并发图片处理**：文档中多张图片同时进行 OCR 和 AI 视觉识别
-  - 支持文件类型：PDF、DOC、DOCX、Excel
-  - 性能提升：2-10倍处理速度（取决于图片数量和网络状况）
-  - 技术实现：使用 `asyncio.gather()` 并发执行 PaddleOCR 和视觉模型调用
-- 临时文件自动清理
-- 内存优化的流式处理
-- 支持大文件处理
-- 智能编码检测
+### 🚀 Redis Deployment Guide
+- **[Redis Cache Configuration](REDIS_CACHE_GUIDE.md)** - 📊 Redis cache optimization configuration guide
 
-## 🔒 安全特性
+### 📖 Feature Documentation
+- **[Supported File Formats](SUPPORTED_FORMATS.md)** - Detailed list of 123 supported formats and feature descriptions
+- **[Conversion Examples](File2md_Examples.md)** - Detailed real conversion cases and feature demonstrations
+- **[Frontend Integration Guide](File2md_API_Guide.md)** - Frontend developer integration documentation
 
-- API Key 鉴权机制
-- 文件类型白名单验证
-- 临时文件安全清理
-- 非 root 用户运行
+## 🔧 Extension Development
 
-## 📊 监控和日志
+### 📝 Adding New File Parsers
 
-- 结构化 JSON 日志
-- 健康检查端点
-- 处理时间统计
-- 错误追踪和报告
+1. Inherit from `BaseParser` class
+2. Implement `parse()` method
+3. Register in `ParserRegistry`
 
-## 📚 更多资源
-
-### 🚀 Redis 部署指南
-- **[Redis缓存配置](REDIS_CACHE_GUIDE.md)** - 📊 Redis缓存优化配置指南
-
-### 📖 功能文档
-- **[支持的文件格式](SUPPORTED_FORMATS.md)** - 详细的123种支持格式列表和功能说明
-- **[转换示例文档](File2md_Examples.md)** - 详细的实际转换案例和功能演示
-- **[前端集成指南](File2md_API_Guide.md)** - 前端开发者接入文档
-
-## 🔧 扩展开发
-
-### 📝 添加新的文件解析器
-
-1. 继承 `BaseParser` 类
-2. 实现 `parse()` 方法
-3. 在 `ParserRegistry` 中注册
-
-示例：
+Example:
 ```python
 from app.parsers.base import BaseParser
 
@@ -783,17 +648,84 @@ class CustomParser(BaseParser):
         return ['.custom']
     
     async def parse(self, file_path: str) -> str:
-        # 读取文件内容
+        # Read file content
         with open(file_path, 'r') as f:
             content = f.read()
         
-        # 格式化为代码块
+        # Format as code block
         return f"```custom\n{content}\n```"
 ```
 
-## 📄 许可证
+## 🏗️ Architecture Design
 
-本项目基于 [Apache License 2.0](LICENSE) 开源许可证发布。
+### 📁 Project Structure
+
+```
+medicnex-file2md/
+├── 🐳 Docker deployment files
+│   ├── Dockerfile                    # Docker image build file
+│   ├── docker-compose.yml           # Docker Compose service orchestration
+│   ├── docker-deploy.sh             # One-click Docker deployment script
+│   └── .dockerignore                # Docker build ignore file
+├── 🛠️ Traditional deployment files
+│   ├── deploy.sh                    # Ubuntu server one-click deployment 
+│   └── monitor_logs.sh              # Log monitoring script
+├── ⚙️ Configuration files
+│   ├── .env.example                 # Environment variable template
+│   ├── requirements.txt             # Python dependencies
+│   ├── LICENSE                      # Apache License 2.0
+│   └── README.md                    # Project documentation (this file)
+└── 📱 Application core
+    └── app/
+        ├── main.py                  # FastAPI application entry
+        ├── config.py                # Configuration management
+        ├── auth.py                  # API Key authentication
+        ├── models.py                # Pydantic data models
+        ├── vision.py                # Vision recognition service
+        ├── queue_manager.py         # Queue manager
+        ├── cache.py                 # Redis cache management
+        ├── utils.py                 # Utility functions
+        ├── exceptions.py            # Exception handling
+        ├── routers/
+        │   └── convert.py           # Conversion API routes
+        └── parsers/                 # 🔧 Parser modules (16 parsers)
+            ├── base.py              # Parser base class
+            ├── registry.py          # Parser registry
+            ├── audio.py             # Audio/video parser (smart chunking + ASR)
+            ├── code.py              # Code file parser (82 languages)
+            ├── pdf.py               # PDF parser
+            ├── doc.py               # Word DOC parser (legacy)
+            ├── docx.py              # Word DOCX parser
+            ├── excel.py             # Excel parser
+            ├── pptx.py              # PowerPoint parser
+            ├── csv.py               # CSV parser
+            ├── numbers.py           # Apple Numbers parser
+            ├── keynote.py           # Apple Keynote parser
+            ├── pages.py             # Apple Pages parser
+            ├── image.py             # Image parser
+            ├── svg.py               # SVG parser
+            ├── markdown.py          # Markdown parser
+            ├── odt.py               # OpenDocument text parser
+            ├── rtf.py               # RTF document parser
+            └── txt.py               # Text parser
+ ```
+
+### 🐳 Containerized Architecture
+
+**Docker Service Components**:
+- **file2md-api**: Main API service, integrating PaddleOCR and all parsers
+- **redis**: Cache service, improving conversion performance and queue management
+- **nginx**: Reverse proxy service (optional, recommended for production)
+
+**Data Persistence**:
+- `paddleocr_models`: PaddleOCR model files persistence
+- `redis_data`: Redis data persistence
+- `temp_files`: Temporary file storage
+- `app_logs`: Application log persistence
+
+## 📄 License
+
+This project is released under the [Apache License 2.0](LICENSE).
 
 ```
 Copyright 2025 MedicNex
@@ -811,103 +743,96 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## 🤝 贡献
+## 🤝 Contributing
 
-我们热烈欢迎社区贡献！以下是参与贡献的方式：
+We warmly welcome community contributions! Here's how you can participate:
 
-### 🐛 报告问题
-- 在 [Issues](../../issues) 页面报告 Bug
-- 提供详细的错误信息和复现步骤
-- 包含您的环境信息（操作系统、Python版本等）
+### 🐛 Report Issues
+- Report bugs on the [Issues](../../issues) page
+- Provide detailed error information and reproduction steps
+- Include your environment information (OS, Python version, etc.)
 
-### 💡 功能建议
-- 在 [Issues](../../issues) 页面提出新功能建议
-- 描述功能的使用场景和预期效果
-- 讨论实现方案的可行性
+### 💡 Feature Suggestions
+- Propose new features on the [Issues](../../issues) page
+- Describe use cases and expected effects
+- Discuss feasibility of implementation approaches
 
-### 🔧 代码贡献
-1. **Fork** 本仓库
-2. 创建特性分支：`git checkout -b feature/amazing-feature`
-3. 提交更改：`git commit -m 'Add some amazing feature'`
-4. 推送到分支：`git push origin feature/amazing-feature`
-5. 提交 **Pull Request**
+### 🔧 Code Contributions
+1. **Fork** this repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add some amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Submit **Pull Request**
 
-### 📋 贡献指南
-- 遵循现有的代码风格和规范
-- 为新功能添加相应的测试
-- 更新相关文档
-- 确保所有测试通过
-- 在 PR 中清楚描述更改内容
+### 🎯 Contribution Areas
+- 🔧 **New Parsers**: Add support for new file formats
+- 🚀 **Performance Optimization**: Improve processing speed and memory efficiency
+- 📚 **Documentation Improvement**: Enhance usage guides and API documentation
+- 🐳 **Deployment Optimization**: Improve Docker and deployment scripts
+- 🧪 **Test Enhancement**: Increase test coverage
 
-### 🎯 贡献领域
-- 🔧 **新解析器**：添加对新文件格式的支持
-- 🚀 **性能优化**：提升处理速度和内存效率
-- 📚 **文档改进**：完善使用指南和API文档
-- 🐳 **部署优化**：改进Docker和部署脚本
-- 🧪 **测试完善**：增加测试覆盖率
+For more detailed information, please refer to [Contributing Guide](CONTRIBUTING.md).
 
-更多详细信息请参阅 [贡献指南](CONTRIBUTING.md)。
-
-感谢您对 MedicNex File2Markdown 项目的关注和贡献！🙏
+Thank you for your attention and contribution to the MedicNex File2Markdown project! 🙏
 
 ---
 
-## 📈 最新更新
+## 📈 Latest Updates
 
-### v2.6.0（最新）
-- 🐳 **Docker完整支持**：全新的容器化部署方案
-  - **Dockerfile**: 基于Ubuntu 24.04的优化镜像，包含PaddleOCR所有依赖
-  - **docker-compose.yml**: 完整的服务编排，包含API、Redis、Nginx
-  - **docker-deploy.sh**: 一键自动化部署脚本，自动生成安全密钥
-  - **数据持久化**: PaddleOCR模型、Redis数据、日志的持久化存储
-  - **健康检查**: 内置的服务健康监控和自动恢复
-  - **资源限制**: 合理的内存和CPU限制配置
-  - **安全配置**: 非root用户运行，自动生成强密钥
-- 📋 **文档优化**: 重新组织部署指南，提供三种部署方式选择
-- 🔧 **架构说明**: 更新项目结构说明，清晰展示Docker相关文件
+### v2.6.0 (Latest)
+- 🐳 **Complete Docker Support**: Brand new containerized deployment solution
+  - **Dockerfile**: Optimized image based on Ubuntu 24.04, including all PaddleOCR dependencies
+  - **docker-compose.yml**: Complete service orchestration including API, Redis, Nginx
+  - **docker-deploy.sh**: One-click automated deployment script with automatic secure key generation
+  - **Data Persistence**: Persistent storage for PaddleOCR models, Redis data, and logs
+  - **Health Checks**: Built-in service health monitoring and automatic recovery
+  - **Resource Limits**: Reasonable memory and CPU limit configurations
+  - **Security Configuration**: Non-root user execution, automatic strong key generation
+- 📋 **Documentation Optimization**: Reorganized deployment guide with three deployment options
+- 🔧 **Architecture Description**: Updated project structure description with clear Docker-related files
 
 ### v2.5.0
-- OCR 引擎从 Tesseract 换成 **PaddleOCR**，提高识别准确率
+- OCR engine switched from Tesseract to **PaddleOCR**, improving recognition accuracy
 
 ### v2.4.0
-- 🎵 **音频和视频处理功能**：全新的音频/视频文件处理支持
-  - **音频格式支持**：`.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` (8种格式)
-  - **视频格式支持**：`.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` (7种格式) 
-  - **智能音频预处理**：16kHz单声道转换，80Hz高通滤波去除噪音
-  - **RMS能量分析**：基于信号有效值的精确语音检测
-  - **自适应阈值**：10百分位数+3dB动态阈值，适应不同环境
-  - **智能分割算法**：300ms最小静音检测，自动合并短段
-  - **并发ASR转换**：多段音频同时语音识别，3-5倍速度提升
-  - **SRT字幕生成**：视频文件自动生成标准时间戳字幕
-  - **质量评估**：基于能量的置信度计算和质量指标
-- 📊 **统计更新**：支持格式从109种增加到**123种**，新增AudioParser解析器
-- 🔧 **依赖增强**：新增pydub、numpy、librosa音频处理库支持
+- 🎵 **Audio and Video Processing Features**: Brand new audio/video file processing support
+  - **Audio Format Support**: `.wav`, `.mp3`, `.mp4`, `.m4a`, `.flac`, `.ogg`, `.wma`, `.aac` (8 formats)
+  - **Video Format Support**: `.mp4`, `.avi`, `.mov`, `.wmv`, `.mkv`, `.webm`, `.3gp` (7 formats) 
+  - **Smart Audio Preprocessing**: 16kHz mono conversion, 80Hz high-pass filtering for noise removal
+  - **RMS Energy Analysis**: Precise voice detection based on signal RMS
+  - **Adaptive Threshold**: 10th percentile + 3dB dynamic threshold, adapts to different environments
+  - **Smart Segmentation Algorithm**: 300ms minimum silence detection, automatic short segment merging
+  - **Concurrent ASR Conversion**: Multiple audio segments simultaneously processed for speech recognition, 3-5x speed improvement
+  - **SRT Subtitle Generation**: Automatic standard timestamp subtitle generation for video files
+  - **Quality Assessment**: Confidence calculation and quality metrics based on energy
+- 📊 **Statistics Update**: Supported formats increased from 109 to **123**, added AudioParser
+- 🔧 **Dependency Enhancement**: Added pydub, numpy, librosa audio processing library support
 
 ### v2.3.0
-- 📱 **Apple iWork 支持**：新增对 Apple iWork 套件的支持
-  - **Keynote (.key)**：演示文稿文件，提取元数据和结构信息，输出为 `slideshow` 格式
-  - **Pages (.pages)**：文字处理文档，提取元数据和结构信息，输出为 `document` 格式
-  - **Numbers (.numbers)**：电子表格文件，支持表格数据提取，输出为 `sheet` 格式
-  - **智能解析**：Numbers文件优先使用 `numbers-parser` 库提取完整表格数据，回退到基础解析
-- 📊 **统计更新**：支持格式从106种增加到**109种**，解析器从13个增加到**16个**
-- 🔧 **依赖更新**：添加 `numbers-parser==4.4.6` 依赖以支持Numbers文件解析
+- 📱 **Apple iWork Support**: Added support for Apple iWork suite
+  - **Keynote (.key)**: Presentation files, extract metadata and structure, output as `slideshow` format
+  - **Pages (.pages)**: Word processing documents, extract metadata and structure, output as `document` format
+  - **Numbers (.numbers)**: Spreadsheet files, support table data extraction, output as `sheet` format
+  - **Smart Parsing**: Numbers files prioritize `numbers-parser` library for complete table data extraction, fallback to basic parsing
+- 📊 **Statistics Update**: Supported formats increased from 106 to **109**, parsers from 13 to **16**
+- 🔧 **Dependency Update**: Added `numbers-parser==4.4.6` dependency for Numbers file parsing
 
 ### v2.2.0 
-- 📊 **数据更新**：完整测试并更新支持格式列表
-  - **109种文件格式**：完整验证所有支持的扩展名
-  - **16个解析器**：优化分类和统计信息
-  - **新增文档**：创建详细的[支持格式列表](SUPPORTED_FORMATS.md)
-- 🔧 **API增强**：`/v1/supported-types` 端点返回准确的格式信息
-- 🖼️ **SVG功能**：完善SVG转PNG的视觉识别功能（ImageMagick支持）
-- 🛡️ **安全改进**：健康检查API移除敏感信息暴露
+- 📊 **Data Update**: Complete testing and updated supported format list
+  - **109 File Formats**: Complete validation of all supported extensions
+  - **16 Parsers**: Optimized classification and statistics
+  - **New Documentation**: Created detailed [Supported Formats List](SUPPORTED_FORMATS.md)
+- 🔧 **API Enhancement**: `/v1/supported-types` endpoint returns accurate format information
+- 🖼️ **SVG Features**: Enhanced SVG to PNG visual recognition (ImageMagick support)
+- 🛡️ **Security Improvements**: Health check API removes sensitive information exposure
 
 ### v2.1.0 
-- ✨ **新增**：并发图片处理功能
-  - PDF、DOC、DOCX、Excel 文档中的多张图片现在可以并发处理
-  - OCR 和 AI 视觉识别同时进行，大幅提升处理速度
-  - 处理速度提升 2-10 倍（取决于图片数量）
-- 🔧 **优化**：改进了异常处理和错误恢复机制
-- 🐛 **修复**：解决了大型文档图片处理的内存问题
+- ✨ **New**: Concurrent image processing functionality
+  - Multiple images in PDF, DOC, DOCX, Excel documents can now be processed concurrently
+  - OCR and AI vision recognition run simultaneously, dramatically improving processing speed
+  - Processing speed improved 2-10x (depending on image count)
+- 🔧 **Optimization**: Improved exception handling and error recovery mechanisms
+- 🐛 **Fix**: Resolved memory issues with large document image processing
 
 ---
 
@@ -915,9 +840,9 @@ limitations under the License.
 
 **🚀 MedicNex File2Markdown**
 
-> 开发者：Kris  
-> &copy; 2025 MedicNex. All rights reserved.
+> Developer: Kris  
+> © 2025 MedicNex. All rights reserved.
 
-*高效智能的文件转换微服务，让 AI 更好地理解您的文档*
+*Efficient and intelligent file conversion microservice, making AI better understand your documents*
 
-</div>
+</div> 
