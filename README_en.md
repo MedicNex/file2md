@@ -668,9 +668,8 @@ medicnex-file2md/
 │   ├── docker-deploy.sh             # One-click Docker deployment script
 │   └── .dockerignore                # Docker build ignore file
 ├── 🛠️ Traditional deployment files
-│   ├── deploy.sh                    # Ubuntu server one-click deployment script
-│   ├── monitor_logs.sh              # Log monitoring script
-│   └── nginx.conf                   # Nginx configuration file
+│   ├── deploy.sh                    # Ubuntu server one-click deployment 
+│   └── monitor_logs.sh              # Log monitoring script
 ├── ⚙️ Configuration files
 │   ├── .env.example                 # Environment variable template
 │   ├── requirements.txt             # Python dependencies

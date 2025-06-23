@@ -668,8 +668,7 @@ medicnex-file2md/
 │   └── .dockerignore                # Docker构建忽略文件
 ├── 🛠️ 传统部署文件
 │   ├── deploy.sh                    # Ubuntu服务器一键部署脚本
-│   ├── monitor_logs.sh              # 日志监控脚本
-│   └── nginx.conf                   # Nginx配置文件
+│   └── monitor_logs.sh              # 日志监控脚本
 ├── ⚙️ 配置文件
 │   ├── .env.example                 # 环境变量模板
 │   ├── requirements.txt             # Python依赖包
