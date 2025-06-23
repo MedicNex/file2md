@@ -19,7 +19,7 @@
 
 ### API调用
 ```bash
-curl -X POST "https://your-domian/v1/convert" \
+curl -X POST "https://your-domain/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@test_doc_with_image_and_codeblock.docx"
 ```

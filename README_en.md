@@ -22,7 +22,7 @@ MedicNex File2Markdown is a FastAPI-based microservice that converts **123 file 
 - 💻 **Code File Support**: Supports **82 programming languages** file conversion, covering mainstream, functional, scripting, and configuration languages
 - 🖼️ **Smart Image Recognition**: Integrated Vision API and PaddleOCR, supports SVG to PNG recognition
 - ⚡ **High-Performance Async**: Based on FastAPI async framework
-- 🚀 **Queue Processing Mode**: Supports batch document conversion with maximum 5 concurrent tasks
+- 🚀 **Queue Processing Mode**: Supports batch document conversion, limit the maximum number of concurrent tasks (configurable via `.env`)
 - 🎯 **Concurrent Image Processing**: Multiple images in documents are processed simultaneously with PaddleOCR and AI vision recognition, improving processing speed by 2-10x
 - 🐳 **Containerized Deployment**: Provides Docker and Docker Compose support
 - 📊 **Unified Output Format**: All file types output in unified code block format
@@ -373,7 +373,7 @@ Response example (Python file):
 
 ### 📦 Batch File Conversion (Async Queue Mode)
 
-Use queue mode to batch submit multiple files, the system will control concurrent processing with a maximum of 5 tasks:
+Use queue mode to batch submit multiple files. The number of concurrent connections can be controlled by `MAX_CONCURRENT` in `.env`:
 
 ```bash
 curl -X POST "https://your-domain/v1/convert-batch" \

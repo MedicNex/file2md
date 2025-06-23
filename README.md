@@ -22,7 +22,7 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 - 💻 **代码文件支持**：支持 **82 种编程语言**文件转换，涵盖主流、函数式、脚本、配置等语言
 - 🖼️ **智能图片识别**：集成 Vision API 和 PaddleOCR，支持 SVG 转 PNG 识别
 - ⚡ **高性能异步**：基于 FastAPI 异步框架
-- 🚀 **队列处理模式**：支持批量文档转换，限制最多5个并发任务
+- 🚀 **队列处理模式**：支持批量文档转换，限制最多并发任务个数（可通过`.env`配置）
 - 🎯 **并发图片处理**：文档中多张图片同时进行 PaddleOCR 和 AI 视觉识别，处理速度提升 2-10 倍
 - 🐳 **容器化部署**：提供 Docker 和 Docker Compose 支持
 - 📊 **统一输出格式**：所有文件类型统一输出为代码块格式
@@ -309,7 +309,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 **输入文件**：上传一个包含多段对话的音频文件 `meeting.wav`
 
 ```bash
-curl -X POST "https://your-domian/v1/convert" \
+curl -X POST "https://your-domain/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@meeting.wav"
 ```
@@ -330,7 +330,7 @@ curl -X POST "https://your-domian/v1/convert" \
 **输入文件**：上传一个教学视频 `tutorial.mp4`
 
 ```bash
-curl -X POST "https://your-domian/v1/convert" \
+curl -X POST "https://your-domain/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@tutorial.mp4"
 ```
@@ -386,7 +386,7 @@ brew install ffmpeg
 ### 📤 单文件转换（同步模式）
 
 ```bash
-curl -X POST "https://your-domian/v1/convert" \
+curl -X POST "https://your-domain/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@example.py"
 ```
@@ -404,10 +404,10 @@ curl -X POST "https://your-domian/v1/convert" \
 
 ### 📦 批量文件转换（异步队列模式）
 
-使用队列模式批量提交多个文件，系统将控制并发数量最多为5个：
+使用队列模式批量提交多个文件，可通过`.env`中的`MAX_CONCURRENT`控制并发数量：
 
 ```bash
-curl -X POST "https://your-domian/v1/convert-batch" \
+curl -X POST "https://your-domain/v1/convert-batch" \
   -H "Authorization: Bearer your-api-key" \
   -F "files=@document1.docx" \
   -F "files=@image1.png" \
@@ -446,7 +446,7 @@ curl -X POST "https://your-domian/v1/convert-batch" \
 ### 📋 查询任务状态
 
 ```bash
-curl -X GET "https://your-domian/v1/task/{task_id}" \
+curl -X GET "https://your-domain/v1/task/{task_id}" \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -470,7 +470,7 @@ curl -X GET "https://your-domian/v1/task/{task_id}" \
 ### 📊 查询队列状态
 
 ```bash
-curl -X GET "https://your-domian/v1/queue/info" \
+curl -X GET "https://your-domain/v1/queue/info" \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -519,7 +519,7 @@ curl -X GET "https://your-domian/v1/queue/info" \
 
 ### 转换结果
 ```bash
-curl -X POST "https://your-domian/v1/convert" \
+curl -X POST "https://your-domain/v1/convert" \
   -H "Authorization: Bearer your-api-key" \
   -F "file=@test_doc_with_image_and_codeblock.docx"
 ```
@@ -569,7 +569,7 @@ curl -X POST "https://your-domian/v1/convert" \
 ### 📋 获取支持的文件类型
 
 ```bash
-curl -X GET "https://your-domian/v1/supported-types" \
+curl -X GET "https://your-domain/v1/supported-types" \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -621,7 +621,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ### 健康检查
 
 ```bash
-curl -X GET "https://your-domian/v1/health"
+curl -X GET "https://your-domain/v1/health"
 ```
 
 ## ⚙️ 配置说明
