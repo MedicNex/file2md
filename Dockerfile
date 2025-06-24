@@ -92,7 +92,6 @@ RUN /opt/venv/bin/pip install -r requirements.txt
 
 # 复制应用代码
 COPY app/ ./app/
-COPY scripts/ ./scripts/
 
 # 创建必要的目录
 RUN mkdir -p /app/logs /app/temp /app/.paddleocr
