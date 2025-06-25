@@ -8,6 +8,7 @@ import os
 import base64
 import asyncio
 from app.vision import get_ocr_text, vision_client
+from app.config import config
 
 class ExcelParser(BaseParser):
     """Excel文件解析器"""
@@ -140,11 +141,12 @@ class ExcelParser(BaseParser):
                     total_image_count = await self._count_images_in_xlsx(file_path)
                     
                     # 图片数量保护机制
-                    if total_image_count > 5:
-                        logger.warning(f"Excel文档包含 {total_image_count} 张图片，超过5张限制，跳过所有图片处理")
+                    max_imgs = config.MAX_IMAGES_PER_DOC
+                    if max_imgs != -1 and total_image_count > max_imgs:
+                        logger.warning(f"Excel文档包含 {total_image_count} 张图片，超过{max_imgs}张限制，跳过所有图片处理")
                         if total_image_count > 0:
                             content_parts.append(f"### 文档包含 {total_image_count} 张图片")
-                            content_parts.append("*因图片数量超过5张限制，已跳过所有图片处理*")
+                            content_parts.append(f"*因图片数量超过{max_imgs}张限制，已跳过所有图片处理*")
                     else:
                         image_parts = await self._extract_images_from_xlsx(file_path)
                         if image_parts:

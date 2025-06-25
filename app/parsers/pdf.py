@@ -6,6 +6,7 @@ from app.vision import image_to_markdown, get_ocr_text, vision_client
 import os
 import base64
 import asyncio
+from app.config import config
 
 class PdfParser(BaseParser):
     """PDF文件解析器"""
@@ -87,8 +88,9 @@ class PdfParser(BaseParser):
                     total_image_count += len(page.images)
                 
                 # 图片数量保护机制
-                if total_image_count > 5:
-                    logger.warning(f"PDF文档包含 {total_image_count} 张图片，超过5张限制，跳过所有图片处理")
+                max_imgs = config.MAX_IMAGES_PER_DOC
+                if max_imgs != -1 and total_image_count > max_imgs:
+                    logger.warning(f"PDF文档包含 {total_image_count} 张图片，超过{max_imgs}张限制，跳过所有图片处理")
                     skip_images = True
                 else:
                     skip_images = False
@@ -147,7 +149,7 @@ class PdfParser(BaseParser):
                         # 跳过图片处理时的提示
                         images = page.images
                         if images:
-                            content_parts.append(f"### 第 {page_num} 页包含 {len(images)} 张图片\n\n*因图片总数超过5张限制，已跳过图片处理*")
+                            content_parts.append(f"### 第 {page_num} 页包含 {len(images)} 张图片\n\n*因图片总数超过{max_imgs}张限制，已跳过图片处理*")
             
             raw_content = '\n\n'.join(content_parts)
             

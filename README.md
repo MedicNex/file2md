@@ -10,6 +10,8 @@
 ![Docker](https://img.shields.io/badge/docker-supported-blue.svg)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
 ![PaddleOCR](https://img.shields.io/badge/PaddleOCR-2.7+-orange.svg)
+![GitHub contributors](https://img.shields.io/github/contributors/MedicNex/medicnex-file2md) 
+![GitHub Repo stars](https://img.shields.io/github/stars/MedicNex/medicnex-file2md?style=social)
 
 </div>
 
@@ -23,7 +25,7 @@ MedicNex File2Markdown is a FastAPI-based microservice that converts **123 file 
 - 🖼️ **Smart Image Recognition**: Integrated Vision API and PaddleOCR, supports SVG to PNG recognition
 - ⚡ **High-Performance Async**: Based on FastAPI async framework
 - 🚀 **Queue Processing Mode**: Supports batch document conversion, limit the maximum number of concurrent tasks (configurable via `.env`)
-- 🎯 **Concurrent Image Processing**: Multiple images in documents are processed simultaneously with PaddleOCR and AI vision recognition, improving processing speed by 2-10x
+- 🎯 **Concurrent Image Processing**: Multiple images in documents are processed simultaneously with PaddleOCR and AI vision recognition, improving processing speed by 2-10x. The limit can be configured via **`MAX_IMAGES_PER_DOC`** (`-1` for no limit).
 - 🐳 **Containerized Deployment**: Provides Docker and Docker Compose support
 - 📊 **Unified Output Format**: All file types output in unified code block format
 
@@ -42,8 +44,6 @@ MedicNex File2Markdown is a FastAPI-based microservice that converts **123 file 
   - [📦 Batch File Conversion (Async Queue Mode)](#-batch-file-conversion-async-queue-mode)
   - [📋 Query Task Status](#-query-task-status)
   - [📊 Query Queue Status](#-query-queue-status)
-- [Complete Feature Example](#complete-feature-example)
-- [🧪 Queue Function Testing](#-queue-function-testing)
 - [🔗 API Endpoints Overview](#-api-endpoints-overview)
 - [⚙️ Configuration](#️-configuration)
   - [🔧 Environment Variables](#-environment-variables)
@@ -273,48 +273,6 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 - 🔄 **Unified Processing Pipeline**: Reuse audio analysis algorithms for consistent processing quality
 - 📊 **Timeline Synchronization**: Precise timestamp correspondence ensuring subtitle-video sync
 
-### Audio Processing Example
-
-**Input File**: Upload an audio file containing multiple conversation segments `meeting.wav`
-
-```bash
-curl -X POST "https://your-domain/v1/convert" \
-  -H "Authorization: Bearer your-api-key" \
-  -F "file=@meeting.wav"
-```
-
-**Output Format** (`audio` block):
-```json
-{
-  "filename": "meeting.wav",
-  "size": 2048000,
-  "content_type": "audio/wav",
-  "content": "```audio\n# Audio Information\nFilename: meeting.wav\nDuration: 00:02:45\nSample Rate: 16000 Hz\nChannels: Mono\nFormat: WAV\n\n# Speech Transcription\n## Segment 1 (00:00:00 - 00:00:15)\nHello everyone, welcome to today's product discussion meeting.\n**Confidence**: 89%\n\n## Segment 2 (00:00:16 - 00:00:32)\nFirst, let's look at this quarter's sales data analysis.\n**Confidence**: 92%\n\n## Segment 3 (00:00:33 - 00:00:48)\nFrom the chart, we can see our product performs excellently on mobile.\n**Confidence**: 87%\n\n# Processing Statistics\n- Total segments: 11\n- Average segment duration: 15.2 seconds\n- Overall confidence: 89%\n- Processing time: 23.4 seconds\n- ASR model used: whisper-1\n```",
-  "duration_ms": 23400
-}
-```
-
-### Video Processing Example
-
-**Input File**: Upload a tutorial video `tutorial.mp4`
-
-```bash
-curl -X POST "https://your-domain/v1/convert" \
-  -H "Authorization: Bearer your-api-key" \
-  -F "file=@tutorial.mp4"
-```
-
-**Output Format** (`video` block):
-```json
-{
-  "filename": "tutorial.mp4", 
-  "size": 15728640,
-  "content_type": "video/mp4",
-  "content": "```video\n# Video Information\nFilename: tutorial.mp4\nVideo Duration: 00:05:23\nAudio Track: Detected\nSubtitle Language: English\n\n# Subtitle Content\n1\n00:00:00,000 --> 00:00:12,500\nWelcome to Python programming tutorial, today we'll learn basic syntax.\n\n2\n00:00:12,500 --> 00:00:28,750\nFirst let's look at variable definition and usage methods.\n\n3\n00:00:28,750 --> 00:00:45,100\nIn Python, you can use the equals sign to assign values to variables.\n\n4\n00:00:45,100 --> 00:01:02,300\nFor example, name equals quote Hello World quote.\n\n# Processing Statistics\n- Total subtitle entries: 26\n- Average subtitle duration: 12.4 seconds\n- Overall quality: Good\n- Processing time: 45.7 seconds\n- Extracted audio format: WAV 16kHz\n```",
-  "duration_ms": 45700
-}
-```
-
 ### Technical Configuration
 
 **Environment Variable Configuration**:
@@ -450,102 +408,6 @@ Response example (SVG file):
 }
 ```
 
-## Complete Feature Example
-
-Here's a complete example of converting a DOCX document containing code blocks and images, showcasing all core system features:
-
-### Input File
-Upload a Word document containing Python code and images: `test_doc_with_image_and_codeblock.docx`
-
-### Conversion Result
-```bash
-curl -X POST "https://your-domain/v1/convert" \
-  -H "Authorization: Bearer your-api-key" \
-  -F "file=@test_doc_with_image_and_codeblock.docx"
-```
-
-**Response Content**:
-```json
-{
-  "filename": "test_doc_with_image_and_codeblock.docx",
-  "size": 15970,
-  "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "content": "```document\n<code class=\"language-python\">\ndef hello():\n\nprint(\"hello world\")\n\n</code>\n\n### Image 1\n\n<img src=\"document_image_1.png\" alt=\"# OCR: HelloWorld! # Visual_Features: ### 1. Overall Precise Description\n\nThis image displays a simple user interface element with a light blue background. The image contains a white-bordered rectangular area with two lines of different colored text. The overall layout is clean with clear and easily distinguishable content and structure.\n\n### 2. Main Elements and Structure\n\n- **Background:** The entire image background is uniform light blue without other patterns or decorations.\n- **Rectangle Frame:** Located in the center of the image, it's a white rectangle with black border and pure white background, appearing very prominent.\n- **Text Content:**\n  - First line text reads \"Hello World!\", black font, moderate size, positioned at the top-left area of the rectangle.\n  - Second line text reads \" fascinated! \", red font, slightly smaller than the first line, directly below the first line, also left-aligned.\n- **Layout:** Two lines of text are vertically arranged within the rectangle with proper spacing, both left-aligned, maintaining aesthetic alignment.\n\n### 3. Tables, Charts and Other Content\n\nThis image contains no tables, charts or other complex elements, only two text segments. No excessive decoration, mainly focused on displaying the two lines of text information.\" />\n```",
-  "duration_ms": 14208
-}
-```
-
-### Feature Description
-
-From the above example, you can see the system's core features:
-
-1. **🔧 Code Block Conversion**:
-   - Original Markdown code block: ````python
-   - Converted to HTML tags: `<code class="language-python">`
-   - Maintains code formatting and syntax highlighting information
-
-2. **🖼️ Image Extraction & OCR**:
-   - Automatically extracts embedded images from DOCX documents
-   - Uses PaddleOCR to recognize text in images: "HelloWorld!"
-   - Generates unique image filenames: `document_image_1.png`
-
-3. **🤖 AI Vision Recognition**:
-   - Uses VLM for image analysis
-   - Provides detailed image descriptions including:
-     - Overall layout and design (light blue background, white rectangle)
-     - Text content analysis ("Hello World!" in black, red "fascinated!")
-     - Structure and layout information
-
-4. **📝 HTML Tag Output**:
-   - Images converted to: `<img src="image_name" alt="# OCR: ... # Visual_Features: ..." />`
-   - Alt attribute contains complete OCR results and AI description
-   - Convenient for frontend display and accessibility
-
-5. **⚡ Performance Statistics**:
-   - Processing time: 14.2 seconds (including AI vision analysis)
-   - File size: 15,970 bytes
-   - Output content: Detailed structured Markdown
-
-### 📋 Get Supported File Types
-
-```bash
-curl -X GET "https://your-domain/v1/supported-types" \
-  -H "Authorization: Bearer your-api-key"
-```
-
-## 🧪 Queue Function Testing
-
-We provide a complete test script to verify queue functionality:
-
-```bash
-# Install test dependencies
-pip install aiohttp
-
-# Set environment variables (if not set)
-export API_KEY="dev-test-key-123"
-
-# Start service
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
-```
-
-The test script will verify the following features:
-- ✅ Single file synchronous conversion
-- ✅ Batch file asynchronous submission
-- ✅ Task status query  
-- ✅ Queue status monitoring
-- ✅ Concurrency limits
-- ✅ Task completion detection
-
-### Queue Function Features
-
-🚀 **Main advantages of the new queue mode:**
-
-1. **Concurrency Control**: Limit multiple documents processing simultaneously through "MAX_CONCURRENT" variable in `.env`, avoiding system overload
-2. **Asynchronous Processing**: Clients immediately get task IDs without waiting for processing completion
-3. **Status Tracking**: Real-time query of each task's processing status and progress
-4. **Queue Management**: Automatic queuing for processing, supports large batch document conversion
-5. **Resource Optimization**: Rational use of system resources, improving overall throughput
-
 ## 🔗 API Endpoints Overview
 
 | Endpoint | Method | Description |
@@ -579,6 +441,7 @@ curl -X GET "https://your-domain/v1/health"
 | `ASR_MODEL` | ASR model name | `whisper-1` | No |
 | `PORT` | Service port | `8080` | No |
 | `LOG_LEVEL` | Log level | `INFO` | No |
+| `MAX_IMAGES_PER_DOC` | Max images processed per document (`-1` = unlimited) | `5` | No |
 
 ### 🔑 API Key Management
 
@@ -775,6 +638,14 @@ For more detailed information, please refer to [Contributing Guide](CONTRIBUTING
 
 Thank you for your attention and contribution to the MedicNex File2Markdown project! 🙏
 
+### 🎉Contributers
+
+<div align="center">
+<a href="https://github.com/MedicNex/medicnex-file2md/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=MedicNex/medicnex-file2md" />
+</a>
+</div>
+
 ---
 
 ## 📈 Latest Updates
@@ -840,8 +711,13 @@ Thank you for your attention and contribution to the MedicNex File2Markdown proj
 
 **🚀 MedicNex File2Markdown**
 
-> Developer: Kris  
-> © 2025 MedicNex. All rights reserved.
+<a href="https://www.star-history.com/#MedicNex/medicnex-file2md&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MedicNex/medicnex-file2md&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MedicNex/medicnex-file2md&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MedicNex/medicnex-file2md&type=Date" />
+ </picture>
+</a>
 
 *Efficient and intelligent file conversion microservice, making AI better understand your documents*
 

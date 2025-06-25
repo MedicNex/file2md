@@ -6,6 +6,7 @@ import os
 import base64
 import asyncio
 from app.vision import get_ocr_text, vision_client
+from app.config import config
 
 class DocParser(BaseParser):
     """DOC文件解析器"""
@@ -143,13 +144,14 @@ class DocParser(BaseParser):
             raw_content = markdownify(html_content, heading_style="ATX")
             
             # 图片数量保护机制
-            if len(image_info_list) > 5:
-                logger.warning(f"DOC文档包含 {len(image_info_list)} 张图片，超过5张限制，跳过所有图片处理")
+            max_imgs = config.MAX_IMAGES_PER_DOC
+            if max_imgs != -1 and len(image_info_list) > max_imgs:
+                logger.warning(f"DOC文档包含 {len(image_info_list)} 张图片，超过{max_imgs}张限制，跳过所有图片处理")
                 # 将所有占位符替换为跳过提示
                 for img_info in image_info_list:
                     placeholder = img_info["placeholder"]
                     img_name = img_info["src"]
-                    skip_tag = f'<img src="{img_name}" alt="因图片数量超过5张限制，已跳过图片处理" />'
+                    skip_tag = f'<img src="{img_name}" alt="因图片数量超过{max_imgs}张限制，已跳过图片处理" />'
                     raw_content = raw_content.replace(placeholder, skip_tag)
             
             # 并发处理所有图片（如果图片数量未超过限制）
@@ -206,7 +208,7 @@ class DocParser(BaseParser):
             # 格式化为统一的代码块格式
             markdown_content = f"```document\n{raw_content.strip()}\n```"
             
-            skip_images = len(image_info_list) > 5
+            skip_images = (config.MAX_IMAGES_PER_DOC != -1 and len(image_info_list) > config.MAX_IMAGES_PER_DOC)
             logger.info(f"成功解析DOC文件: {file_path} (总图片数: {len(image_info_list)}, 跳过图片: {skip_images})")
             if image_counter > 0:
                 logger.info(f"DOC文档中共处理了 {image_counter} 张图片")

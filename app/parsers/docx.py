@@ -2,12 +2,12 @@ from .base import BaseParser
 from loguru import logger
 import docx
 from markdownify import markdownify
-import io
 import os
 from PIL import Image
 from app.vision import image_to_markdown, get_ocr_text, vision_client
 import base64
 import asyncio
+from app.config import config
 
 class DocxParser(BaseParser):
     """DOCX文件解析器"""
@@ -113,11 +113,12 @@ class DocxParser(BaseParser):
             image_count = sum(1 for rel in rels.values() if "image" in rel.target_ref)
             
             # 图片数量保护机制
-            if image_count > 5:
-                logger.warning(f"DOCX文档包含 {image_count} 张图片，超过5张限制，跳过所有图片处理")
+            max_imgs = config.MAX_IMAGES_PER_DOC
+            if max_imgs != -1 and image_count > max_imgs:
+                logger.warning(f"DOCX文档包含 {image_count} 张图片，超过{max_imgs}张限制，跳过所有图片处理")
                 if image_count > 0:
                     content_parts.append(f"### 文档包含 {image_count} 张图片")
-                    content_parts.append("*因图片数量超过5张限制，已跳过所有图片处理*")
+                    content_parts.append(f"*因图片数量超过{max_imgs}张限制，已跳过所有图片处理*")
             else:
                 # 提取并处理图片
                 image_parts = await self._extract_images(doc, file_path)
@@ -134,7 +135,7 @@ class DocxParser(BaseParser):
             # 格式化为统一的代码块格式
             markdown_content = f"```document\n{raw_content}\n```"
             
-            skip_images = image_count > 5
+            skip_images = (config.MAX_IMAGES_PER_DOC != -1 and image_count > config.MAX_IMAGES_PER_DOC)
             logger.info(f"成功解析DOCX文件: {file_path} (总图片数: {image_count}, 跳过图片: {skip_images})")
             
             return markdown_content

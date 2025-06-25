@@ -61,15 +61,14 @@ class Config:
     VISION_RETRY_DELAY: float = float(os.getenv("VISION_RETRY_DELAY", "1.0"))
     VISION_BACKOFF_FACTOR: float = float(os.getenv("VISION_BACKOFF_FACTOR", "2.0"))
     
-    # 兼容旧的OpenAI配置
-    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
-    
     # API安全配置
     API_KEY: Optional[str] = os.getenv("API_KEY")
     REQUIRE_API_KEY: bool = os.getenv("REQUIRE_API_KEY", "true").lower() == "true"
     
     # 文件处理配置
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "100")) * 1024 * 1024  # MB to bytes
+    # 当文档中的图片数量超过此值时跳过图片处理，-1 表示不限制
+    MAX_IMAGES_PER_DOC: int = int(os.getenv("MAX_IMAGES_PER_DOC", "5"))
     TEMP_DIR: str = os.getenv("TEMP_DIR", "/tmp")
     
     # Redis缓存配置
@@ -88,13 +87,14 @@ class Config:
     TEXT_CHUNK_SIZE: int = int(os.getenv("TEXT_CHUNK_SIZE", "1048576"))  # 文本块大小 (1MB)
     
     # CORS配置
+    ENABLE_CORS: bool = os.getenv("ENABLE_CORS", "true").lower() == "true"
     CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
     CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
     
     @classmethod
     def get_vision_api_key(cls) -> Optional[str]:
         """获取视觉API密钥，优先使用专用密钥"""
-        return cls.VISION_API_KEY or cls.OPENAI_API_KEY
+        return cls.VISION_API_KEY
     
     @classmethod
     def is_vision_enabled(cls) -> bool:
@@ -144,6 +144,10 @@ class Config:
             if cls.REDIS_MAX_CONNECTIONS < 1:
                 errors.append(f"Redis最大连接数无效: {cls.REDIS_MAX_CONNECTIONS}")
         
+        # 图片数量限制校验
+        if cls.MAX_IMAGES_PER_DOC < -1:
+            errors.append(f"最大图片数量无效: {cls.MAX_IMAGES_PER_DOC}")
+        
         if errors:
             error_msg = "配置验证失败:\n" + "\n".join(f"- {error}" for error in errors)
             logger.error(error_msg)
@@ -165,6 +169,7 @@ class Config:
         logger.info(f"最大文件大小: {cls.MAX_FILE_SIZE // 1024 // 1024} MB")
         logger.info(f"最大文本行数: {cls.MAX_TEXT_LINES}")
         logger.info(f"最大文本字符数: {cls.MAX_TEXT_CHARS}")
+        logger.info(f"图片处理上限: {('不限制' if cls.MAX_IMAGES_PER_DOC == -1 else cls.MAX_IMAGES_PER_DOC)}")
         logger.info(f"视觉API: {'已启用' if cls.is_vision_enabled() else '未启用'}")
         logger.info(f"API密钥验证: {'必需' if cls.REQUIRE_API_KEY else '可选'}")
         logger.info(f"Redis缓存: {'已启用' if cls.REDIS_CACHE_ENABLED else '未启用'}")

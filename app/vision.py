@@ -16,30 +16,47 @@ from app.config import config
 # 初始化 PaddleOCR
 _ocr_engine = None
 
+def _is_gpu_available() -> bool:
+    """检测系统是否存在可用 GPU 并且 PaddlePaddle 编译支持 CUDA"""
+    try:
+        import paddle
+        if paddle.device.is_compiled_with_cuda():
+            return paddle.device.cuda.device_count() > 0
+    except Exception as e:
+        # 捕获所有异常（包括未安装 paddle 的情况）
+        logger.debug(f"GPU 检测失败或不可用: {e}")
+    return False
+
 def init_paddle_ocr():
     """初始化 PaddleOCR 引擎"""
     global _ocr_engine
     try:
         from paddleocr import PaddleOCR
         
-        # 兼容性初始化，支持新旧版本API
+        # 根据系统环境自动检测是否启用 GPU
+        gpu_available = _is_gpu_available()
+
         try:
             # 尝试新版本参数
             _ocr_engine = PaddleOCR(
                 use_textline_orientation=True,  # 使用文本行方向检测 (新参数名)
                 lang='ch',  # 中文识别
-                use_gpu=False  # 使用 CPU
+                use_gpu=gpu_available  # 自动选择 GPU 或 CPU
             )
-            logger.info("PaddleOCR (CPU) 初始化成功 - 使用新版API")
-        except TypeError as te:
-            # 回退到旧版本参数
+            logger.info(
+                f"PaddleOCR ({'GPU' if gpu_available else 'CPU'}) 初始化成功 - 使用新版API"
+            )
+        except TypeError:
+            # 回退到旧版本参数（use_angle_cls）
             logger.info("使用旧版本PaddleOCR API参数")
             _ocr_engine = PaddleOCR(
                 use_angle_cls=True,  # 使用角度分类器 (旧参数名)
                 lang='ch',  # 中文识别
-                use_gpu=False  # 使用 CPU
+                use_gpu=gpu_available  # 自动选择 GPU 或 CPU
             )
-            logger.info("PaddleOCR (CPU) 初始化成功 - 使用旧版API")
+            logger.info(
+                f"PaddleOCR ({'GPU' if gpu_available else 'CPU'}) 初始化成功 - 使用旧版API"
+            )
         
         return _ocr_engine
         

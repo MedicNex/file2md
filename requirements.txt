@@ -1,6 +1,3 @@
-# 更新的依赖包版本 - 修复已知安全漏洞和依赖冲突
-# 原文件: requirements.txt
-
 # 核心 Web 框架 - 升级到兼容版本
 fastapi>=0.115.12
 uvicorn[standard]>=0.30.0
@@ -27,7 +24,7 @@ mistune>=3.0.2
 
 # 图像处理 - 修复 CVE-2021-25287/25288 缓冲区越界漏洞
 pillow>=10.4.0
-# PaddleOCR (CPU版本) 用于文字识别
+# PaddleOCR 用于文字识别
 paddleocr>=2.7.3
 
 # AI/API
@@ -48,7 +45,7 @@ python-dotenv>=1.0.0
 
 # 音频处理
 pydub>=0.25.1
-numpy>=1.24.3
+numpy==1.24.3 # 需要使用 1.X 版本防止与 PaddleOCR 版本冲突
 librosa>=0.11.0  # 可选，用于高级音频分析
 
 # 其他格式处理

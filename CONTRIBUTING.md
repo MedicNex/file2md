@@ -288,4 +288,12 @@ python -m pytest --cov=app tests/
 
 再次感谢您的贡献！每一个贡献，无论大小，都让这个项目变得更好。🙏
 
+## 🎉贡献者
+
+<div align="center">
+<a href="https://github.com/MedicNex/medicnex-file2md/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=MedicNex/medicnex-file2md" />
+</a>
+</div>
+
 **Happy coding!** 🚀 

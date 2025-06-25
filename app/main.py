@@ -46,13 +46,14 @@ app = FastAPI(
 )
 
 # 添加CORS中间件
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=config.CORS_ORIGINS,
-    allow_credentials=config.CORS_ALLOW_CREDENTIALS,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if config.ENABLE_CORS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.CORS_ORIGINS,
+        allow_credentials=config.CORS_ALLOW_CREDENTIALS,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # 创建队列管理器实例
 queue_manager = ConversionQueueManager(max_concurrent=config.MAX_CONCURRENT)
