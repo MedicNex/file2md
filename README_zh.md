@@ -299,7 +299,10 @@ pip install --upgrade pip setuptools wheel
 # 逐个安装核心依赖（避免版本冲突）
 pip install fastapi uvicorn pydantic python-multipart starlette
 pip install loguru python-dotenv
-pip install paddlepaddle paddleocr
+
+# 安装特定版本的PaddleOCR和PaddlePaddle（解决兼容性问题）
+pip install paddlepaddle==2.5.2
+pip install paddleocr==2.7.0
 
 # 然后安装其他依赖
 pip install -r requirements.txt --no-deps
@@ -343,6 +346,13 @@ uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 首次启动时，PaddleOCR会自动下载并缓存所需模型文件（约1GB），这可能需要一些时间，取决于您的网络速度。下载完成后，后续启动将会更快。
+
+**注意**：如果启动时遇到 `Unknown argument: use_gpu` 错误，这是因为PaddleOCR版本兼容性问题。请使用以下特定版本解决：
+```bash
+pip uninstall -y paddleocr paddlepaddle
+pip install paddlepaddle==2.5.2
+pip install paddleocr==2.7.0
+```
 
 6. **可选：Redis缓存**：
 如果需要Redis缓存功能，可以使用Homebrew安装Redis：

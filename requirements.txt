@@ -25,7 +25,10 @@ mistune>=3.0.2
 # 图像处理 - 修复 CVE-2021-25287/25288 缓冲区越界漏洞
 pillow>=10.4.0
 # PaddleOCR 用于文字识别
-paddleocr>=2.7.3
+# 注意：在macOS上使用时，建议使用以下特定版本以避免"use_gpu"参数错误
+# pip install paddlepaddle==2.5.2
+# pip install paddleocr==2.7.0
+paddleocr>=2.7.0,<3.0.0
 
 # AI/API
 openai>=1.84.0
