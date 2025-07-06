@@ -205,6 +205,8 @@ sudo ./deploy.sh
 
 ### 💻 Local Development Environment
 
+#### Standard Method
+
 1. Install dependencies:
 ```bash
 pip install -r requirements.txt
@@ -247,6 +249,82 @@ export VISION_API_KEY="your-vision-api-key"  # optional
 4. Start the service:
 ```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+#### macOS Quick Deployment (Without Docker)
+
+If you're experiencing slow Docker deployment on macOS, you can use these steps for direct local deployment:
+
+1. **Create virtual environment**:
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+2. **Install dependencies**:
+```bash
+# First install base tools
+pip install --upgrade pip setuptools wheel
+
+# Install core dependencies individually (to avoid version conflicts)
+pip install fastapi uvicorn pydantic python-multipart starlette
+pip install loguru python-dotenv
+pip install paddlepaddle paddleocr
+
+# Then install other dependencies
+pip install -r requirements.txt --no-deps
+```
+
+3. **Install system dependencies**:
+```bash
+# SVG vision recognition support (choose one)
+brew install freetype imagemagick  # ImageMagick support
+# or
+brew install cairo pkg-config  # Cairo support
+
+# Audio processing support
+brew install ffmpeg  # Audio format conversion and processing
+
+# Note: PaddleOCR will automatically download required models on first use
+# On macOS, PaddleOCR is a pure Python implementation with no additional system dependencies
+# However, it will download approximately 1GB of model files on first run, ensure good network connection
+```
+
+4. **Configure environment variables**:
+Create a `.env` file in the project root directory with necessary configurations:
+```
+DEBUG=true
+PORT=8080
+MAX_CONCURRENT=5
+LOG_LEVEL=INFO
+REDIS_CACHE_ENABLED=false  # Set to false if Redis cache is not needed
+API_KEY=your_api_key_here  # If API key authentication is required
+# If you need vision API functionality, add the following configuration
+# VISION_API_KEY=your_vision_api_key
+```
+
+5. **Start the service**:
+```bash
+python -m app.main
+```
+Or start directly with uvicorn:
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+On first startup, PaddleOCR will automatically download and cache required model files (approximately 1GB), which may take some time depending on your network speed. Subsequent starts will be faster once the models are cached.
+
+6. **Optional: Redis cache**:
+If you need Redis cache functionality, install Redis using Homebrew:
+```bash
+brew install redis
+brew services start redis
+```
+Then enable Redis in your `.env` file:
+```
+REDIS_CACHE_ENABLED=true
+REDIS_HOST=localhost
+REDIS_PORT=6379
 ```
 
 ## 🎵 Audio and Video Processing Features

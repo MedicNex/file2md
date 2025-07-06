@@ -125,7 +125,7 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 
 ### 🐳 使用 Docker Compose（推荐）
 
-最简单的部署方式，支持一键自动化部署：
+最简单的部署方式，支持一键自动化部署，适用于Linux生产环境：
 
 1. **克隆项目**：
 ```bash
@@ -216,6 +216,8 @@ sudo ./deploy.sh
 
 ### 💻 本地开发环境
 
+#### 标准方式
+
 1. 安装依赖：
 ```bash
 pip install -r requirements.txt
@@ -277,6 +279,82 @@ export VISION_API_KEY="your-vision-api-key"  # 可选
 4. 启动服务：
 ```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+#### macOS 快速部署方式（不使用Docker）
+
+如果您在macOS上遇到Docker部署速度慢的问题，可以使用以下步骤直接在本地部署：
+
+1. **创建虚拟环境**：
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+2. **安装依赖**：
+```bash
+# 先安装基础工具
+pip install --upgrade pip setuptools wheel
+
+# 逐个安装核心依赖（避免版本冲突）
+pip install fastapi uvicorn pydantic python-multipart starlette
+pip install loguru python-dotenv
+pip install paddlepaddle paddleocr
+
+# 然后安装其他依赖
+pip install -r requirements.txt --no-deps
+```
+
+3. **安装系统依赖**：
+```bash
+# SVG视觉识别支持（二选一）
+brew install freetype imagemagick  # ImageMagick支持
+# 或者
+brew install cairo pkg-config  # Cairo支持
+
+# 音频处理支持
+brew install ffmpeg  # 音频格式转换和处理
+
+# 注意：PaddleOCR会在首次使用时自动下载所需模型
+# 在macOS上，PaddleOCR为纯Python实现，无需额外系统依赖
+# 但首次运行时会下载约1GB的模型文件，请确保网络连接良好
+```
+
+4. **配置环境变量**：
+创建一个`.env`文件在项目根目录，包含必要的配置：
+```
+DEBUG=true
+PORT=8080
+MAX_CONCURRENT=5
+LOG_LEVEL=INFO
+REDIS_CACHE_ENABLED=false  # 如果不需要Redis缓存，设为false
+API_KEY=your_api_key_here  # 如果需要API密钥验证
+# 如果需要使用视觉API功能，添加以下配置
+# VISION_API_KEY=your_vision_api_key
+```
+
+5. **启动服务**：
+```bash
+python -m app.main
+```
+或者使用uvicorn直接启动：
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+首次启动时，PaddleOCR会自动下载并缓存所需模型文件（约1GB），这可能需要一些时间，取决于您的网络速度。下载完成后，后续启动将会更快。
+
+6. **可选：Redis缓存**：
+如果需要Redis缓存功能，可以使用Homebrew安装Redis：
+```bash
+brew install redis
+brew services start redis
+```
+然后在`.env`文件中启用Redis：
+```
+REDIS_CACHE_ENABLED=true
+REDIS_HOST=localhost
+REDIS_PORT=6379
 ```
 
 ## 🎵 音频和视频处理功能
