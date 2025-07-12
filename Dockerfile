@@ -87,25 +87,33 @@ RUN /opt/venv/bin/pip install --upgrade pip setuptools wheel
 # 复制requirements文件
 COPY requirements.txt .
 
+# 先安装关键依赖，避免版本冲突
+RUN /opt/venv/bin/pip install "numpy>=1.26.0,<2.0" && \
+    /opt/venv/bin/pip install "opencv-python-headless>=4.5,<4.9" && \
+    /opt/venv/bin/pip install "opencv-python>=4.5,<4.9" && \
+    /opt/venv/bin/pip install "opencv-contrib-python>=4.5,<4.9" && \
+    /opt/venv/bin/pip install "protobuf>=4.0,<6.0" && \
+    /opt/venv/bin/pip install "packaging<25"
+
 # 检测架构并安装相应的PaddlePaddle版本
 RUN ARCH=$(dpkg --print-architecture) && \
     echo "Detected architecture: $ARCH" && \
     if [ "$ARCH" = "arm64" ]; then \
         echo "Installing PaddlePaddle for ARM64..." && \
-        /opt/venv/bin/pip install paddlepaddle==2.6.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html -i https://pypi.tuna.tsinghua.edu.cn/simple; \
+        /opt/venv/bin/pip install paddlepaddle -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html -i https://pypi.tuna.tsinghua.edu.cn/simple; \
     else \
         echo "Installing PaddlePaddle for AMD64..." && \
-        /opt/venv/bin/pip install paddlepaddle==2.6.1 -i https://pypi.tuna.tsinghua.edu.cn/simple; \
+        /opt/venv/bin/pip install paddlepaddle -i https://pypi.tuna.tsinghua.edu.cn/simple; \
     fi
 
-# 安装OpenCV (无头版本，适合服务器环境)
-RUN /opt/venv/bin/pip install opencv-python-headless==4.8.1.78
-
 # 安装PaddleOCR
-RUN /opt/venv/bin/pip install paddleocr==2.7.3 -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN /opt/venv/bin/pip install paddleocr -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 安装其他项目依赖
-RUN /opt/venv/bin/pip install -r requirements.txt
+# 安装其他项目依赖（忽略已安装的包）
+RUN /opt/venv/bin/pip install --ignore-installed -r requirements.txt
+
+# 验证依赖兼容性
+RUN /opt/venv/bin/pip check || (echo "Dependency conflicts detected:" && /opt/venv/bin/pip check 2>&1 && exit 1)
 
 # 复制应用代码
 COPY app/ ./app/
@@ -122,10 +130,13 @@ RUN chown -R appuser:appuser /app
 # 切换到非root用户
 USER appuser
 
-# 验证安装 - 使用更宽松的验证方式
+# 验证安装
 RUN python3 -c "import sys; print(f'Python version: {sys.version}')" && \
-    python3 -c "try: import paddle; print(f'Paddle version: {paddle.__version__}'); except Exception as e: print(f'Paddle import warning: {e}')" && \
-    python3 -c "try: from paddleocr import PaddleOCR; print('PaddleOCR import successful'); except Exception as e: print(f'PaddleOCR import warning: {e}')"
+    python3 -c "import numpy; print(f'numpy version: {numpy.__version__}')" && \
+    python3 -c "import cv2; print(f'OpenCV version: {cv2.__version__}')" && \
+    python3 -c "import paddle; print(f'Paddle version: {paddle.__version__}')" && \
+    python3 -c "from paddleocr import PaddleOCR; print('PaddleOCR import successful')" && \
+    python3 -c "import pdf2docx; print(f'pdf2docx version: {pdf2docx.__version__}')"
 
 # 暴露端口
 EXPOSE 8999
