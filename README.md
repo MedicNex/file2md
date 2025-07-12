@@ -124,11 +124,62 @@ All file conversion results use a unified code block format for easy LLM underst
 
 ## 🚀 Quick Start
 
-We provide three deployment options to choose from:
+We provide four deployment options to choose from:
 
-### 🐳 Using Docker Compose (Recommended)
+### 🐳 Docker Image One-Click Deployment (Recommanded)
 
-The simplest deployment method with one-click automated deployment:
+#### Download the latesr image `medicnex-file2md.tar` from the GitHub Releases, configure `.env` in the same directory, then run the following command:
+
+```bash
+#!/bin/bash
+
+# Check if image exists
+if ! docker images | grep -q "medicnex-file2md:latest"; then
+    echo "Importing image..."
+    docker load -i medicnex-file2md.tar
+fi
+
+# Stop and remove old container (if exists)
+docker stop medicnex-file2md 2>/dev/null || true
+docker rm medicnex-file2md 2>/dev/null || true
+
+# Start new container
+docker run -d --name medicnex-file2md -p 8999:8999 \
+  -v $(pwd)/.env:/app/.env \
+  medicnex-file2md:latest
+
+echo "Service started, visit http://localhost:8999/docs"
+```
+or
+```bash
+chmod +x docker_image_deploy.sh
+./docker_image_deploy.sh
+```
+This will deploy and start Docker with one click.
+
+#### Check Health Status
+```bash
+curl http://localhost:8999/v1/health
+```
+
+#### View Real-time Logs
+```bash
+docker logs -f medicnex-file2md
+```
+
+#### Stop Docker
+```bash
+docker stop medicnex-file2md
+```
+
+#### Restart Docker
+```bash
+docker restart medicnex-file2md
+```
+
+### 🐳 Using Docker Compose
+
+A simple deployment method with one-click automated deployment:
 
 1. **Clone the project**:
 ```bash
@@ -168,57 +219,6 @@ This script will automatically:
 
 # Stop services
 ./docker-deploy.sh stop
-```
-
-### 🐳 Docker One-Click Deployment Guide
-
-## Download the latesr image `medicnex-file2md.tar` on the GitHub Releases, configure `.env` in the same directory, then run the following command:
-
-```bash
-#!/bin/bash
-
-# Check if image exists
-if ! docker images | grep -q "medicnex-file2md:latest"; then
-    echo "Importing image..."
-    docker load -i medicnex-file2md.tar
-fi
-
-# Stop and remove old container (if exists)
-docker stop medicnex-file2md 2>/dev/null || true
-docker rm medicnex-file2md 2>/dev/null || true
-
-# Start new container
-docker run -d --name medicnex-file2md -p 8999:8999 \
-  -v $(pwd)/.env:/app/.env \
-  medicnex-file2md:latest
-
-echo "Service started, visit http://localhost:8999/docs"
-```
-or
-```bash
-chmod +x docker_image_deploy.sh
-./docker_image_deploy.sh
-```
-This will deploy and start Docker with one click.
-
-## Check Health Status
-```bash
-curl http://localhost:8999/v1/health
-```
-
-## View Real-time Logs
-```bash
-docker logs -f medicnex-file2md
-```
-
-## Stop Docker
-```bash
-docker stop medicnex-file2md
-```
-
-## Restart Docker
-```bash
-docker restart medicnex-file2md
 ```
 
 ### 💻 Manual Docker Compose Deployment
