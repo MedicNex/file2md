@@ -278,7 +278,7 @@ export VISION_API_KEY="your-vision-api-key"  # 可选
 
 4. 启动服务：
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8999 --reload
 ```
 
 #### macOS 快速部署方式（不使用Docker）
@@ -327,7 +327,7 @@ brew install ffmpeg  # 音频格式转换和处理
 创建一个`.env`文件在项目根目录，包含必要的配置：
 ```
 DEBUG=true
-PORT=8080
+PORT=8999
 MAX_CONCURRENT=5
 LOG_LEVEL=INFO
 REDIS_CACHE_ENABLED=false  # 如果不需要Redis缓存，设为false
@@ -342,7 +342,7 @@ python -m app.main
 ```
 或者使用uvicorn直接启动：
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8999 --reload
 ```
 
 首次启动时，PaddleOCR会自动下载并缓存所需模型文件（约1GB），这可能需要一些时间，取决于您的网络速度。下载完成后，后续启动将会更快。
@@ -594,7 +594,7 @@ pip install aiohttp
 export API_KEY="dev-test-key-123"
 
 # 启动服务
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8999 --reload
 ```
 
 测试脚本将验证以下功能：
@@ -647,7 +647,7 @@ curl -X GET "https://your-domain/v1/health"
 | `ASR_API_KEY` | ASR语音识别API密钥 | - | 音频功能必需 |
 | `ASR_API_BASE` | ASR API基础URL | `https://api.openai.com/v1` | 否 |
 | `ASR_MODEL` | ASR模型名称 | `whisper-1` | 否 |
-| `PORT` | 服务端口 | `8080` | 否 |
+| `PORT` | 服务端口 | `8999` | 否 |
 | `LOG_LEVEL` | 日志级别 | `INFO` | 否 |
 | `MAX_IMAGES_PER_DOC` | 当文档中的图片数量超过此值时跳过图片处理（`-1` 表示不限制） | `5` | 否 |
 

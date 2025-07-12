@@ -35,7 +35,7 @@ pip install -r requirements.txt
 docker-compose up -d
 
 # 本地方式
-python -m uvicorn app.main:app --reload --port 8080
+python -m uvicorn app.main:app --reload --port 8999
 ```
 
 ## 🐛 报告问题

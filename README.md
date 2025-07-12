@@ -248,7 +248,7 @@ export VISION_API_KEY="your-vision-api-key"  # optional
 
 4. Start the service:
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8999 --reload
 ```
 
 #### macOS Quick Deployment (Without Docker)
@@ -297,7 +297,7 @@ brew install ffmpeg  # Audio format conversion and processing
 Create a `.env` file in the project root directory with necessary configurations:
 ```
 DEBUG=true
-PORT=8080
+PORT=8999
 MAX_CONCURRENT=5
 LOG_LEVEL=INFO
 REDIS_CACHE_ENABLED=false  # Set to false if Redis cache is not needed
@@ -312,7 +312,7 @@ python -m app.main
 ```
 Or start directly with uvicorn:
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8999 --reload
 ```
 
 On first startup, PaddleOCR will automatically download and cache required model files (approximately 1GB), which may take some time depending on your network speed. Subsequent starts will be faster once the models are cached.
@@ -574,7 +574,7 @@ curl -X GET "https://your-domain/v1/health"
 | `ASR_API_KEY` | ASR speech recognition API key | - | Required for audio features |
 | `ASR_API_BASE` | ASR API base URL | `https://api.openai.com/v1` | No |
 | `ASR_MODEL` | ASR model name | `whisper-1` | No |
-| `PORT` | Service port | `8080` | No |
+| `PORT` | Service port | `8999` | No |
 | `LOG_LEVEL` | Log level | `INFO` | No |
 | `MAX_IMAGES_PER_DOC` | Max images processed per document (`-1` = unlimited) | `5` | No |
 

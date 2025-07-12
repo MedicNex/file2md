@@ -41,7 +41,7 @@ class Config:
     APP_NAME: str = "MedicNex File Convert Service"
     APP_VERSION: str = "1.0.0"
     HOST: str = "0.0.0.0"
-    PORT: int = int(os.getenv("PORT", "8080"))
+    PORT: int = int(os.getenv("PORT", "8999"))
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     
     # 队列配置

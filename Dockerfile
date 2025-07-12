@@ -128,11 +128,11 @@ RUN python3 -c "import sys; print(f'Python version: {sys.version}')" && \
     python3 -c "try: from paddleocr import PaddleOCR; print('PaddleOCR import successful'); except Exception as e: print(f'PaddleOCR import warning: {e}')"
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 8999
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/v1/health || exit 1
+    CMD curl -f http://localhost:8999/v1/health || exit 1
 
 # 启动命令
-CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"] 
+CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8999", "--workers", "1"] 
