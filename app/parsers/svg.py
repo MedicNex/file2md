@@ -80,9 +80,10 @@ class SvgParser(BaseParser):
                 img.background_color = background_color
             
             # 设置安全选项和资源限制
-            img.options['svg:xml-parse-huge'] = 'false'
-            img.options['svg:xml-parse-nonet'] = 'true'
-            img.options['svg:xml-parse-noent'] = 'true'  # 禁用实体解析
+            if hasattr(img, 'options') and img.options is not None:
+                img.options['svg:xml-parse-huge'] = 'false'
+                img.options['svg:xml-parse-nonet'] = 'true'
+                img.options['svg:xml-parse-noent'] = 'true'  # 禁用实体解析
             
             # 设置资源限制（防止DoS攻击）
             from wand.api import library

@@ -59,7 +59,8 @@ class NumbersParser(BaseParser):
                             headers = []
                             for col in range(min(table.num_cols, 10)):  # 限制列数
                                 try:
-                                    cell_value = table.cell(0, col).value
+                                    cell = table.cell(0, col)
+                                    cell_value = getattr(cell, 'value', None)
                                     headers.append(str(cell_value) if cell_value is not None else "")
                                 except:
                                     headers.append("")
@@ -73,7 +74,8 @@ class NumbersParser(BaseParser):
                             row_data = []
                             for col in range(min(table.num_cols, 10)):  # 限制列数
                                 try:
-                                    cell_value = table.cell(row, col).value
+                                    cell = table.cell(row, col)
+                                    cell_value = getattr(cell, 'value', None)
                                     row_data.append(str(cell_value) if cell_value is not None else "")
                                 except:
                                     row_data.append("")

@@ -128,7 +128,7 @@ class CacheManager:
             return None
     
     async def cache_result(self, file_content: bytes, filename: str, markdown_content: str, 
-                          file_size: int, duration_ms: int, content_type: str = None) -> bool:
+                          file_size: int, duration_ms: int, content_type: str | None = None) -> bool:
         """
         缓存解析结果
         

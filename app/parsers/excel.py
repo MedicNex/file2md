@@ -80,7 +80,7 @@ class ExcelParser(BaseParser):
                 ],
                 max_tokens=1000
             )
-            return response.choices[0].message.content
+            return response.choices[0].message.content or "视觉模型识别失败"
         except Exception as e:
             logger.warning(f"Vision API调用失败: {e}")
             return "视觉模型识别失败"
@@ -126,7 +126,7 @@ class ExcelParser(BaseParser):
                                 f"{df[col].max():.2f}" if df[col].count() > 0 else "N/A"
                             ])
                         
-                        stats_df = pd.DataFrame(stats_data, columns=['列名', '计数', '平均值', '最小值', '最大值'])
+                        stats_df = pd.DataFrame(stats_data, columns=pd.Index(['列名', '计数', '平均值', '最小值', '最大值']))
                         stats_table = tabulate(stats_df, headers='keys', tablefmt='html', showindex=False)
                         content_parts.append(stats_table)
                     
@@ -182,8 +182,9 @@ class ExcelParser(BaseParser):
                 worksheet = workbook[sheet_name]
                 
                 # 检查工作表中的图片
-                if hasattr(worksheet, '_images') and worksheet._images:
-                    total_count += len(worksheet._images)
+                images = getattr(worksheet, '_images', None)
+                if images:
+                    total_count += len(images)
             
             workbook.close()
             return total_count
@@ -207,8 +208,9 @@ class ExcelParser(BaseParser):
                 sheet_image_counter = 0
                 
                 # 检查工作表中的图片
-                if hasattr(worksheet, '_images') and worksheet._images:
-                    for image in worksheet._images:
+                images = getattr(worksheet, '_images', None)
+                if images:
+                    for image in images:
                         sheet_image_counter += 1
                         
                         try:

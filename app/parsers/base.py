@@ -54,10 +54,10 @@ class BaseParser(ABC):
         """
         try:
             if 'b' in mode:
-                async with aiofiles.open(file_path, mode) as f:
+                async with aiofiles.open(file_path, mode) as f:  # type: ignore
                     return await f.read()
             else:
-                async with aiofiles.open(file_path, mode, encoding=encoding) as f:
+                async with aiofiles.open(file_path, mode, encoding=encoding) as f:  # type: ignore
                     return await f.read()
         except Exception as e:
             logger.error(f"异步读取文件失败 {file_path}: {e}")
@@ -75,10 +75,10 @@ class BaseParser(ABC):
         """
         try:
             if 'b' in mode:
-                async with aiofiles.open(file_path, mode) as f:
+                async with aiofiles.open(file_path, mode) as f:  # type: ignore
                     await f.write(content)
             else:
-                async with aiofiles.open(file_path, mode, encoding=encoding) as f:
+                async with aiofiles.open(file_path, mode, encoding=encoding) as f:  # type: ignore
                     await f.write(content)
         except Exception as e:
             logger.error(f"异步写入文件失败 {file_path}: {e}")

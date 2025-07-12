@@ -34,7 +34,7 @@ class OdtParser(BaseParser):
             logger.error(f"解析ODT文件失败 {file_path}: {e}")
             raise Exception(f"ODT文件解析错误: {str(e)}")
     
-    async def _pandoc_parse(self, file_path: str) -> str:
+    async def _pandoc_parse(self, file_path: str) -> str | None:
         """使用pandoc解析ODT文件"""
         try:
             # 创建临时输出文件，指定UTF-8编码

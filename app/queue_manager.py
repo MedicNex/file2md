@@ -169,6 +169,8 @@ class ConversionQueueManager:
                 
                 # 获取解析器
                 parser_class = parser_registry.get_parser(file_extension)
+                if parser_class is None:
+                    raise ValueError(f"未找到文件类型 {file_extension} 的解析器")
                 parser_instance = parser_class()
                 
                 # 执行文件转换

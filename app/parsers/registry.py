@@ -55,7 +55,7 @@ class ParserRegistry:
         """注册新的解析器"""
         self._parsers[extension.lower()] = parser_class
     
-    def get_parser(self, extension: str) -> Type[BaseParser]:
+    def get_parser(self, extension: str) -> Type[BaseParser] | None:
         """获取文件扩展名对应的解析器"""
         return self._parsers.get(extension.lower())
     

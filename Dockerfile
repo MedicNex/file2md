@@ -2,7 +2,13 @@
 # 基于Ubuntu 24.04，包含PaddleOCR和所有必要依赖
 # 支持 ARM64 和 AMD64 架构
 
+# Ubuntu/Debian基础镜像
 FROM ubuntu:24.04
+RUN apt update && apt install -y antiword
+
+# 或者Alpine基础镜像
+FROM alpine:latest
+RUN apk add --no-cache antiword
 
 LABEL maintainer="MedicNex"
 LABEL description="File2MD API Service"

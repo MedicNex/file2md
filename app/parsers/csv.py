@@ -58,7 +58,7 @@ class CsvParser(BaseParser):
                         f"{df[col].max():.2f}" if df[col].count() > 0 else "N/A"
                     ])
                 
-                stats_df = pd.DataFrame(stats_data, columns=['列名', '计数', '平均值', '标准差', '最小值', '最大值'])
+                stats_df = pd.DataFrame(stats_data, columns=pd.Index(['列名', '计数', '平均值', '标准差', '最小值', '最大值']))
                 stats_table = tabulate(stats_df, headers='keys', tablefmt='html', showindex=False)
                 content_parts.append(stats_table)
             
@@ -72,7 +72,7 @@ class CsvParser(BaseParser):
                     most_common = df[col].mode().iloc[0] if not df[col].mode().empty else "N/A"
                     text_info.append([col, f"{unique_count}", str(most_common)[:50]])
                 
-                text_df = pd.DataFrame(text_info, columns=['列名', '唯一值数量', '最常见值'])
+                text_df = pd.DataFrame(text_info, columns=pd.Index(['列名', '唯一值数量', '最常见值']))
                 text_table = tabulate(text_df, headers='keys', tablefmt='html', showindex=False)
                 content_parts.append(text_table)
             

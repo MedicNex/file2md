@@ -138,6 +138,10 @@ class CodeParser(BaseParser):
                     content = await self.read_file_async(file_path, mode='r', encoding='latin-1')
                     encoding = 'latin-1'
             
+            # 确保content是字符串类型
+            if isinstance(content, bytes):
+                content = content.decode(encoding, errors='replace')
+            
             # 统计文件信息
             line_count = content.count('\n') + 1 if content else 0
             char_count = len(content)

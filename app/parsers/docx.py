@@ -79,7 +79,7 @@ class DocxParser(BaseParser):
                 ],
                 max_tokens=1000
             )
-            return response.choices[0].message.content
+            return response.choices[0].message.content or "视觉模型识别失败"
         except Exception as e:
             logger.warning(f"Vision API调用失败: {e}")
             return "视觉模型识别失败"
@@ -98,7 +98,7 @@ class DocxParser(BaseParser):
                     text = paragraph.text.strip()
                     
                     # 检查是否是标题
-                    if paragraph.style.name.startswith('Heading'):
+                    if paragraph.style and paragraph.style.name and paragraph.style.name.startswith('Heading'):
                         level = int(paragraph.style.name.split()[-1])
                         text = f"{'#' * level} {text}"
                     

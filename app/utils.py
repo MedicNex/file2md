@@ -308,4 +308,7 @@ async def retry_async(func, max_retries: int = 3, delay: float = 1.0, backoff_fa
             else:
                 logger.error(f"重试失败，已达到最大重试次数 {max_retries}")
     
-    raise last_exception 
+    if last_exception is not None:
+        raise last_exception
+    else:
+        raise Exception("重试失败，但未捕获到具体异常") 

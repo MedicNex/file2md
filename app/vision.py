@@ -109,11 +109,6 @@ def init_vision_client():
                 client = openai.OpenAI(api_key=config.VISION_API_KEY)
                 logger.info("使用OpenAI Vision API")
                 return client
-        elif config.OPENAI_API_KEY:
-            # 兼容旧配置
-            client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
-            logger.info("使用OPENAI_API_KEY初始化Vision client")
-            return client
     except Exception as e:
         logger.error(f"Vision client初始化失败: {e}")
         import traceback
@@ -173,7 +168,7 @@ async def call_vision_api_with_retry(base64_image: str, prompt: str) -> str:
             
             content = response.choices[0].message.content
             logger.info(f"Vision API调用成功，使用模型: {config.VISION_MODEL}")
-            return content
+            return content or "视觉模型返回空内容"
             
         except openai.RateLimitError as e:
             last_exception = VisionAPIRateLimitError(f"速率限制: {e}")
@@ -309,7 +304,7 @@ async def get_ocr_text(image_path: str) -> str:
         try:
             with Image.open(image_path) as image:
                 # 如果图片有多个帧（如动态GIF），只处理第一帧
-                if hasattr(image, 'n_frames') and image.n_frames > 1:
+                if hasattr(image, 'n_frames') and image.n_frames > 1:  # type: ignore
                     image.seek(0)
                 
                 # 确保图片格式兼容 PaddleOCR

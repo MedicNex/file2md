@@ -24,8 +24,9 @@ class PptxParser(BaseParser):
                 
                 # 提取文本内容
                 for shape in slide.shapes:
-                    if hasattr(shape, "text") and shape.text.strip():
-                        text = shape.text.strip()
+                    text_attr = getattr(shape, "text", None)
+                    if text_attr and text_attr.strip():
+                        text = text_attr.strip()
                         # 处理标题和内容
                         if shape.shape_type == 1:  # 标题形状
                             slide_content.append(f"### {text}")

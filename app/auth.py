@@ -12,6 +12,7 @@ def get_api_keys() -> list[str]:
     # 优先使用新的配置系统
     if config.API_KEY:
         return [config.API_KEY]
+    return []
 
 async def get_api_key(
     authorization: Optional[str] = Header(None, alias="X-API-Key"),
