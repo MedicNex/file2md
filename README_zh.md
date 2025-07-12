@@ -177,7 +177,56 @@ cd medicnex-file2md
 ./docker-deploy.sh stop
 ```
 
-**详细文档**：📋 [Docker部署指南](DOCKER_DEPLOY_README.md)
+### 🐳 Docker 一键部署指南
+
+## 在 Releases 中下载最新镜像`medicnex-file2md.tar`，在同一目录下配置好`.env`，运行如下命令：
+
+```bash
+#!/bin/bash
+
+# 检查镜像是否存在
+if ! docker images | grep -q "medicnex-file2md:latest"; then
+    echo "导入镜像..."
+    docker load -i medicnex-file2md.tar
+fi
+
+# 停止并删除旧容器（如果存在）
+docker stop medicnex-file2md 2>/dev/null || true
+docker rm medicnex-file2md 2>/dev/null || true
+
+# 启动新容器
+docker run -d --name medicnex-file2md -p 8999:8999 \
+  -v $(pwd)/.env:/app/.env \
+  medicnex-file2md:latest
+
+echo "服务已启动，访问 http://localhost:8999/docs"
+```
+或
+```bash
+chmod +x docker_image_deploy.sh
+./docker_image_deploy.sh
+```
+即可一键部署并启动 Docker。
+
+## 查看健康状态
+```bash
+curl http://localhost:8999/v1/health
+```
+
+## 查看实时日志
+```bash
+docker logs -f medicnex-file2md
+```
+
+## 停止 Docker
+```bash
+docker stop medicnex-file2md
+```
+
+## 重启 Docker
+```bash
+docker restart medicnex-file2md
+```
 
 ### 💻 手动 Docker Compose 部署
 

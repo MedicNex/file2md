@@ -15,21 +15,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - medicnex-network
 
   medicnex-file2md:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: medicnex-file2md
     restart: unless-stopped
     ports:
       - "8999:8999"
+    env_file:
+      - .env
     environment:
-      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - PYTHONUNBUFFERED=1
       - PADDLEOCR_HOME=/app/.paddleocr
     volumes:
       - ./logs:/app/logs
       - ./temp:/app/temp
       - ./.paddleocr:/app/.paddleocr
+      - ./app:/app/app  # 挂载应用代码以支持热重载
+      - ./.env:/app/.env:ro  # 挂载.env文件以支持热重载
     depends_on:
       redis:
         condition: service_healthy
@@ -39,6 +48,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    networks:
+      - medicnex-network
+
+networks:
+  medicnex-network:
+    driver: bridge
 
 volumes:
   redis_data: 

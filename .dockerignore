@@ -1,34 +1,36 @@
-# Docker构建时忽略的文件和目录
-
 # Git相关
 .git
 .gitignore
 .gitattributes
 
 # Python相关
-__pycache__/
+__pycache__
 *.pyc
 *.pyo
 *.pyd
 .Python
-*.egg-info/
-dist/
-build/
-*.egg
-.pytest_cache/
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
 .coverage
-.tox/
-.cache/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# 虚拟环境
 venv/
 env/
-.venv/
-.env/
-
-# 环境配置文件（包含敏感信息）
-.env
-.env.local
-.env.production
-.env.development
+ENV/
+env.bak/
+venv.bak/
 
 # IDE相关
 .vscode/
@@ -37,54 +39,36 @@ env/
 *.swo
 *~
 
-# 系统文件
+# 操作系统相关
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-*.log
 
-# 临时文件和缓存
-temp/
-tmp/
+# 项目特定
 logs/
-*.tmp
-*.bak
-*.backup
+temp/
+.paddleocr/
+*.log
+.env
+.env.local
+.env.*.local
 
-# 文档文件
-*.md
-!README.md
+# 文档
+README.md
+README_zh.md
+CONTRIBUTING.md
+LICENSE
 docs/
 
-# 测试文件
-tests/
-test_*.py
-*_test.py
-
-# 部署相关文件
+# 部署脚本
 deploy.sh
-docker-compose.override.yml
+docker-deploy.sh
 monitor_logs.sh
 
-# SSL证书和密钥
-*.pem
-*.key
-*.crt
-ssl/
-
-# 数据库文件
-*.db
-*.sqlite3
-
-# PaddleOCR缓存（运行时会重新下载）
-.paddleocr/
-
-# Node.js相关（如果存在）
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
 # 其他
-*.pid
-*.seed
-*.pid.lock 
+*.md
+!README.md 
