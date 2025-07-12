@@ -13,7 +13,7 @@ from app.auth import get_api_key
 from app.models import (
     ConvertResponse, ErrorResponse, TaskSubmitResponse, 
     BatchSubmitResponse, TaskStatusResponse, QueueInfoResponse,
-    CacheStatsResponse
+    CacheStatsResponse, OCRResponse
 )
 from app.parsers.registry import parser_registry
 from app.queue_manager import TaskStatus
@@ -145,6 +145,14 @@ async def convert_file(
         
         # 获取解析器
         parser_class = parser_registry.get_parser(file_extension)
+        if parser_class is None:
+            raise HTTPException(
+                status_code=415,
+                detail={
+                    "code": "PARSER_NOT_FOUND",
+                    "message": f"未找到文件类型 {file_extension} 的解析器"
+                }
+            )
         parser_instance = parser_class()
         
         # 解析文件
@@ -233,7 +241,7 @@ async def convert_batch_files(
             submitted_tasks.append(TaskSubmitResponse(
                 task_id=task_id,
                 message="任务已提交到转换队列",
-                filename=file.filename,
+                filename=file.filename or "unknown",
                 status="pending"
             ))
             
@@ -247,7 +255,7 @@ async def convert_batch_files(
             submitted_tasks.append(TaskSubmitResponse(
                 task_id="",
                 message=f"文件验证失败: {error_message}",
-                filename=file.filename,
+                filename=file.filename or "unknown",
                 status="failed"
             ))
             
@@ -260,7 +268,7 @@ async def convert_batch_files(
             submitted_tasks.append(TaskSubmitResponse(
                 task_id="",
                 message=f"任务提交失败: {str(e)}",
-                filename=file.filename,
+                filename=file.filename or "unknown",
                 status="failed"
             ))
             
@@ -377,4 +385,142 @@ async def clear_cache(api_key: str = Depends(get_api_key)):
     
     logger.info(f"缓存清理完成: {cleared_count}条记录被清除")
     
-    return UnicodeJSONResponse(content=response_data) 
+    return UnicodeJSONResponse(content=response_data)
+
+@router.post("/ocr", response_model=OCRResponse)
+async def ocr_image(
+    file: UploadFile = File(...),
+    api_key: str = Depends(get_api_key)
+):
+    """
+    对上传的图片进行OCR文字识别（仅使用OCR，不使用Vision API）
+    """
+    start_time = time.time()
+    temp_file_path = None
+    
+    try:
+        # 验证文件
+        if not file.filename:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "INVALID_FILE",
+                    "message": "文件名不能为空"
+                }
+            )
+        
+        # 先快速读取文件内容用于缓存检查
+        content = await file.read()
+        file_size = len(content)
+        
+        # 检查文件大小
+        if file_size == 0:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "EMPTY_FILE",
+                    "message": "文件为空"
+                }
+            )
+        
+        if file_size > config.MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail={
+                    "code": "FILE_TOO_LARGE",
+                    "message": f"文件过大: {file_size} bytes，最大允许: {config.MAX_FILE_SIZE} bytes ({config.MAX_FILE_SIZE // 1024 // 1024} MB)"
+                }
+            )
+        
+        # 检查文件类型是否为图片
+        file_extension = Path(file.filename).suffix.lower()
+        supported_image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif', '.webp'}
+        
+        if file_extension not in supported_image_extensions:
+            raise HTTPException(
+                status_code=415,
+                detail={
+                    "code": "UNSUPPORTED_TYPE",
+                    "message": f"不支持的文件类型: {file_extension}，仅支持图片格式: {', '.join(supported_image_extensions)}"
+                }
+            )
+        
+        # 优先检查缓存，避免不必要的文件处理
+        cache_check_start = time.time()
+        cached_result = await cache_manager.get_cached_result(content)
+        if cached_result:
+            # 计算缓存检查的实际耗时
+            cache_duration_ms = int((time.time() - cache_check_start) * 1000)
+            total_duration_ms = int((time.time() - start_time) * 1000)
+            
+            # 返回缓存的结果，但更新文件名和时间信息
+            cached_result["filename"] = file.filename
+            cached_result["cache_duration_ms"] = cache_duration_ms
+            cached_result["total_duration_ms"] = total_duration_ms
+            
+            logger.info(f"从缓存返回OCR结果: {file.filename} (缓存查询: {cache_duration_ms}ms, 总耗时: {total_duration_ms}ms)")
+            return UnicodeJSONResponse(content=cached_result)
+        
+        # 保存上传的文件到临时位置
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+        temp_file_path = temp_file.name
+        
+        # 写入文件内容
+        temp_file.write(content)
+        temp_file.close()
+        
+        # 导入vision模块进行OCR处理
+        from app.vision import get_ocr_text
+        
+        # 进行OCR识别
+        ocr_text = await get_ocr_text(temp_file_path)
+        
+        # 计算处理时间
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        logger.info(f"OCR处理成功: {file.filename} ({file_size} bytes) -> {len(ocr_text)} characters, 耗时: {duration_ms}ms")
+        
+        # 缓存OCR结果
+        await cache_manager.cache_result(
+            file_content=content,
+            filename=file.filename,
+            markdown_content=ocr_text,  # 使用markdown_content字段存储OCR文本
+            file_size=file_size,
+            duration_ms=duration_ms,
+            content_type=file.content_type
+        )
+        
+        # 使用自定义响应类确保中文正确显示
+        response_data = {
+            "filename": file.filename,
+            "size": len(content),
+            "content_type": file.content_type or "application/octet-stream",
+            "ocr_text": ocr_text,
+            "duration_ms": duration_ms,
+            "from_cache": False
+        }
+        
+        return UnicodeJSONResponse(content=response_data)
+        
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
+        
+    except Exception as e:
+        logger.error(f"OCR处理失败 {file.filename}: {e}")
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "OCR_ERROR",
+                "message": "OCR处理失败",
+                "detail": str(e)
+            }
+        )
+        
+    finally:
+        # 清理临时文件
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+            except Exception as cleanup_error:
+                logger.warning(f"临时文件清理失败: {cleanup_error}") 

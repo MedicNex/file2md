@@ -447,6 +447,33 @@ curl -X POST "https://your-domain/v1/convert" \
 }
 ```
 
+### 🔍 图片OCR识别（仅OCR）
+
+```bash
+curl -X POST "https://your-domain/v1/ocr" \
+  -H "Authorization: Bearer your-api-key" \
+  -F "file=@document.png"
+```
+
+响应示例：
+```json
+{
+  "filename": "document.png",
+  "size": 204800,
+  "content_type": "image/png",
+  "ocr_text": "这是从图片中识别出的文字内容\n包含多行文本\n支持中文和英文识别",
+  "duration_ms": 1200,
+  "from_cache": false
+}
+```
+
+**OCR接口特点：**
+- 🎯 **仅使用OCR技术**：不调用Vision API，专注于文字识别
+- 🖼️ **支持多种图片格式**：JPG, JPEG, PNG, BMP, TIFF, TIF, GIF, WEBP
+- ⚡ **快速处理**：基于PaddleOCR，支持GPU加速
+- 💾 **缓存支持**：相同图片自动缓存结果
+- 🌏 **多语言支持**：支持中文、英文等多种语言识别
+
 ### 📦 批量文件转换（异步队列模式）
 
 使用队列模式批量提交多个文件，可通过`.env`中的`MAX_CONCURRENT`控制并发数量：
@@ -593,6 +620,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 | 端点 | 方法 | 描述 |
 |------|------|------|
 | `/v1/convert` | POST | 单文件同步转换 |
+| `/v1/ocr` | POST | 图片OCR识别（仅OCR） |
 | `/v1/convert-batch` | POST | 批量文件异步提交 |
 | `/v1/task/{task_id}` | GET | 查询任务状态 |
 | `/v1/queue/info` | GET | 查询队列状态 |

@@ -230,7 +230,59 @@ Content-Type: multipart/form-data
 - 包含5-10张图片的文档：**5-8倍** 速度提升
 - 大型文档（10+张图片）：**8-10倍** 速度提升
 
-### 4. 批量文件转换（异步队列）
+### 4. 图片OCR识别（仅OCR）
+
+**接口地址**: `POST /v1/ocr`
+
+**功能说明**: 对上传的图片进行OCR文字识别（仅使用OCR技术，不使用Vision API）
+
+**请求头**:
+```http
+Authorization: Bearer your-api-key
+Content-Type: multipart/form-data
+```
+
+**请求参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| file | File | 是 | 要识别的图片文件 |
+
+**支持的文件类型**:
+- 图片格式: JPG, JPEG, PNG, BMP, TIFF, TIF, GIF, WEBP
+
+**文件限制**:
+- 最大文件大小: 100MB
+- 仅支持图片格式文件
+
+**响应示例**:
+```json
+{
+  "filename": "document.png",
+  "size": 204800,
+  "content_type": "image/png",
+  "ocr_text": "这是从图片中识别出的文字内容\n包含多行文本\n支持中文和英文识别",
+  "duration_ms": 1200,
+  "from_cache": false
+}
+```
+
+**响应字段说明**:
+- `filename`: 原始文件名
+- `size`: 文件大小（字节）
+- `content_type`: 文件MIME类型
+- `ocr_text`: OCR识别出的文字内容
+- `duration_ms`: 处理耗时（毫秒）
+- `from_cache`: 是否来自缓存结果
+
+**错误响应示例**:
+```json
+{
+  "code": "UNSUPPORTED_TYPE",
+  "message": "不支持的文件类型: .pdf，仅支持图片格式: .jpg, .jpeg, .png, .bmp, .tiff, .tif, .gif, .webp"
+}
+```
+
+### 5. 批量文件转换（异步队列）
 
 **接口地址**: `POST /v1/convert-batch`
 
@@ -270,7 +322,7 @@ Content-Type: multipart/form-data
 }
 ```
 
-### 5. 查询任务状态
+### 6. 查询任务状态
 
 **接口地址**: `GET /v1/task/{task_id}`
 
@@ -326,7 +378,7 @@ Authorization: Bearer your-api-key
 - `completed`: 处理完成
 - `failed`: 处理失败
 
-### 6. 查询队列状态
+### 7. 查询队列状态
 
 **接口地址**: `GET /v1/queue/info`
 
@@ -361,7 +413,7 @@ Authorization: Bearer your-api-key
 - `completed_count`: 已完成的任务数
 - `failed_count`: 失败的任务数
 
-### 7. 清理过期任务
+### 8. 清理过期任务
 
 **接口地址**: `POST /v1/queue/cleanup`
 

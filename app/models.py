@@ -68,4 +68,16 @@ class CacheStatsResponse(BaseModel):
     connected_clients: Optional[int] = None
     total_commands_processed: Optional[int] = None
     cache_ttl_hours: Optional[int] = None
-    error: Optional[str] = None 
+    error: Optional[str] = None
+
+class OCRResponse(BaseModel):
+    """OCR响应模型"""
+    filename: str
+    size: int
+    content_type: str
+    ocr_text: str
+    duration_ms: int
+    from_cache: Optional[bool] = False
+    cache_hit_time: Optional[int] = None
+    cache_duration_ms: Optional[int] = None
+    total_duration_ms: Optional[int] = None 

@@ -496,11 +496,58 @@ Response example (SVG file):
 }
 ```
 
+### 🔍 Image OCR Recognition (OCR Only)
+
+```bash
+curl -X POST "https://your-domain/v1/ocr" \
+  -H "Authorization: Bearer your-api-key" \
+  -F "file=@document.png"
+```
+
+**Description:**  
+Recognize text in uploaded images using OCR only (PaddleOCR), without calling Vision API.
+
+**Supported formats:** JPG, JPEG, PNG, BMP, TIFF, TIF, GIF, WEBP
+
+**Request parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| file | File | Yes      | Image file to recognize |
+
+**Response example:**
+```json
+{
+  "filename": "document.png",
+  "size": 204800,
+  "content_type": "image/png",
+  "ocr_text": "This is the recognized text from the image\nSupports multiple lines\nSupports English and Chinese",
+  "duration_ms": 1200,
+  "from_cache": false
+}
+```
+
+**Response fields:**
+- `filename`: Original file name
+- `size`: File size (bytes)
+- `content_type`: MIME type
+- `ocr_text`: Recognized text content
+- `duration_ms`: Processing time (ms)
+- `from_cache`: Whether the result is from cache
+
+**Error example:**
+```json
+{
+  "code": "UNSUPPORTED_TYPE",
+  "message": "Unsupported file type: .pdf, only image formats are supported: .jpg, .jpeg, .png, .bmp, .tiff, .tif, .gif, .webp"
+}
+```
+
 ## 🔗 API Endpoints Overview
 
 | Endpoint | Method | Description |
 |------|------|------|
 | `/v1/convert` | POST | Single file synchronous conversion |
+| `/v1/ocr` | POST | Image OCR recognition (OCR only) |
 | `/v1/convert-batch` | POST | Batch file asynchronous submission |
 | `/v1/task/{task_id}` | GET | Query task status |
 | `/v1/queue/info` | GET | Query queue status |
