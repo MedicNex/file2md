@@ -251,7 +251,8 @@ pip install --upgrade pip setuptools wheel
 
 # 8. 先装关键依赖，彻底避免冲突
 log_info "安装关键依赖（numpy、opencv、pdf2docx）..."
-pip install "numpy>=1.26.0,<2.0"
+# 强制安装numpy 1.26.x，确保与OpenCV兼容
+pip install "numpy>=1.26.0,<2.0" --force-reinstall
 pip install "opencv-python-headless>=4.5,<4.9"
 pip install "opencv-python>=4.5,<4.9"
 pip install "opencv-contrib-python>=4.5,<4.9"

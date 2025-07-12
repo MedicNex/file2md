@@ -25,7 +25,9 @@ const i18n = {
     pleaseSelectFile: "请选择要上传的文件",
     pleaseSaveKey: "请先输入并保存API Key",
     yes: "是",
-    no: "否"
+    no: "否",
+    loadingSupportedTypes: "正在加载支持的文件类型...",
+    failedToLoadTypes: "加载支持的文件类型失败"
   },
   en: {
     title: "File Parser Service",
@@ -52,12 +54,61 @@ const i18n = {
     pleaseSelectFile: "Please select a file to upload",
     pleaseSaveKey: "Please enter and save API Key first",
     yes: "Yes",
-    no: "No"
+    no: "No",
+    loadingSupportedTypes: "Loading supported file types...",
+    failedToLoadTypes: "Failed to load supported file types"
   }
 };
 
 // 当前语言
 let currentLang = localStorage.getItem('language') || 'zh';
+
+// 支持的文件类型（动态获取）
+let supportedExtensions = [];
+let imageExtensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif', '.webp'];
+
+// 动态获取支持的文件类型
+async function loadSupportedTypes() {
+  const apiKey = localStorage.getItem('apiKey');
+  if (!apiKey) {
+    console.log('No API key found, using default file types');
+    updateSupportedTypesDisplay(123); // 使用默认数量
+    return;
+  }
+
+  try {
+    const response = await fetch('/v1/supported-types', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      supportedExtensions = data.supported_extensions || [];
+      console.log(`Loaded ${supportedExtensions.length} supported file types`);
+      updateSupportedTypesDisplay(supportedExtensions.length);
+    } else {
+      console.warn('Failed to load supported types, using defaults');
+      updateSupportedTypesDisplay(123);
+    }
+  } catch (error) {
+    console.warn('Error loading supported types:', error);
+    updateSupportedTypesDisplay(123);
+  }
+}
+
+// 更新支持文件类型显示
+function updateSupportedTypesDisplay(count) {
+  const countElement = document.getElementById('supportedTypesCount');
+  if (countElement) {
+    if (currentLang === 'zh') {
+      countElement.textContent = `支持 ${count} 种文件格式`;
+    } else {
+      countElement.textContent = `Supports ${count} file formats`;
+    }
+  }
+}
 
 // 应用语言
 function applyLanguage(lang) {
@@ -85,10 +136,13 @@ function applyLanguage(lang) {
     btn.classList.remove('active');
   });
   document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
+  
+  // 更新文件类型显示
+  updateSupportedTypesDisplay(supportedExtensions.length || 123);
 }
 
 // 读取localStorage中的API Key
-window.onload = function() {
+window.onload = async function() {
   const apiKey = localStorage.getItem('apiKey');
   if (apiKey) {
     document.getElementById('apiKey').value = apiKey;
@@ -96,6 +150,9 @@ window.onload = function() {
   
   // 应用保存的语言设置
   applyLanguage(currentLang);
+  
+  // 加载支持的文件类型
+  await loadSupportedTypes();
   
   // 添加语言切换事件监听
   document.querySelectorAll('.language-btn').forEach(btn => {
@@ -119,19 +176,32 @@ function updateFileInput() {
   const fileInput = document.getElementById('fileInput');
   
   if (convertMode.checked) {
-    fileInput.accept = '.pdf,.docx,.doc,.rtf,.odt,.txt,.xlsx,.xls,.csv,.pptx,.md,.pages,.numbers,.keynote,.svg,.py,.js,.java,.cpp,.c,.html,.css,.json,.xml,.yaml,.yml';
-    fileInput.title = currentLang === 'zh' ? '支持文档、表格、演示文稿、图片、代码等格式' : 'Supports documents, spreadsheets, presentations, images, code and other formats';
+    // 使用动态获取的支持文件类型，如果没有则使用默认值
+    const acceptTypes = supportedExtensions.length > 0 
+      ? supportedExtensions.join(',') 
+      : '.pdf,.docx,.doc,.rtf,.odt,.txt,.xlsx,.xls,.csv,.pptx,.md,.pages,.numbers,.keynote,.svg,.py,.js,.java,.cpp,.c,.html,.css,.json,.xml,.yaml,.yml';
+    
+    fileInput.accept = acceptTypes;
+    fileInput.title = currentLang === 'zh' 
+      ? `支持 ${supportedExtensions.length || 123} 种文件格式，包括文档、表格、演示文稿、图片、代码等` 
+      : `Supports ${supportedExtensions.length || 123} file formats including documents, spreadsheets, presentations, images, code and more`;
   } else {
-    fileInput.accept = '.jpg,.jpeg,.png,.bmp,.tiff,.tif,.gif,.webp';
-    fileInput.title = currentLang === 'zh' ? '仅支持图片格式：JPG, PNG, BMP, TIFF, GIF, WebP' : 'Only supports image formats: JPG, PNG, BMP, TIFF, GIF, WebP';
+    fileInput.accept = imageExtensions.join(',');
+    fileInput.title = currentLang === 'zh' 
+      ? '仅支持图片格式：JPG, PNG, BMP, TIFF, GIF, WebP' 
+      : 'Only supports image formats: JPG, PNG, BMP, TIFF, GIF, WebP';
   }
 }
 
-document.getElementById('saveKeyBtn').onclick = function() {
+document.getElementById('saveKeyBtn').onclick = async function() {
   const key = document.getElementById('apiKey').value.trim();
   if (key) {
     localStorage.setItem('apiKey', key);
     alert(i18n[currentLang].saveSuccess);
+    
+    // 保存API Key后重新加载支持的文件类型
+    await loadSupportedTypes();
+    updateFileInput();
   } else {
     alert(i18n[currentLang].pleaseEnterKey);
   }

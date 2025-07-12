@@ -54,8 +54,8 @@ python-dotenv>=1.0.0
 
 # 音频处理
 pydub>=0.25.1
-# numpy版本 - 兼容numba和Python 3.12
-numpy>=1.26.0,<2.3
+# numpy版本 - 兼容OpenCV和Python 3.12
+numpy>=1.26.0,<2.0
 # 注意：librosa和audioread在Python 3.12+环境下有兼容性问题，已移除
 # 如需音频分析功能，请使用Python 3.11或更低版本
 
