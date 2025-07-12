@@ -25,11 +25,16 @@ mistune>=3.0.2
 
 # 图像处理 - 修复 CVE-2021-25287/25288 缓冲区越界漏洞
 pillow>=10.4.0
+# OpenCV - 解决多个依赖冲突
+opencv-python-headless>=4.5,<4.9
+opencv-python>=4.5,<4.9
+opencv-contrib-python>=4.5,<4.9
 # PaddleOCR 用于文字识别
-# 注意：在macOS上使用时，建议使用以下特定版本以避免"use_gpu"参数错误
-# pip install paddlepaddle==2.5.2
-# pip install paddleocr==2.7.0
-paddleocr>=2.7.0,<3.0.0
+# 注意：Python 3.12需要使用最新版本
+# pip install paddlepaddle
+# pip install paddleocr
+paddleocr>=2.7.0
+paddlepaddle>=2.6.0
 
 # AI/API
 openai>=1.84.0
@@ -49,11 +54,16 @@ python-dotenv>=1.0.0
 
 # 音频处理
 pydub>=0.25.1
-numpy==1.24.4 # 降级到兼容PaddleOCR的版本
-librosa>=0.11.0  # 可选，用于高级音频分析
+# numpy版本 - 兼容numba和Python 3.12
+numpy>=1.26.0,<2.3
+# 注意：librosa和audioread在Python 3.12+环境下有兼容性问题，已移除
+# 如需音频分析功能，请使用Python 3.11或更低版本
 
 # 其他格式处理
 striprtf>=0.0.26
 Wand>=0.6.13
 cairosvg>=2.8.2
+# 修复版本冲突
+packaging<25
+protobuf<6.0
 numbers-parser>=4.15.1 

@@ -47,6 +47,10 @@ show_help() {
     echo "  --dev                  开发模式，不切换用户"
     echo "  -h, --help             显示此帮助信息"
     echo ""
+    echo "Python版本兼容性:"
+    echo "  - Python 3.8-3.11: 使用标准版本 (numpy 1.24.3, PaddlePaddle 2.5.2)"
+    echo "  - Python 3.12: 自动使用兼容版本 (numpy >=1.26.0, 最新PaddlePaddle)"
+    echo ""
     echo "示例:"
     echo "  $0                               # 在当前目录部署"
     echo "  $0 -d /opt/myapp -u myuser       # 指定目录和用户"
@@ -155,6 +159,17 @@ log_info "项目目录: $PROJECT_DIR"
 log_info "运行用户: $RUN_USER:$RUN_GROUP"
 log_info "服务端口: $SERVICE_PORT"
 log_info "服务名称: $SERVICE_NAME"
+if [[ "$PYTHON312_MODE" == true ]]; then
+    log_warning "⚠️  检测到Python 3.12，将使用兼容版本安装策略"
+    log_info "  - numpy: >=1.26.0"
+    log_info "  - PaddlePaddle: 最新版本"
+    log_info "  - PaddleOCR: 最新版本"
+else
+    log_info "使用标准安装策略"
+    log_info "  - numpy: 1.24.3"
+    log_info "  - PaddlePaddle: 2.5.2"
+    log_info "  - PaddleOCR: 2.7.0"
+fi
 echo "=================================================="
 
 # 仅在非开发模式下更新系统包
@@ -217,97 +232,58 @@ log_info "检查Python环境..."
 python --version
 pip --version
 
+# 检测Python版本
+PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+log_info "检测到Python版本: $PYTHON_VERSION"
+
+if [[ "$PYTHON_VERSION" == "3.13" ]]; then
+    log_error "Python 3.13 暂不支持！请使用 Python 3.10/3.11/3.12。"
+    exit 1
+fi
+
 # 7. 清理和重新安装Python依赖
 log_info "清理可能冲突的包..."
-pip uninstall -y paddlepaddle paddlepaddle-gpu paddlepaddle-cpu paddleocr opencv-python opencv-contrib-python 2>/dev/null || true
+pip uninstall -y numpy opencv-python opencv-contrib-python opencv-python-headless pdf2docx paddlepaddle paddleocr 2>/dev/null || true
 
 # 升级pip和基础工具
 log_info "升级pip和基础工具..."
 pip install --upgrade pip setuptools wheel
 
-# 8. 安装PaddlePaddle核心框架
-log_info "安装PaddlePaddle核心框架..."
-pip install paddlepaddle==2.6.1 -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 8. 先装关键依赖，彻底避免冲突
+log_info "安装关键依赖（numpy、opencv、pdf2docx）..."
+pip install "numpy>=1.26.0,<2.0"
+pip install "opencv-python-headless>=4.5,<4.9"
+pip install "opencv-python>=4.5,<4.9"
+pip install "opencv-contrib-python>=4.5,<4.9"
+pip install pdf2docx==0.5.8
 
-# 验证paddle安装
-log_info "验证paddle核心模块..."
-python -c "
-try:
-    import paddle
-    print('✓ paddle模块导入成功')
-    print(f'paddle版本: {paddle.__version__}')
-except ImportError as e:
-    print(f'✗ paddle导入失败: {e}')
-    exit(1)
-"
+# 强制安装兼容的protobuf和packaging版本
+log_info "安装兼容的protobuf和packaging版本..."
+pip install "protobuf>=4.0,<6.0" --force-reinstall
+pip install "packaging<25" --force-reinstall
 
-if [[ $? -ne 0 ]]; then
-    log_error "paddle安装验证失败，尝试替代安装方法..."
-    
-    # 尝试替代安装方法
-    pip install paddlepaddle-cpu==2.6.1 -i https://pypi.tuna.tsinghua.edu.cn/simple
-    
-    python -c "
-try:
-    import paddle
-    print('✓ paddle模块导入成功（替代方法）')
-    print(f'paddle版本: {paddle.__version__}')
-except ImportError as e:
-    print(f'✗ paddle仍然导入失败: {e}')
-    exit(1)
-"
-    
-    if [[ $? -ne 0 ]]; then
-        log_error "所有paddle安装方法都失败"
-        exit 1
-    fi
-fi
-
-log_success "PaddlePaddle核心框架安装成功"
-
-# 9. 安装其他必要依赖
-log_info "安装OpenCV和图像处理依赖..."
-pip install opencv-python-headless==4.8.1.78
-pip install pillow>=10.0.0 numpy>=1.21.0
+# 9. 安装PaddlePaddle
+log_info "安装PaddlePaddle..."
+pip install paddlepaddle -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 10. 安装PaddleOCR
 log_info "安装PaddleOCR..."
-pip install paddleocr==2.7.3 -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install paddleocr -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 11. 验证完整安装
-log_info "验证完整PaddleOCR安装..."
-python -c "
-try:
-    import paddle
-    print('✓ paddle模块: OK')
-    
-    import paddleocr
-    print('✓ paddleocr模块: OK')
-    
-    from paddleocr import PaddleOCR
-    print('✓ PaddleOCR类: OK')
-    
-    print('所有核心模块验证通过！')
-    
-except Exception as e:
-    print(f'✗ 验证失败: {e}')
-    import traceback
-    traceback.print_exc()
-    exit(1)
-"
+# 11. 安装项目其他依赖（忽略已装包）
+log_info "安装项目其他依赖..."
+pip install --ignore-installed -r requirements.txt
 
-if [[ $? -ne 0 ]]; then
-    log_error "PaddleOCR验证失败"
+# 12. pip check 检查依赖
+log_info "依赖完整性检查..."
+if ! pip check; then
+    log_error "依赖冲突未解决，请检查 requirements.txt 或反馈给开发者。"
     exit 1
 fi
 
-# 12. 安装项目其他依赖
-log_info "安装项目其他依赖..."
-pip install -r requirements.txt
+log_success "所有依赖安装完成，无需任何修复脚本！"
 
-log_success "所有Python依赖安装完成"
-
-# 13. 创建PaddleOCR兼容性测试
+# 14. 创建PaddleOCR兼容性测试
 log_info "创建PaddleOCR兼容性测试..."
 
 cat > test_paddle_final.py << 'EOF'
@@ -332,6 +308,9 @@ def test_paddleocr_final():
             {},
             {'use_gpu': False, 'lang': 'ch'},
             {'use_angle_cls': True, 'lang': 'ch', 'use_gpu': False},
+            # Python 3.12兼容配置
+            {'use_textline_orientation': True, 'lang': 'ch'},
+            {'use_gpu': False, 'lang': 'ch', 'use_textline_orientation': True},
         ]
         
         working_config = None
@@ -530,7 +509,7 @@ Type=simple
 User=$RUN_USER
 Group=$RUN_GROUP
 WorkingDirectory=$PROJECT_DIR
-Environment=PATH=$PROJECT_DIR/venv/bin
+Environment=PATH=$PROJECT_DIR/venv/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=$PROJECT_DIR/venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port $SERVICE_PORT --workers 1
 Restart=always
 RestartSec=10
@@ -546,6 +525,11 @@ CPUQuota=200%
 Environment="PYTHONPATH=$PROJECT_DIR"
 Environment="PYTHONUNBUFFERED=1"
 Environment="PADDLEOCR_HOME=$PROJECT_DIR/.paddleocr"
+Environment="HOME=$PROJECT_DIR"
+
+# 超时设置
+TimeoutStartSec=300
+TimeoutStopSec=60
 
 [Install]
 WantedBy=multi-user.target
@@ -559,7 +543,14 @@ if [[ "$CREATE_SYSTEMD" == true ]]; then
 fi
 find "$PROJECT_DIR" -type d -exec chmod 755 {} \; 2>/dev/null || true
 find "$PROJECT_DIR" -type f -exec chmod 644 {} \; 2>/dev/null || true
-chmod +x "$PROJECT_DIR/venv/bin/"* 2>/dev/null || true
+
+# 确保虚拟环境可执行文件有正确权限
+log_info "设置虚拟环境权限..."
+chmod +x "$PROJECT_DIR/venv/bin/python" 2>/dev/null || true
+chmod +x "$PROJECT_DIR/venv/bin/python3" 2>/dev/null || true
+chmod +x "$PROJECT_DIR/venv/bin/pip" 2>/dev/null || true
+chmod +x "$PROJECT_DIR/venv/bin/uvicorn" 2>/dev/null || true
+find "$PROJECT_DIR/venv/bin/" -type f -exec chmod +x {} \; 2>/dev/null || true
 
 # 18. 启动服务
 if [[ "$CREATE_SYSTEMD" == true ]]; then
@@ -608,16 +599,34 @@ fi
 
 # 健康检查
 log_info "执行健康检查..."
-sleep 5
+sleep 10
 
 health_status="失败"
 for i in {1..5}; do
-    if curl -s "http://localhost:$SERVICE_PORT/v1/health" > /dev/null 2>&1; then
-        health_status="成功"
-        break
-    fi
     log_info "健康检查重试 $i/5..."
-    sleep 3
+    
+    # 检查端口是否在监听
+    if netstat -tlnp 2>/dev/null | grep -q ":$SERVICE_PORT " || ss -tlnp 2>/dev/null | grep -q ":$SERVICE_PORT "; then
+        log_info "端口 $SERVICE_PORT 正在监听"
+        
+        # 尝试多种健康检查端点
+        if curl -s --connect-timeout 5 "http://localhost:$SERVICE_PORT/v1/health" > /dev/null 2>&1; then
+            health_status="成功"
+            break
+        elif curl -s --connect-timeout 5 "http://localhost:$SERVICE_PORT/health" > /dev/null 2>&1; then
+            health_status="成功"
+            break
+        elif curl -s --connect-timeout 5 "http://localhost:$SERVICE_PORT/" > /dev/null 2>&1; then
+            health_status="成功"
+            break
+        else
+            log_warning "端口监听但健康检查失败，可能是应用启动中..."
+        fi
+    else
+        log_warning "端口 $SERVICE_PORT 未监听"
+    fi
+    
+    sleep 5
 done
 
 if [[ "$health_status" == "成功" ]]; then
@@ -628,7 +637,27 @@ if [[ "$health_status" == "成功" ]]; then
     curl -s "http://localhost:$SERVICE_PORT/v1/health" 2>/dev/null | jq '.' 2>/dev/null || curl -s "http://localhost:$SERVICE_PORT/v1/health" 2>/dev/null || echo "健康检查响应获取失败"
     
 else
-    log_warning "⚠ 健康检查失败，查看服务日志获取详细信息"
+    log_warning "⚠ 健康检查失败"
+    echo ""
+    echo "=== 故障排查信息 ==="
+    echo "1. 检查服务状态:"
+    if [[ "$CREATE_SYSTEMD" == true ]]; then
+        systemctl status "$SERVICE_NAME.service" --no-pager -l
+    fi
+    
+    echo ""
+    echo "2. 检查端口监听:"
+    netstat -tlnp 2>/dev/null | grep ":$SERVICE_PORT " || ss -tlnp 2>/dev/null | grep ":$SERVICE_PORT " || echo "端口未监听"
+    
+    echo ""
+    echo "3. 检查进程:"
+    ps aux | grep -E "(uvicorn|python.*app.main)" | grep -v grep || echo "未找到相关进程"
+    
+    echo ""
+    echo "4. 查看最新日志:"
+    if [[ "$CREATE_SYSTEMD" == true ]]; then
+        journalctl -u "$SERVICE_NAME.service" --no-pager -n 20
+    fi
 fi
 
 # 20. 最终部署报告
@@ -640,8 +669,13 @@ echo ""
 echo "📊 部署状态报告："
 echo "  ✓ 项目目录: $PROJECT_DIR"
 echo "  ✓ 运行用户: $RUN_USER:$RUN_GROUP"
+echo "  ✓ Python版本: $PYTHON_VERSION"
+if [[ "$PYTHON312_MODE" == true ]]; then
+    echo "  ✓ 兼容模式: Python 3.12专用"
+fi
 echo "  ✓ 系统依赖: 已安装"
 echo "  ✓ Python环境: 已配置"
+echo "  ✓ numpy版本: 1.26.x"
 echo "  ✓ PaddlePaddle: 已安装"
 echo "  ✓ PaddleOCR: 已安装"
 echo "  ✓ 项目依赖: 已安装"

@@ -120,10 +120,10 @@ function updateFileInput() {
   
   if (convertMode.checked) {
     fileInput.accept = '.pdf,.docx,.doc,.rtf,.odt,.txt,.xlsx,.xls,.csv,.pptx,.md,.pages,.numbers,.keynote,.svg,.py,.js,.java,.cpp,.c,.html,.css,.json,.xml,.yaml,.yml';
-    fileInput.title = '支持文档、表格、演示文稿、图片、代码等格式';
+    fileInput.title = currentLang === 'zh' ? '支持文档、表格、演示文稿、图片、代码等格式' : 'Supports documents, spreadsheets, presentations, images, code and other formats';
   } else {
     fileInput.accept = '.jpg,.jpeg,.png,.bmp,.tiff,.tif,.gif,.webp';
-    fileInput.title = '仅支持图片格式：JPG, PNG, BMP, TIFF, GIF, WebP';
+    fileInput.title = currentLang === 'zh' ? '仅支持图片格式：JPG, PNG, BMP, TIFF, GIF, WebP' : 'Only supports image formats: JPG, PNG, BMP, TIFF, GIF, WebP';
   }
 }
 
@@ -150,18 +150,18 @@ document.getElementById('uploadBtn').onclick = async function() {
   resultDiv.innerText = '';
 
   if (!apiKey) {
-    alert('请先输入并保存API Key');
+    alert(i18n[currentLang].pleaseSaveKey);
     return;
   }
   if (!fileInput.files.length) {
-    alert('请选择要上传的文件');
+    alert(i18n[currentLang].pleaseSelectFile);
     return;
   }
 
   // 显示加载状态
   uploadBtn.disabled = true;
   loadingSpinner.style.display = 'inline-block';
-  buttonText.textContent = '处理中...';
+      buttonText.textContent = i18n[currentLang].processing;
 
   const file = fileInput.files[0];
   const formData = new FormData();
@@ -169,10 +169,10 @@ document.getElementById('uploadBtn').onclick = async function() {
 
   // 根据选择的模式决定调用哪个接口
   const endpoint = convertMode.checked ? '/v1/convert' : '/v1/ocr';
-  const modeName = convertMode.checked ? '文档转换' : 'OCR识别';
+  const modeName = convertMode.checked ? (currentLang === 'zh' ? '文档转换' : 'Document Conversion') : (currentLang === 'zh' ? 'OCR识别' : 'OCR Recognition');
 
   try {
-    console.log(`开始${modeName}，调用接口: ${endpoint}`);
+    console.log(`${currentLang === 'zh' ? '开始' : 'Starting'} ${modeName}，${currentLang === 'zh' ? '调用接口' : 'calling endpoint'}: ${endpoint}`);
     
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -184,7 +184,7 @@ document.getElementById('uploadBtn').onclick = async function() {
     
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`上传失败 (${response.status}): ${errorText}`);
+      throw new Error(`${currentLang === 'zh' ? '上传失败' : 'Upload failed'} (${response.status}): ${errorText}`);
     }
     
     const data = await response.json();
@@ -241,11 +241,11 @@ document.getElementById('uploadBtn').onclick = async function() {
     }
   } catch (err) {
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = `<h3>错误</h3><p style="color: red;">${err.message}</p>`;
+    resultDiv.innerHTML = `<h3>${i18n[currentLang].error}</h3><p style="color: red;">${err.message}</p>`;
   } finally {
     // 恢复按钮状态
     uploadBtn.disabled = false;
     loadingSpinner.style.display = 'none';
-    buttonText.textContent = '上传并处理';
+    buttonText.textContent = i18n[currentLang].uploadBtn;
   }
 }; 
