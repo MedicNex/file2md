@@ -29,6 +29,18 @@ MedicNex File2Markdown is a FastAPI-based microservice that converts **123 file 
 - 🐳 **Containerized Deployment**: Provides Docker and Docker Compose support
 - 📊 **Unified Output Format**: All file types output in unified code block format
 
+## WebUI (Beta)
+
+- 🖥️ **Built-in WebUI**: Out-of-the-box web interface for file upload, API Key management, document conversion, and OCR recognition.
+- 🌐 **Language Switch**: Supports both English and 中文 interface.
+- 📦 **No extra deployment**: Access at http://localhost:8999/webui after backend is started.
+
+**Demo:**
+
+![WebUI Demo](webui/webui.png)
+
+---
+
 ## 📑 Table of Contents
 
 - [📋 Unified Output Format](#-unified-output-format)

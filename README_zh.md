@@ -29,6 +29,16 @@ MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种�
 - 🐳 **容器化部署**：提供 Docker 和 Docker Compose 支持
 - 📊 **统一输出格式**：所有文件类型统一输出为代码块格式
 
+## WebUI（内置网页版）
+
+- 🖥️ **内置WebUI**：开箱即用的网页界面，支持文件上传、API Key管理、文档转换、图片OCR识别。
+- 🌐 **多语言切换**：支持中文和English界面一键切换。
+- 📦 **无需额外部署**：后端启动后，直接访问 http://localhost:8999/webui 即可。
+
+**演示截图：**
+
+![WebUI演示](webui/webui.png)
+
 ## 📑 目录
 
 - [📋 统一输出格式](#-统一输出格式)
@@ -317,6 +327,9 @@ brew install cairo pkg-config  # Cairo支持
 
 # 音频处理支持
 brew install ffmpeg  # 音频格式转换和处理
+
+# doc文件处理支持
+brew install antiword
 
 # 注意：PaddleOCR会在首次使用时自动下载所需模型
 # 在macOS上，PaddleOCR为纯Python实现，无需额外系统依赖

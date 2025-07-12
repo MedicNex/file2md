@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medicnex File2MD - WebUI</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f7f7f7; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 32px; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
+    label { display: block; margin-bottom: 8px; font-weight: bold; }
+    input[type="text"], input[type="file"] { width: 100%; margin-bottom: 16px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 10px 24px; background: #1976d2; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    .result { margin-top: 24px; background: #f0f0f0; padding: 16px; border-radius: 4px; }
+    .function-selector { margin-bottom: 20px; }
+    .radio-group { display: flex; gap: 20px; margin-top: 8px; justify-content: center; align-items: center; }
+    .radio-group input[type="radio"] { width: auto; margin-right: 8px; margin: 0; }
+    .radio-group label { display: inline; font-weight: normal; margin: 0; cursor: pointer; }
+    .button-container { display: flex; justify-content: center; gap: 16px; margin-top: 20px; }
+    .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #ffffff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .button-content { display: flex; align-items: center; justify-content: center; }
+    .language-switcher { position: absolute; top: 20px; right: 20px; }
+    .language-btn { padding: 8px 12px; background: #f0f0f0; color: #333; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .language-btn.active { background: #1976d2; color: #fff; }
+    .container { position: relative; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 语言切换按钮 -->
+    <div class="language-switcher">
+      <button class="language-btn active" data-lang="zh">中文</button>
+      <button class="language-btn" data-lang="en">English</button>
+    </div>
+    
+    <h2 style="text-align: center;" data-i18n="title">File Parser Service</h2>
+    <label for="apiKey" data-i18n="apiKeyLabel">API Key：</label>
+    <input type="text" id="apiKey" data-i18n-placeholder="apiKeyPlaceholder" placeholder="请输入API Key" />
+    <div class="button-container">
+      <button id="saveKeyBtn" data-i18n="saveKeyBtn">保存API Key</button>
+    </div>
+    <hr/>
+    
+    <!-- 功能选择 -->
+    <div class="function-selector">
+      <label data-i18n="functionLabel">选择功能：</label>
+      <div class="radio-group">
+        <input type="radio" id="convertMode" name="mode" value="convert" checked>
+        <label for="convertMode" data-i18n="convertMode">文档转换</label>
+        <input type="radio" id="ocrMode" name="mode" value="ocr">
+        <label for="ocrMode" data-i18n="ocrMode">图片OCR识别</label>
+      </div>
+    </div>
+    
+    <label for="fileInput" data-i18n="fileInputLabel">选择文件：</label>
+    <input type="file" id="fileInput" />
+    <div class="button-container">
+      <button id="uploadBtn">
+        <div class="button-content">
+          <span class="loading" id="loadingSpinner" style="display: none;"></span>
+          <span id="buttonText" data-i18n="uploadBtn">上传并处理</span>
+        </div>
+      </button>
+    </div>
+    <div class="result" id="result" style="display:none;"></div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html> 

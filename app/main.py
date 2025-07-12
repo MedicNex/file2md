@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 import os
 import sys
@@ -60,6 +61,9 @@ queue_manager = ConversionQueueManager(max_concurrent=config.MAX_CONCURRENT)
 
 # 包含路由
 app.include_router(convert.router, prefix="/v1")
+
+# 托管静态文件（webui）
+app.mount("/webui", StaticFiles(directory="webui", html=True), name="webui")
 
 @app.on_event("startup")
 async def startup_event():
