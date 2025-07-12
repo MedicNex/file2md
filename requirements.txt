@@ -49,7 +49,7 @@ python-dotenv>=1.0.0
 
 # 音频处理
 pydub>=0.25.1
-numpy==1.26.0 # 需要使用 1.X 版本防止与 PaddleOCR 版本冲突
+numpy==1.24.4 # 降级到兼容PaddleOCR的版本
 librosa>=0.11.0  # 可选，用于高级音频分析
 
 # 其他格式处理
