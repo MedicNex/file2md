@@ -128,7 +128,7 @@ We provide four deployment options to choose from:
 
 ### 🐳 Docker Image One-Click Deployment (Recommanded)
 
-#### Download the latesr image `medicnex-file2md.tar` from the GitHub Releases, configure `.env` in the same directory, then run the following command:
+#### Download the latest docker image `medicnex-file2md.tar` from the GitHub Releases, configure `.env` in the same directory, then run the following command:
 
 ```bash
 #!/bin/bash
