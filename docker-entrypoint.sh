@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# MedicNex File2MD Docker入口点脚本
+# File2MD Docker入口点脚本
 # 启动Redis和应用服务，支持.env文件热重载
 
 set -e
@@ -120,7 +120,7 @@ trap stop_services SIGTERM SIGINT
 main() {
     case "$1" in
         "start")
-            log_info "启动MedicNex File2MD服务..."
+            log_info "启动File2MD服务..."
             start_redis
             start_app
             ;;

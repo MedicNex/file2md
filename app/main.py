@@ -107,7 +107,7 @@ async def health_check(response: Response):
     # 基础服务状态
     health_status = {
         "status": "UP",
-        "service": "file2markdown",
+        "service": "file2md",
         "version": config.APP_VERSION,
         "components": {
             "api": {"status": "UP"},

@@ -1,6 +1,6 @@
 <div align="center">
 
-# MedicNex File2Markdown
+# File2MD
 
 [English](README.md) | [中文](README_zh.md)
 
@@ -15,7 +15,7 @@
 
 </div>
 
-MedicNex File2Markdown 是一个基于 FastAPI 的微服务，可以将**123种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、音频、视频、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式，对于 LLM 理解友好。
+File2MD 是一个基于 FastAPI 的微服务，可以将**123种文件格式**（Word、PDF、PowerPoint、Excel、CSV、图片、音频、视频、Apple iWork套件、82种编程语言等）转换为统一的 Markdown 代码块格式，对于 LLM 理解友好。
 
 ## 功能特性
 
@@ -920,7 +920,7 @@ limitations under the License.
 
 更多详细信息请参阅 [贡献指南](CONTRIBUTING.md)。
 
-感谢您对 MedicNex File2Markdown 项目的关注和贡献！🙏
+感谢您对 File2MD 项目的关注和贡献！🙏
 
 ### 🎉贡献者
 
@@ -993,7 +993,7 @@ limitations under the License.
 
 <div align="center">
 
-## **🚀 MedicNex File2Markdown**
+## **🚀 File2MD**
 
 <a href="https://www.star-history.com/#MedicNex/medicnex-file2md&Date">
  <picture>

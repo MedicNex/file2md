@@ -1,8 +1,8 @@
-# MedicNex File2Markdown 前端对接API文档
+# File2MD 前端对接API文档
 
 ## 📖 概述
 
-MedicNex File2Markdown 是一个文档转换 API 服务，支持将多种格式的文件（包括文档、图片、代码文件等）转换为统一的Markdown代码块格式。本文档为前端工程师提供完整的API接口说明。
+File2MD 是一个文档转换 API 服务，支持将多种格式的文件（包括文档、图片、代码文件等）转换为统一的Markdown代码块格式。本文档为前端工程师提供完整的API接口说明。
 
 ## 🌐 基础信息
 
@@ -85,7 +85,7 @@ Authorization: Bearer your-api-key
 ```json
 {
   "status": "UP",
-  "service": "file2markdown",
+  "service": "File2MD",
   "version": "1.0.0",
   "components": {
     "api": {"status": "UP"},

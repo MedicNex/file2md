@@ -1,4 +1,4 @@
-# MedicNex File2Markdown 转换示例
+# File2MD 转换示例
 
 本文档提供了各种文件类型的真实转换示例，帮助开发者更好地理解系统功能。
 
@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
 ### 输入: 测试图片
 - **文件**: `test_image.png` 
-- **内容**: 包含"MedicNex File2Markdown Vision API Test"文字的界面
+- **内容**: 包含"File2MD Vision API Test"文字的界面
 
 ### 转换结果
 ```json
@@ -104,7 +104,7 @@ if __name__ == "__main__":
   "filename": "test_image.png",
   "size": 3072,
   "content_type": "image/png",
-  "content": "```image\n# OCR:\nMedicNex File2Markdown\n\nVision API Test\n\n# Description:\n这张图片展示了一个简洁的测试界面，主要用于验证视觉API功能。图片包含清晰的英文标题文字，布局整洁，适合用作API功能测试。\n```",
+  "content": "```image\n# OCR:\nFile2MD\n\nVision API Test\n\n# Description:\n这张图片展示了一个简洁的测试界面，主要用于验证视觉API功能。图片包含清晰的英文标题文字，布局整洁，适合用作API功能测试。\n```",
   "duration_ms": 8456
 }
 ```

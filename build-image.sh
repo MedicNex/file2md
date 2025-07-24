@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# MedicNex File2MD Docker镜像构建脚本
+# File2MD Docker镜像构建脚本
 
 set -e
 

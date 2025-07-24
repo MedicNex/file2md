@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# MedicNex File2MD Docker部署脚本
+# File2MD Docker部署脚本
 # 支持.env文件热重载
 set -e
 

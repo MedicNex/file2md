@@ -1,6 +1,6 @@
 <div align="center">
 
-# MedicNex File2Markdown
+# File2MD
 
 [English](README.md) | [中文](README_zh.md)
 
@@ -15,7 +15,7 @@
 
 </div>
 
-MedicNex File2Markdown is a FastAPI-based microservice that converts **123 file formats** (Word, PDF, PowerPoint, Excel, CSV, images, audio, video, Apple iWork suite, 82 programming languages, etc.) into unified Markdown code block format, which is LLM-friendly.
+File2MD is a FastAPI-based microservice that converts **123 file formats** (Word, PDF, PowerPoint, Excel, CSV, images, audio, video, Apple iWork suite, 82 programming languages, etc.) into unified Markdown code block format, which is LLM-friendly.
 
 ## Features
 
@@ -834,7 +834,7 @@ We warmly welcome community contributions! Here's how you can participate:
 
 For more detailed information, please refer to [Contributing Guide](CONTRIBUTING.md).
 
-Thank you for your attention and contribution to the MedicNex File2Markdown project! 🙏
+Thank you for your attention and contribution to the File2MD project! 🙏
 
 ### 🎉Contributers
 
@@ -907,7 +907,7 @@ Thank you for your attention and contribution to the MedicNex File2Markdown proj
 
 <div align="center">
 
-**🚀 MedicNex File2Markdown**
+**🚀 File2MD**
 
 <a href="https://www.star-history.com/#MedicNex/medicnex-file2md&Date">
  <picture>

@@ -1,4 +1,4 @@
-# MedicNex File2MD 独立Docker镜像
+# File2MD 独立Docker镜像
 # 包含Redis和所有依赖，支持.env文件热重载
 # 支持ARM64和AMD64架构
 

@@ -502,7 +502,7 @@ if [[ "$CREATE_SYSTEMD" == true ]]; then
     log_info "创建systemd服务配置..."
     cat > "/etc/systemd/system/$SERVICE_NAME.service" << EOF
 [Unit]
-Description=MedicNex File2MD API Service with PaddleOCR
+Description=File2MD API Service with PaddleOCR
 After=network.target redis.service
 
 [Service]
@@ -736,5 +736,5 @@ fi
 
 echo ""
 echo "=================================================="
-echo "部署完成！感谢使用 MedicNex File2MD 服务。"
+echo "部署完成！感谢使用 File2MD 服务。"
 echo "==================================================" 
