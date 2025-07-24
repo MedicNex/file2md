@@ -28,7 +28,7 @@ log_warning() {
 }
 
 # 默认配置
-DEFAULT_SERVICE_NAME="medicnex-file2md"
+DEFAULT_SERVICE_NAME="file2md"
 DEFAULT_PORT="8999"
 DEFAULT_USER="www"
 DEFAULT_GROUP="www"
@@ -42,7 +42,7 @@ show_help() {
     echo "  -u, --user USER        运行用户 (默认: www)"
     echo "  -g, --group GROUP      运行用户组 (默认: www)"
     echo "  -p, --port PORT        服务端口 (默认: 8999)"
-    echo "  -s, --service NAME     服务名称 (默认: medicnex-file2md)"
+    echo "  -s, --service NAME     服务名称 (默认: file2md)"
     echo "  --no-systemd           不创建systemd服务"
     echo "  --dev                  开发模式，不切换用户"
     echo "  -h, --help             显示此帮助信息"

@@ -190,8 +190,8 @@ docker restart medicnex-file2md
 
 1. **克隆项目**：
 ```bash
-git clone https://github.com/MedicNex/medicnex-file2md.git
-cd medicnex-file2md
+git clone https://github.com/MedicNex/file2md.git
+cd file2md
 ```
 
 2. **一键部署**：
@@ -995,11 +995,11 @@ limitations under the License.
 
 ## **🚀 File2MD**
 
-<a href="https://www.star-history.com/#MedicNex/medicnex-file2md&Date">
+<a href="https://www.star-history.com/#MedicNex/file2md&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MedicNex/medicnex-file2md&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MedicNex/medicnex-file2md&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MedicNex/medicnex-file2md&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MedicNex/file2md&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MedicNex/file2md&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MedicNex/file2md&type=Date" />
  </picture>
 </a>
 

@@ -85,7 +85,7 @@ Authorization: Bearer your-api-key
 ```json
 {
   "status": "UP",
-  "service": "File2MD",
+  "service": "file2md",
   "version": "1.0.0",
   "components": {
     "api": {"status": "UP"},

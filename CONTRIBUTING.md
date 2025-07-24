@@ -14,8 +14,8 @@
 
 1. **Fork 并克隆仓库**
 ```bash
-git clone https://github.com/your-username/medicnex-file2md.git
-cd medicnex-file2md
+git clone https://github.com/your-username/file2md.git
+cd file2md
 ```
 
 2. **设置开发环境**
@@ -291,8 +291,8 @@ python -m pytest --cov=app tests/
 ## 🎉贡献者
 
 <div align="center">
-<a href="https://github.com/MedicNex/medicnex-file2md/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=MedicNex/medicnex-file2md" />
+<a href="https://github.com/MedicNex/file2md/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=MedicNex/file2md" />
 </a>
 </div>
 
